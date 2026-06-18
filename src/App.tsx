@@ -1,25 +1,11 @@
-// import {useEffect, useState} from 'react' (고의 에러)
 import { useState } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
 import './App.css';
 
-// (고의 에러1) prettier: double quotes + 들여쓰기 불일치
-// function greet(name: any) {
-//     return "Hello, " + name
-// }
-
 function App() {
   const [count, setCount] = useState(0);
-
-  // (고의 에러2)
-  // const [title, setTitle] = useState("untitled")
-  //
-  // // eslint: exhaustive-deps — count가 빠져 있음
-  // useEffect(() => {
-  //   setTitle("count is " + count)
-  // }, []);
 
   return (
     <>
