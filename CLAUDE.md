@@ -56,6 +56,11 @@ pnpm preview       # 빌드 결과물 미리보기
 - 기존 유틸 재사용 — 유사한 코드 중복 생성 금지
 - any 타입 사용 금지 — 명시적 타입 정의
 
+## 보안 규칙
+
+- `target="_blank"` 사용 시 반드시 `rel="noreferrer"` 함께 명시 — 탭내빙(tabnabbing) 방지 (`react/jsx-no-target-blank`: **error**)
+- `dangerouslySetInnerHTML` 사용 금지 — XSS 취약점 (`react/no-danger`: **error**)
+
 ## Never Do
 
 - 의도 없는 네이밍 금지 (`data`, `temp`, `doStuff`, `Comp`, `Card1`)

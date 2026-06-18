@@ -22,6 +22,8 @@ export default defineConfig([
             "react/react-in-jsx-scope": "off", // React 17+ 에서는 불필요
             "react-hooks/rules-of-hooks": "error",
             "react-hooks/exhaustive-deps": "error",
+            "react/jsx-no-target-blank": "error",
+            "react/no-danger": "error",
             "@typescript-eslint/consistent-type-imports": "error",
         }
     }
