@@ -10,7 +10,7 @@ type CouponSectionProps = {
 // 쿠폰의 경우 해당 섹션이 쿠폰 리스트를 직접 들고 있다가(나중에 API로 대체 가능 대비),
 // 최종 할인 금액만 CheckoutPage로 올린다.
 export function CouponSection({ onDiscountChange }: CouponSectionProps) {
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState<string>('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
 
   const applyCoupon = () => {

@@ -3,11 +3,11 @@ import { Section } from '../../common/components/Section.tsx';
 import { LineRow } from '../../common/components/LineRow.tsx';
 import { PriceInfo } from '../../common/components/PriceInfo.tsx';
 
-type Props = {
+type CartSectionProps = {
   items: CartItem[];
 };
 
-export function CartSection({ items }: Props) {
+export function CartSection({ items }: CartSectionProps) {
   return (
     <Section title={'주문 상품'}>
       {items.map((item) => (
