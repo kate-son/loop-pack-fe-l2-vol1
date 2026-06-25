@@ -14,7 +14,7 @@ import '@/market/market.css';
 import { AddressSection } from './sections/AddressSection';
 import { getPriceText } from '@/utils.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
-import { useCheckout } from '@/market/hooks/useCheckoutSummary';
+import { useCheckout } from './hooks/useCheckout';
 import type { Address } from '@/market/types/address.types';
 
 export function CheckoutPage() {
