@@ -89,6 +89,27 @@ useEffect(() => {
 const fullName = `${firstName} ${lastName}`;
 ```
 
+### º View는 그리기만 한다 — 로직을 몰라야 한다
+
+공통/leaf 컴포넌트는 "무엇을 보여줄지" 판단(매핑, 분기, 계산)하지 않고 전달받은 값을 그리기만 한다.
+판단은 그 컴포넌트를 사용하는 도메인 컴포넌트/페이지가 미리 끝내서 값으로 내려준다.
+
+```text
+// ❌ — View가 도메인 지식(상태 → 색상 매핑)을 직접 판단
+function StatusTag({ isPaid, isPreparing, isShipped }: Props) {
+  let color = '#9ca3af';
+  if (isPaid) color = '#3b82f6';
+  if (isPreparing) color = '#f59e0b';
+  if (isShipped) color = '#8b5cf6';
+  return <span style={{ color }}>{label}</span>;
+}
+
+// ✅ — View는 label/color를 그릴 뿐, 매핑은 호출부(도메인)가 책임진다
+function Tag({ label, color }: Props) {
+  return <span style={{ color }}>{label}</span>;
+}
+```
+
 ### º 복잡한 조건에 이름 붙이기
 
 ```text
