@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { PaymentMethod } from '../types/payment.types';
 import { Section } from '../../common/components/Section.tsx';
 import { Radio } from '../../common/components/Radio.tsx';
@@ -10,16 +11,14 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 
 const PAYMENT_METHODS: PaymentMethod[] = ['card', 'transfer', 'kakao'];
 
-type Props = {
-  payment: PaymentMethod;
-  onPaymentChange: (payment: PaymentMethod) => void;
-};
+// 결제수단은 가격 계산이나 다른 섹션에 영향을 주지 않아 이 섹션 내부에서만 관리한다.
+export function PaymentMethodSection() {
+  const [payment, setPayment] = useState<PaymentMethod>('card');
 
-export function PaymentMethodSection({ payment, onPaymentChange }: Props) {
   return (
-    <Section title={'결제수단'}>
+    <Section title="결제수단">
       {PAYMENT_METHODS.map((m) => (
-        <Radio key={m} checked={payment === m} onChange={() => onPaymentChange(m)}>
+        <Radio key={m} checked={payment === m} onChange={() => setPayment(m)}>
           {PAYMENT_LABEL[m]}
         </Radio>
       ))}

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { Coupon } from './types/coupon.types';
-import type { PaymentMethod } from './types/payment.types';
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
-import { DeliveryMemo } from './components/DeliveryMemo';
+import { ADDRESSES, CART, MEMBER, PAST_ORDERS } from './data';
+import { DeliveryMemoSection } from './sections/DeliveryMemoSection';
 import { CartSection } from './sections/CartSection';
 import { CouponSection } from './sections/CouponSection';
 import { PointSection } from './sections/PointSection';
@@ -12,60 +11,46 @@ import { TermsSection } from './sections/TermsSection';
 import { RecentOrdersSection } from './sections/RecentOrdersSection';
 import './market.css';
 import { AddressSection } from './sections/AddressSection';
-import { AddressForm } from './sections/AddressSection/AddressForm.tsx';
-
-const BASE_SHIPPING_FEE = 3000;
-const FREE_SHIPPING_THRESHOLD = 50000;
-const REMOTE_AREA_SURCHARGE = 3000;
+import { getPriceText } from '../utils.ts';
+import {
+  VIP_DISCOUNT_RATE,
+  BASE_SHIPPING_FEE,
+  FREE_SHIPPING_THRESHOLD,
+  REMOTE_AREA_SURCHARGE,
+} from './pricePolicy.ts';
+import { CheckoutCompletePage } from './CheckoutCompletePage.tsx';
 
 export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
 
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [usePoint, setUsePoint] = useState(false);
-  const [pointInput, setPointInput] = useState(0);
-  const [payment, setPayment] = useState<PaymentMethod>('card');
-  const [agreed, setAgreed] = useState(false);
-  const [placed, setPlaced] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null); //쿠폰
+  const [pointDiscount, setPointDiscount] = useState(0); //포인트
+  const [agreed, setAgreed] = useState(false); //약관 동의 여부
+  const [isRemoteAddress, setIsRemoteAddress] = useState(ADDRESSES[0].isRemote); //도서산간 여부
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
+  //결제하기 버튼 클릭 flag
+  const [placed, setPlaced] = useState(false);
 
   // ── 배송비 정책 ──────────────────────────────
   const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
   let shippingFee = BASE_SHIPPING_FEE;
   if (itemTotal >= FREE_SHIPPING_THRESHOLD) shippingFee = 0;
-  if (address.isRemote) shippingFee += REMOTE_AREA_SURCHARGE;
+  if (isRemoteAddress) shippingFee += REMOTE_AREA_SURCHARGE;
+
+  // ── 멤버십 할인 정책 ──────────────────────────
+  const gradeDiscountItemTotal =
+    member.grade === 'VIP' ? Math.round(itemTotal * VIP_DISCOUNT_RATE) : itemTotal;
+  const membershipDiscount = itemTotal - gradeDiscountItemTotal;
 
   // ── 쿠폰 정책 ────────────────────────────────
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
 
-  // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
-
-  const finalPrice = itemTotal + shippingFee - couponDiscount - pointDiscount;
-
-  const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim());
-    setAppliedCoupon(found ?? null);
-    if (!found) alert('존재하지 않는 쿠폰이에요');
-  };
+  const finalPrice = gradeDiscountItemTotal + shippingFee - couponDiscount - pointDiscount;
 
   if (placed) {
     return (
-      <div className="checkout">
-        <h1>주문 완료</h1>
-        <div className="section">
-          <p style={{ color: 'var(--text-h)' }}>
-            주문이 접수되었어요. 결제 금액 {finalPrice.toLocaleString()}원
-          </p>
-        </div>
-        <button className="pay" onClick={() => setPlaced(false)}>
-          주문서로 돌아가기
-        </button>
-      </div>
+      <CheckoutCompletePage finalPrice={finalPrice} goToCheckoutPage={() => setPlaced(false)} />
     );
   }
 
@@ -73,53 +58,35 @@ export function CheckoutPage() {
     <div className="checkout">
       <h1>주문/결제</h1>
 
-      <AddressSection selectedAddress={address}>
-        <AddressForm
-          addresses={ADDRESSES}
-          selectedAddressId={selectedAddressId}
-          onSelectAddress={setSelectedAddressId}
-        />
-      </AddressSection>
+      <AddressSection onRemoteChange={setIsRemoteAddress} />
 
-      <div className="section">
-        <h2>배송 요청사항</h2>
-        <DeliveryMemo />
-      </div>
+      <DeliveryMemoSection />
 
       <CartSection items={cart} />
 
-      <CouponSection
-        couponCode={couponCode}
-        onCouponCodeChange={setCouponCode}
-        appliedCoupon={appliedCoupon}
-        onApply={applyCoupon}
-      />
+      <CouponSection appliedCoupon={appliedCoupon} onApply={setAppliedCoupon} />
 
       <PointSection
-        usePoint={usePoint}
-        onUsePointChange={setUsePoint}
-        pointInput={pointInput}
-        onPointInputChange={setPointInput}
         availablePoint={member.point}
+        itemTotal={itemTotal}
+        onPointDiscountChange={setPointDiscount}
       />
 
-      <PaymentMethodSection payment={payment} onPaymentChange={setPayment} />
+      <PaymentMethodSection />
 
       <OrderSummarySection
         itemTotal={itemTotal}
         shippingFee={shippingFee}
         appliedCoupon={appliedCoupon}
-        couponDiscount={couponDiscount}
-        usePoint={usePoint}
         pointDiscount={pointDiscount}
+        membershipDiscount={membershipDiscount}
         finalPrice={finalPrice}
-        member={member}
       />
 
       <TermsSection agreed={agreed} onAgreedChange={setAgreed} />
 
       <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
-        {finalPrice.toLocaleString()}원 결제하기
+        {getPriceText(finalPrice)} 결제하기
       </button>
 
       <RecentOrdersSection orders={PAST_ORDERS} />
