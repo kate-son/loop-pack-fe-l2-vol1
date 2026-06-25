@@ -1,17 +1,23 @@
-import { useState } from 'react'
-import type { Address, Coupon, PaymentMethod } from './types'
-import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data'
-import { Price } from './Price'
-import { OrderLineRow } from './OrderLineRow'
-import { OrderStatusTag } from './OrderStatusTag'
-import { DeliveryMemo } from './DeliveryMemo'
-import './market.css'
+import { useState } from 'react';
+import type { Address } from './types/address.types';
+import type { Coupon } from './types/coupon.types';
+import type { PaymentMethod } from './types/payment.types';
+import { ADDRESSES, CART, COUPONS, MEMBER, PAST_ORDERS } from './data';
+import { Price } from './components/Price';
+import { OrderLineRow } from './components/OrderLineRow';
+import { OrderStatusTag } from './components/OrderStatusTag';
+import { DeliveryMemo } from './components/DeliveryMemo';
+import './market.css';
+
+const BASE_SHIPPING_FEE = 3000;
+const FREE_SHIPPING_THRESHOLD = 50000;
+const REMOTE_AREA_SURCHARGE = 3000;
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: '신용/체크카드',
   transfer: '계좌이체',
   kakao: '카카오페이',
-}
+};
 
 // 배송지 — 접기/펼치기와 선택 요약은 스스로 책임진다.
 // 단, 실제 선택 동작(onSelectAddress)은 AddressForm → AddressField 로 통과시킨다.
@@ -20,12 +26,12 @@ function DeliverySection({
   selectedAddressId,
   onSelectAddress,
 }: {
-  addresses: Address[]
-  selectedAddressId: string
-  onSelectAddress: (id: string) => void
+  addresses: Address[];
+  selectedAddressId: string;
+  onSelectAddress: (id: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false)
-  const selected = addresses.find((a) => a.id === selectedAddressId)!
+  const [expanded, setExpanded] = useState(false);
+  const selected = addresses.find((a) => a.id === selectedAddressId)!;
   return (
     <div className="section">
       <div className="row between">
@@ -46,7 +52,7 @@ function DeliverySection({
         </p>
       )}
     </div>
-  )
+  );
 }
 
 // '도서산간 제외' 필터는 스스로 책임진다.
@@ -56,20 +62,16 @@ function AddressForm({
   selectedAddressId,
   onSelectAddress,
 }: {
-  addresses: Address[]
-  selectedAddressId: string
-  onSelectAddress: (id: string) => void
+  addresses: Address[];
+  selectedAddressId: string;
+  onSelectAddress: (id: string) => void;
 }) {
-  const [onlyNear, setOnlyNear] = useState(false)
-  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses
+  const [onlyNear, setOnlyNear] = useState(false);
+  const list = onlyNear ? addresses.filter((a) => !a.isRemote) : addresses;
   return (
     <>
       <label className="filter">
-        <input
-          type="checkbox"
-          checked={onlyNear}
-          onChange={(e) => setOnlyNear(e.target.checked)}
-        />
+        <input type="checkbox" checked={onlyNear} onChange={(e) => setOnlyNear(e.target.checked)} />
         도서산간 제외
       </label>
       {list.map((a) => (
@@ -81,7 +83,7 @@ function AddressForm({
         />
       ))}
     </>
-  )
+  );
 }
 
 function AddressField({
@@ -89,9 +91,9 @@ function AddressField({
   selected,
   onSelect,
 }: {
-  address: Address
-  selected: boolean
-  onSelect: (id: string) => void
+  address: Address;
+  selected: boolean;
+  onSelect: (id: string) => void;
 }) {
   return (
     <label className="addr">
@@ -101,45 +103,45 @@ function AddressField({
         {address.isRemote ? ' · 도서산간' : ''}
       </span>
     </label>
-  )
+  );
 }
 
 export function CheckoutPage() {
-  const member = MEMBER
-  const cart = CART
+  const member = MEMBER;
+  const cart = CART;
 
-  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id)
-  const [couponCode, setCouponCode] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
-  const [usePoint, setUsePoint] = useState(false)
-  const [pointInput, setPointInput] = useState(0)
-  const [payment, setPayment] = useState<PaymentMethod>('card')
-  const [isTermsOpen, setIsTermsOpen] = useState(false)
-  const [agreed, setAgreed] = useState(false)
-  const [placed, setPlaced] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState(ADDRESSES[0].id);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [usePoint, setUsePoint] = useState(false);
+  const [pointInput, setPointInput] = useState(0);
+  const [payment, setPayment] = useState<PaymentMethod>('card');
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [placed, setPlaced] = useState(false);
 
-  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!
+  const address = ADDRESSES.find((a) => a.id === selectedAddressId)!;
 
   // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0)
-  let shippingFee = 3000
-  if (itemTotal >= 50000) shippingFee = 0
-  if (address.isRemote) shippingFee += 3000
+  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
+  let shippingFee = BASE_SHIPPING_FEE;
+  if (itemTotal >= FREE_SHIPPING_THRESHOLD) shippingFee = 0;
+  if (address.isRemote) shippingFee += REMOTE_AREA_SURCHARGE;
 
   // ── 쿠폰 정책 ────────────────────────────────
-  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
+  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
 
   // ── 적립금 정책 ──────────────────────────────
-  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0
+  const pointDiscount = usePoint ? Math.min(pointInput, member.point, itemTotal) : 0;
 
   // 최종 금액을 state 에 담아둔다.
-  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount)
+  const [finalPrice] = useState(itemTotal + shippingFee - couponDiscount - pointDiscount);
 
   const applyCoupon = () => {
-    const found = COUPONS.find((c) => c.code === couponCode.trim())
-    setAppliedCoupon(found ?? null)
-    if (!found) alert('존재하지 않는 쿠폰이에요')
-  }
+    const found = COUPONS.find((c) => c.code === couponCode.trim());
+    setAppliedCoupon(found ?? null);
+    if (!found) alert('존재하지 않는 쿠폰이에요');
+  };
 
   if (placed) {
     return (
@@ -154,7 +156,7 @@ export function CheckoutPage() {
           주문서로 돌아가기
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -292,5 +294,5 @@ export function CheckoutPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }
