@@ -5,11 +5,15 @@ import pluginReact from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import prettier from "eslint-config-prettier"
 import {defineConfig} from "eslint/config";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 
 export default defineConfig([
     {
         files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-        plugins: {js},
+        plugins: {
+            js,
+            'jsx-a11y': jsxA11y
+        },
         extends: ["js/recommended"],
         languageOptions: {globals: globals.browser}
     },
@@ -34,6 +38,7 @@ export default defineConfig([
             "no-empty": "error", //빈 블록으로 에러를 무시하는 것을 방지
             "no-var": "error", //var 사용 금지, const/let 사용 강제
             "@typescript-eslint/no-unused-vars": "warn", //쓰지 않는 변수 warn 처리 : 개발 중 임시로 변수 선언하는 경우로 warn으로 처리
+            "jsx-a11y/alt-text": "error", // 접근성(a11y) 초기부터 강제. 나중에 추가 시 공수가 크므로 error로 처리
         }
     }
 ]);
