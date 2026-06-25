@@ -53,14 +53,21 @@ export function CheckoutPage() {
     setPlaced(true);
   };
 
+  const handleGoBack = () => {
+    setCouponDiscount(0); // 훅 상태
+    setPointDiscount(0);
+    setAgreed(false);
+    setSelectedAddress(null);
+    setPlaced(false);
+  };
+
   if (placed) {
-    return (
-      <CheckoutCompletePage finalPrice={finalPrice} goToCheckoutPage={() => setPlaced(false)} />
-    );
+    return <CheckoutCompletePage finalPrice={finalPrice} goToCheckoutPage={handleGoBack} />;
   }
 
   return (
-    <div className="checkout">
+    // placed를 key로 넘겨 리마운트 처리
+    <div className="checkout" key={`checkout_${placed}`}>
       <h1>주문/결제</h1>
 
       <AddressSection selectedAddress={selectedAddress} onAddressChange={setSelectedAddress} />
