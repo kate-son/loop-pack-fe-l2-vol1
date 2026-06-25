@@ -11,38 +11,28 @@ import { RecentOrdersSection } from '@/market/sections/RecentOrdersSection';
 import '@/market/market.css';
 import { AddressSection } from '@/market/sections/AddressSection';
 import { getPriceText } from '@/utils.ts';
-import {
-  VIP_DISCOUNT_RATE,
-  BASE_SHIPPING_FEE,
-  FREE_SHIPPING_THRESHOLD,
-  REMOTE_AREA_SURCHARGE,
-} from '@/market/pricePolicy.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
+import { useCheckout } from '@/market/hooks/useCheckoutSummary';
 
 export function CheckoutPage() {
   const member = MEMBER;
   const cart = CART;
 
-  const [couponDiscount, setCouponDiscount] = useState<number>(0); //쿠폰
-  const [pointDiscount, setPointDiscount] = useState<number>(0); //포인트
-  const [agreed, setAgreed] = useState<boolean>(false); //약관 동의 여부
-  const [isRemoteAddress, setIsRemoteAddress] = useState(false); //도서산간 여부
-
-  //결제하기 버튼 클릭 flag
+  const [agreed, setAgreed] = useState<boolean>(false);
   const [placed, setPlaced] = useState<boolean>(false);
 
-  // ── 배송비 정책 ──────────────────────────────
-  const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
-  let shippingFee = BASE_SHIPPING_FEE;
-  if (itemTotal >= FREE_SHIPPING_THRESHOLD) shippingFee = 0;
-  if (isRemoteAddress) shippingFee += REMOTE_AREA_SURCHARGE;
-
-  // ── 등급 할인 정책 ──────────────────────────
-  const gradeDiscountItemTotal =
-    member.grade === 'VIP' ? Math.round(itemTotal * VIP_DISCOUNT_RATE) : itemTotal;
-  const gradeDiscount = itemTotal - gradeDiscountItemTotal;
-
-  const finalPrice = gradeDiscountItemTotal + shippingFee - couponDiscount - pointDiscount;
+  const {
+    itemTotal,
+    shippingFee,
+    gradeDiscount,
+    gradeDiscountItemTotal,
+    couponDiscount,
+    pointDiscount,
+    finalPrice,
+    setCouponDiscount,
+    setPointDiscount,
+    setIsRemoteAddress,
+  } = useCheckout(cart, member);
 
   if (placed) {
     return (
