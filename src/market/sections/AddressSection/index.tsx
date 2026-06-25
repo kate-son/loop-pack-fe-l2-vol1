@@ -4,18 +4,15 @@ import { Section } from '@/common/components/Section.tsx';
 import { AddressForm } from '@/market/sections/AddressSection/AddressForm.tsx';
 
 type AddressSectionProps = {
-  onRemoteChange: (isRemote: boolean) => void;
+  /** 현재 선택된 배송지 (표시용) */
+  selectedAddress: Address | null;
+  /** 배송지 변경 시 호출 */
+  onAddressChange: (address: Address) => void;
 };
 
 //주문/결제 페이지에서 배송지Section은 변경/접기에 대한 컨트롤만 함
-export function AddressSection({ onRemoteChange }: AddressSectionProps) {
+export function AddressSection({ selectedAddress, onAddressChange }: AddressSectionProps) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-
-  const handleSelectAddress = (address: Address) => {
-    onRemoteChange(address.isRemote);
-    setSelectedAddress(address);
-  };
 
   return (
     <Section
@@ -32,7 +29,7 @@ export function AddressSection({ onRemoteChange }: AddressSectionProps) {
         </p>
       )}
       <div hidden={!isExpanded}>
-        <AddressForm onSelectAddress={handleSelectAddress} />
+        <AddressForm onSelectAddress={onAddressChange} />
       </div>
     </Section>
   );

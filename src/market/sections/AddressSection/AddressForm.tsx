@@ -1,21 +1,31 @@
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import type { Address } from '@/market/types/address.types';
 import { Radio } from '@/common/components/Radio.tsx';
 import { Checkbox } from '@/common/components/Checkbox.tsx';
 import { ADDRESSES } from '@/market/data.ts';
 
-type AddressFormProps = {
-  onSelectAddress: (address: Address) => void;
+export type AddressFormRef = {
+  getValue: () => Address;
 };
 
-//AddressForm에서 주소를 가져온다. 나중에 API로 대체 가능 대비)
-export function AddressForm({ onSelectAddress }: AddressFormProps) {
+type AddressFormProps = {
+  /** 주소 선택 시 호출 (controlled 모드) */
+  onSelectAddress?: (address: Address) => void;
+};
+
+//AddressForm에서 주소를 가져온다. 나중에 API로 대체 가능 대비
+export const AddressForm = forwardRef<AddressFormRef, AddressFormProps>(function AddressForm(
+  { onSelectAddress },
+  ref,
+) {
   const [onlyNear, setOnlyNear] = useState<boolean>(false);
   const [selectedAddress, setSelectedAddress] = useState<Address>(ADDRESSES[0]);
   const list = onlyNear ? ADDRESSES.filter((a) => !a.isRemote) : ADDRESSES;
 
+  useImperativeHandle(ref, () => ({ getValue: () => selectedAddress }));
+
   useEffect(() => {
-    onSelectAddress(selectedAddress);
+    onSelectAddress?.(selectedAddress);
   }, [selectedAddress, onSelectAddress]);
 
   // 필터로 현재 선택된 주소가 가려지면, 보이는 목록 중 첫 번째로 선택을 옮긴다. /* AI-generated */
@@ -52,4 +62,4 @@ export function AddressForm({ onSelectAddress }: AddressFormProps) {
       ))}
     </>
   );
-}
+});

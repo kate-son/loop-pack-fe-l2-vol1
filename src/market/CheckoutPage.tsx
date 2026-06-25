@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CART, MEMBER, PAST_ORDERS } from '@/market/data';
 import { DeliveryMemoSection } from '@/market/sections/DeliveryMemoSection';
+import type { DeliveryMemoRef } from '@/market/sections/DeliveryMemoSection';
 import { CartSection } from '@/market/sections/CartSection';
 import { CouponSection } from '@/market/sections/CouponSection';
 import { PointSection } from '@/market/sections/PointSection';
 import { PaymentMethodSection } from '@/market/sections/PaymentMethodSection';
+import type { PaymentMethodRef } from '@/market/sections/PaymentMethodSection';
 import { SummarySection } from '@/market/sections/SummarySection';
 import { TermsSection } from '@/market/sections/TermsSection';
 import { RecentOrdersSection } from '@/market/sections/RecentOrdersSection';
@@ -13,6 +15,7 @@ import { AddressSection } from '@/market/sections/AddressSection';
 import { getPriceText } from '@/utils.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
 import { useCheckout } from '@/market/hooks/useCheckoutSummary';
+import type { Address } from '@/market/types/address.types';
 
 export function CheckoutPage() {
   const member = MEMBER;
@@ -20,6 +23,12 @@ export function CheckoutPage() {
 
   const [agreed, setAgreed] = useState<boolean>(false);
   const [placed, setPlaced] = useState<boolean>(false);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+
+  const memoRef = useRef<DeliveryMemoRef>(null);
+  const paymentRef = useRef<PaymentMethodRef>(null);
+
+  const isRemoteAddress = selectedAddress?.isRemote ?? false;
 
   const {
     itemTotal,
@@ -31,8 +40,18 @@ export function CheckoutPage() {
     finalPrice,
     setCouponDiscount,
     setPointDiscount,
-    setIsRemoteAddress,
-  } = useCheckout(cart, member);
+  } = useCheckout(cart, member, isRemoteAddress);
+
+  const handlePlace = () => {
+    //결제하기 버튼 클릭시 주문 정보 가져오기
+    const _orderData = {
+      address: selectedAddress,
+      memo: memoRef.current?.getValue() ?? '',
+      payment: paymentRef.current?.getValue() ?? 'card',
+      finalPrice,
+    };
+    setPlaced(true);
+  };
 
   if (placed) {
     return (
@@ -44,9 +63,9 @@ export function CheckoutPage() {
     <div className="checkout">
       <h1>주문/결제</h1>
 
-      <AddressSection onRemoteChange={setIsRemoteAddress} />
+      <AddressSection selectedAddress={selectedAddress} onAddressChange={setSelectedAddress} />
 
-      <DeliveryMemoSection />
+      <DeliveryMemoSection ref={memoRef} />
 
       <CartSection items={cart} />
 
@@ -58,7 +77,7 @@ export function CheckoutPage() {
         onPointDiscountChange={setPointDiscount}
       />
 
-      <PaymentMethodSection />
+      <PaymentMethodSection ref={paymentRef} />
 
       <SummarySection
         itemTotal={itemTotal}
@@ -71,7 +90,7 @@ export function CheckoutPage() {
 
       <TermsSection agreed={agreed} onAgreedChange={setAgreed} />
 
-      <button className="pay" disabled={!agreed} onClick={() => setPlaced(true)}>
+      <button className="pay" disabled={!agreed} onClick={handlePlace}>
         {getPriceText(finalPrice)} 결제하기
       </button>
 

@@ -8,10 +8,9 @@ import {
   REMOTE_AREA_SURCHARGE,
 } from '@/market/pricePolicy.ts';
 
-export function useCheckout(cart: CartItem[], member: Member) {
+export function useCheckout(cart: CartItem[], member: Member, isRemoteAddress: boolean) {
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
   const [pointDiscount, setPointDiscount] = useState<number>(0);
-  const [isRemoteAddress, setIsRemoteAddress] = useState<boolean>(false);
 
   //총 상품 금액
   const itemTotal = cart.reduce((sum, it) => sum + it.price * it.quantity, 0);
@@ -39,6 +38,5 @@ export function useCheckout(cart: CartItem[], member: Member) {
     finalPrice,
     setCouponDiscount,
     setPointDiscount,
-    setIsRemoteAddress,
   };
 }
