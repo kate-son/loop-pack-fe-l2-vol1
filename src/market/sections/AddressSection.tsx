@@ -29,7 +29,7 @@ export function AddressSection({ selectedAddress, onAddressChange }: AddressSect
         </p>
       )}
       <div hidden={!isExpanded}>
-        <AddressForm onSelectAddress={onAddressChange} />
+        <AddressForm selectedAddress={selectedAddress} onSelectAddress={onAddressChange} />
       </div>
     </Section>
   );
