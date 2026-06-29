@@ -44,14 +44,13 @@ export function CheckoutPage() {
 
   const handlePlace = () => {
     //결제하기 버튼 클릭시 주문 정보 가져오기
-    const _orderData = {
-      address: selectedAddress,
-      memo: memoRef.current?.getValue() ?? '',
-      payment: paymentRef.current?.getValue() ?? 'card',
-      finalPrice,
-    };
+    // const _orderData = {
+    //   address: selectedAddress,
+    //   memo: memoRef.current?.getValue() ?? '',
+    //   payment: paymentRef.current?.getValue() ?? 'card',
+    //   finalPrice,
+    // };
     setPlaced(true);
-    console.log(_orderData);
   };
 
   const handleGoBack = () => {
