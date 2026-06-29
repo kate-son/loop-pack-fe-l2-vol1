@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Address } from '@/market/types/address.types.ts';
+import type { Address } from '@/market/types';
 import { Section } from '@/common/components/Section.tsx';
 import { AddressForm } from '@/market/forms/AddressForm.tsx';
 

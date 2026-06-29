@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import type { CartItem } from '@/market/types/cart.types';
-import type { Member } from '@/market/types/member.types';
+import type { CartItem } from '@/market/types';
+import type { Member } from '@/market/types';
 import {
   VIP_DISCOUNT_RATE,
   BASE_SHIPPING_FEE,
   FREE_SHIPPING_THRESHOLD,
   REMOTE_AREA_SURCHARGE,
 } from '@/market/pricePolicy.ts';
-import type { Coupon } from '@/market/types/coupon.types.ts';
+import type { Coupon } from '@/market/types';
 
 export function useCheckout(cart: CartItem[], member: Member, isRemoteAddress: boolean) {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);

@@ -1,8 +1,8 @@
-import type { Address } from '@/market/types/address.types';
-import type { CartItem } from '@/market/types/cart.types';
-import type { Coupon } from '@/market/types/coupon.types';
-import type { Member } from '@/market/types/member.types';
-import type { PastOrder } from '@/market/types/order.types';
+import type { Address } from '@/market/types';
+import type { CartItem } from '@/market/types';
+import type { Coupon } from '@/market/types';
+import type { Member } from '@/market/types';
+import type { PastOrder } from '@/market/types';
 
 export const CART: CartItem[] = [
   {

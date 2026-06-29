@@ -1,5 +1,5 @@
 import { forwardRef, useState, useImperativeHandle } from 'react';
-import type { PaymentMethod } from '@/market/types/payment.types';
+import type { PaymentMethod } from '@/market/types';
 import { Section } from '@/common/components/Section.tsx';
 import { Radio } from '@/common/components/Radio.tsx';
 

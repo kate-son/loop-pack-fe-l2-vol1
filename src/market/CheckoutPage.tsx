@@ -15,7 +15,7 @@ import { AddressSection } from './sections/AddressSection';
 import { getPriceText } from '@/utils.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
 import { useCheckout } from './hooks/useCheckout';
-import type { Address } from '@/market/types/address.types';
+import type { Address } from '@/market/types';
 
 export function CheckoutPage() {
   const member = MEMBER;

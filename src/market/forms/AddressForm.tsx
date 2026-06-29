@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import type { Address } from '@/market/types/address.types';
+import type { Address } from '@/market/types';
 import { Radio } from '@/common/components/Radio.tsx';
 import { Checkbox } from '@/common/components/Checkbox.tsx';
 import { ADDRESSES } from '@/market/data.ts';
