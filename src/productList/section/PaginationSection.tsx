@@ -1,4 +1,4 @@
-import { PAGINATION_RANGE } from './types';
+import { PAGINATION_RANGE } from '../types';
 
 type PaginationProps = {
   /** 현재 페이지 */
@@ -9,7 +9,7 @@ type PaginationProps = {
   onPageChange: (page: number) => void;
 };
 
-export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+export function PaginationSection({ page, totalPages, onPageChange }: PaginationProps) {
   const startPage = Math.max(1, page - PAGINATION_RANGE);
   const endPage = Math.min(totalPages, page + PAGINATION_RANGE);
   const pageNumbers: number[] = [];

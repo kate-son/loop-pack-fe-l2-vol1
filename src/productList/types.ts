@@ -18,6 +18,15 @@ export type ProductListResponse = {
 
 export type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
 
+export type FilterValues = {
+  category: 'all' | Product['category'];
+  minPrice: number | '';
+  maxPrice: number | '';
+  sortBy: SortBy;
+  searchQuery: string;
+  inStockOnly: boolean;
+};
+
 export const CATEGORIES: { value: 'all' | Product['category']; label: string }[] = [
   { value: 'all', label: '전체' },
   { value: 'electronics', label: '전자제품' },
