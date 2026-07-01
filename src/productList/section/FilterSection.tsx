@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Product, SortBy, FilterValues } from '../types';
+import type { FilterValues, SortBy } from '../types';
 import { CATEGORIES, SORT_OPTIONS } from '../types';
 
 type FilterSectionProps = {
@@ -11,64 +11,45 @@ type FilterSectionProps = {
   onViewModeChange: (mode: 'grid' | 'list') => void;
 };
 
+const INITIAL_VALUES: FilterValues = {
+  category: 'all',
+  minPrice: '',
+  maxPrice: '',
+  sortBy: 'latest',
+  searchQuery: '',
+  inStockOnly: false,
+};
+
 export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: FilterSectionProps) {
-  const [category, setCategory] = useState<'all' | Product['category']>('all');
-  const [minPrice, setMinPrice] = useState<number | ''>('');
-  const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [sortBy, setSortBy] = useState<SortBy>('latest');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const [values, setValues] = useState<FilterValues>(INITIAL_VALUES);
 
-  const handleCategoryChange = (cat: 'all' | Product['category']) => {
-    setCategory(cat);
-    onFilterChange({ category: cat, minPrice, maxPrice, sortBy, searchQuery, inStockOnly });
+  const update = (patch: Partial<FilterValues>) => {
+    const next = { ...values, ...patch };
+    setValues(next);
+    onFilterChange(next);
   };
 
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value === '' ? '' : Number(e.target.value);
-    setMinPrice(v);
-    onFilterChange({ category, minPrice: v, maxPrice, sortBy, searchQuery, inStockOnly });
-  };
+  const handleCategoryChange = (category: FilterValues['category']) =>
+    update({ category: category });
 
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value === '' ? '' : Number(e.target.value);
-    setMaxPrice(v);
-    onFilterChange({ category, minPrice, maxPrice: v, sortBy, searchQuery, inStockOnly });
-  };
+  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    update({ minPrice: e.target.value === '' ? '' : Number(e.target.value) });
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const v = e.target.value as SortBy;
-    setSortBy(v);
-    onFilterChange({ category, minPrice, maxPrice, sortBy: v, searchQuery, inStockOnly });
-  };
+  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    update({ maxPrice: e.target.value === '' ? '' : Number(e.target.value) });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setSearchQuery(v);
-    onFilterChange({ category, minPrice, maxPrice, sortBy, searchQuery: v, inStockOnly });
-  };
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
+    update({ sortBy: e.target.value as SortBy });
 
-  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.checked;
-    setInStockOnly(v);
-    onFilterChange({ category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly: v });
-  };
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    update({ searchQuery: e.target.value });
+
+  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) =>
+    update({ inStockOnly: e.target.checked });
 
   const handleResetFilters = () => {
-    setCategory('all');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('latest');
-    setSearchQuery('');
-    setInStockOnly(false);
-    onFilterChange({
-      category: 'all',
-      minPrice: '',
-      maxPrice: '',
-      sortBy: 'latest',
-      searchQuery: '',
-      inStockOnly: false,
-    });
+    setValues(INITIAL_VALUES);
+    onFilterChange(INITIAL_VALUES);
   };
 
   return (
@@ -80,7 +61,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.value}
-                className={category === cat.value ? 'active' : ''}
+                className={values.category === cat.value ? 'active' : ''}
                 onClick={() => handleCategoryChange(cat.value)}
               >
                 {cat.label}
@@ -95,7 +76,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
             <input
               type="number"
               placeholder="최소"
-              value={minPrice}
+              value={values.minPrice}
               onChange={handleMinPriceChange}
               min={0}
             />
@@ -103,7 +84,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
             <input
               type="number"
               placeholder="최대"
-              value={maxPrice}
+              value={values.maxPrice}
               onChange={handleMaxPriceChange}
               min={0}
             />
@@ -115,7 +96,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
           <label
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 400, fontSize: 13 }}
           >
-            <input type="checkbox" checked={inStockOnly} onChange={handleInStockToggle} />
+            <input type="checkbox" checked={values.inStockOnly} onChange={handleInStockToggle} />
             재고 있는 것만
           </label>
         </div>
@@ -129,11 +110,11 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
         <input
           type="search"
           placeholder="상품 검색..."
-          value={searchQuery}
+          value={values.searchQuery}
           onChange={handleSearchChange}
           className="search-input"
         />
-        <select value={sortBy} onChange={handleSortChange}>
+        <select value={values.sortBy} onChange={handleSortChange}>
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
