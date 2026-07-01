@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FilterValues, SortBy } from '../types';
 import { CATEGORIES, SORT_OPTIONS } from '../types';
+import { INITIAL_FILTER_VALUES } from '../hooks/useProductList';
 
 type FilterSectionProps = {
   /** 필터 값이 바뀔 때 호출 (viewMode 제외) */
@@ -11,17 +12,8 @@ type FilterSectionProps = {
   onViewModeChange: (mode: 'grid' | 'list') => void;
 };
 
-const INITIAL_VALUES: FilterValues = {
-  category: 'all',
-  minPrice: '',
-  maxPrice: '',
-  sortBy: 'latest',
-  searchQuery: '',
-  inStockOnly: false,
-};
-
 export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: FilterSectionProps) {
-  const [values, setValues] = useState<FilterValues>(INITIAL_VALUES);
+  const [values, setValues] = useState<FilterValues>(INITIAL_FILTER_VALUES);
 
   const update = (patch: Partial<FilterValues>) => {
     const next = { ...values, ...patch };
@@ -48,8 +40,8 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
     update({ inStockOnly: e.target.checked });
 
   const handleResetFilters = () => {
-    setValues(INITIAL_VALUES);
-    onFilterChange(INITIAL_VALUES);
+    setValues(INITIAL_FILTER_VALUES);
+    onFilterChange(INITIAL_FILTER_VALUES);
   };
 
   return (

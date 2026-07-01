@@ -1,60 +1,22 @@
 import { useState, useEffect } from 'react';
 import './ProductListPage.css';
-import type { ProductListResponse, FilterValues } from './types';
+import type { FilterValues } from './types';
 import { PAGE_SIZE } from './types';
 import { FilterSection } from './section/FilterSection';
 import { ProductSection } from './section/ProductSection';
 import { PaginationSection } from './section/PaginationSection';
-
-const INITIAL_FILTER: FilterValues = {
-  category: 'all',
-  minPrice: '',
-  maxPrice: '',
-  sortBy: 'latest',
-  searchQuery: '',
-  inStockOnly: false,
-};
+import { useWishList } from './hooks/useWishList';
+import { useProductList, INITIAL_FILTER_VALUES } from './hooks/useProductList';
 
 export function ProductListPage() {
-  const [filterValues, setFilterValues] = useState<FilterValues>(INITIAL_FILTER);
+  const { wishlist, toggleWishlist } = useWishList();
+  const [filterValues, setFilterValues] = useState<FilterValues>(INITIAL_FILTER_VALUES);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
 
-  const [products, setProducts] = useState<ProductListResponse['products']>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { products, totalCount, isLoading, error } = useProductList(filterValues, page);
 
   const { category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly } = filterValues;
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        category,
-        sort: sortBy,
-        q: searchQuery,
-        page: String(page),
-        size: String(PAGE_SIZE),
-      });
-      if (minPrice !== '') params.set('minPrice', String(minPrice));
-      if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-      if (inStockOnly) params.set('inStock', 'true');
-      try {
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error(`API 호출 실패 (status: ${res.status})`);
-        const data: ProductListResponse = await res.json();
-        setProducts(data.products);
-        setTotalCount(data.totalCount);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
-  }, [category, minPrice, maxPrice, sortBy, searchQuery, page, inStockOnly]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -72,13 +34,11 @@ export function ProductListPage() {
     window.history.replaceState(null, '', `?${params.toString()}`);
   }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
 
-  /* AI-generated */
   const handleFilterChange = (values: FilterValues) => {
     setFilterValues(values);
     setPage(1);
   };
 
-  /* AI-generated */
   const handlePageChange = (next: number) => {
     setPage(next);
   };
@@ -104,8 +64,7 @@ export function ProductListPage() {
         <h1>상품 목록</h1>
         <p className="total-count">
           총 {totalCount.toLocaleString()}개의 상품
-          {/* wishlist가 ProductSection 내부로 이동하면서 임시 주석 처리 */}
-          {/* {wishlist.length > 0 && <span> · 위시리스트 {wishlist.length}개</span>} */}
+          {wishlist.length > 0 && <span> · 위시리스트 {wishlist.length}개</span>}
         </p>
       </header>
 
@@ -120,6 +79,8 @@ export function ProductListPage() {
         searchQuery={searchQuery}
         viewMode={viewMode}
         isLoading={isLoading}
+        wishlist={wishlist}
+        onWishlistToggle={toggleWishlist}
       />
 
       <PaginationSection page={page} totalPages={totalPages} onPageChange={handlePageChange} />

@@ -12,18 +12,20 @@ type ProductGridProps = {
   viewMode: 'grid' | 'list';
   /** 백그라운드 로딩 여부 */
   isLoading: boolean;
+  /** 위시리스트 상품 ID 목록 */
+  wishlist: number[];
+  /** 위시리스트 토글 시 호출 */
+  onWishlistToggle: (id: number) => void;
 };
 
-export function ProductSection({ products, searchQuery, viewMode, isLoading }: ProductGridProps) {
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
+export function ProductSection({
+  products,
+  searchQuery,
+  viewMode,
+  isLoading,
+  wishlist,
+  onWishlistToggle,
+}: ProductGridProps) {
   const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() => {
     try {
       const stored = localStorage.getItem('recentlyViewed');
@@ -35,25 +37,11 @@ export function ProductSection({ products, searchQuery, viewMode, isLoading }: P
 
   useEffect(() => {
     try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
-  }, [wishlist]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
     } catch {
       // localStorage 사용 불가 시 무시
     }
   }, [recentlyViewed]);
-
-  const handleWishlistToggle = (productId: number) => {
-    setWishlist((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
-    );
-  };
 
   const handleProductClick = (productId: number) => {
     setRecentlyViewed((prev) => {
@@ -77,7 +65,7 @@ export function ProductSection({ products, searchQuery, viewMode, isLoading }: P
               product={product}
               searchQuery={searchQuery}
               isWished={wishlist.includes(product.id)}
-              onWishlistToggle={handleWishlistToggle}
+              onWishlistToggle={onWishlistToggle}
               onClick={handleProductClick}
             />
           ))
