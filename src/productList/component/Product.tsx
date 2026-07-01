@@ -8,6 +8,7 @@ import {
   NEW_PRODUCT_DAYS,
   MS_PER_DAY,
 } from '../types';
+import { getPriceText } from '@/utils.ts';
 
 type ProductProps = {
   /** 렌더링할 상품 */
@@ -32,10 +33,8 @@ export function Product({
   const discountRate = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
-  const formattedPrice = product.price.toLocaleString() + '원';
-  const formattedOriginal = product.originalPrice
-    ? product.originalPrice.toLocaleString() + '원'
-    : null;
+  const formattedPrice = getPriceText(product.price);
+  const formattedOriginal = product.originalPrice ? getPriceText(product.originalPrice) : null;
   const isAlmostSoldOut = product.stock > 0 && product.stock <= ALMOST_SOLD_OUT_STOCK;
   const isSoldOut = product.stock === 0;
   const isHot = discountRate >= HOT_DISCOUNT_RATE;

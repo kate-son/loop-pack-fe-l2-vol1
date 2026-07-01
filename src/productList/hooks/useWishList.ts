@@ -1,21 +1,11 @@
 import { useEffect, useState } from 'react';
+import { getLocalStorage, setLocalStorage } from '../../utils';
 
 export function useWishList() {
-  const [wishlist, setWishlist] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('wishlist');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [wishlist, setWishlist] = useState<number[]>(() => getLocalStorage('wishlist', []));
 
   useEffect(() => {
-    try {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    } catch {
-      // localStorage 사용 불가 시 무시
-    }
+    setLocalStorage('wishlist', wishlist);
   }, [wishlist]);
 
   const toggleWishlist = (productId: number) => {

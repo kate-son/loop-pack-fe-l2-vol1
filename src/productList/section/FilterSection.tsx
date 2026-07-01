@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ChangeEvent, useState } from 'react';
 import type { FilterValues, SortBy } from '../types';
 import { CATEGORIES, SORT_OPTIONS } from '../types';
 import { INITIAL_FILTER_VALUES } from '../hooks/useProductList';
@@ -24,19 +24,19 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
   const handleCategoryChange = (category: FilterValues['category']) =>
     update({ category: category });
 
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleMinPriceChange = (e: ChangeEvent<HTMLInputElement>) =>
     update({ minPrice: e.target.value === '' ? '' : Number(e.target.value) });
 
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleMaxPriceChange = (e: ChangeEvent<HTMLInputElement>) =>
     update({ maxPrice: e.target.value === '' ? '' : Number(e.target.value) });
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
+  const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) =>
     update({ sortBy: e.target.value as SortBy });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) =>
     update({ searchQuery: e.target.value });
 
-  const handleInStockToggle = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleInStockToggle = (e: ChangeEvent<HTMLInputElement>) =>
     update({ inStockOnly: e.target.checked });
 
   const handleResetFilters = () => {

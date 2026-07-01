@@ -7,6 +7,7 @@ import { ProductSection } from './section/ProductSection';
 import { PaginationSection } from './section/PaginationSection';
 import { useWishList } from './hooks/useWishList';
 import { useProductList, INITIAL_FILTER_VALUES } from './hooks/useProductList';
+import { buildSearchParams } from './utils';
 
 export function ProductListPage() {
   const { wishlist, toggleWishlist } = useWishList();
@@ -16,23 +17,15 @@ export function ProductListPage() {
 
   const { products, totalCount, isLoading, error } = useProductList(filterValues, page);
 
-  const { category, minPrice, maxPrice, sortBy, searchQuery, inStockOnly } = filterValues;
+  const { searchQuery } = filterValues;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (category !== 'all') params.set('category', category);
-    if (searchQuery) params.set('q', searchQuery);
-    if (page > 1) params.set('page', String(page));
-    if (sortBy !== 'latest') params.set('sort', sortBy);
-    if (minPrice !== '') params.set('minPrice', String(minPrice));
-    if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
-    if (inStockOnly) params.set('inStock', 'true');
-    window.history.replaceState(null, '', `?${params.toString()}`);
-  }, [category, searchQuery, page, sortBy, minPrice, maxPrice, inStockOnly]);
+    window.history.replaceState(null, '', `?${buildSearchParams(filterValues, page)}`);
+  }, [filterValues, page]);
 
   const handleFilterChange = (values: FilterValues) => {
     setFilterValues(values);
