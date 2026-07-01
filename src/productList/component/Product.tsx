@@ -48,7 +48,9 @@ export function Product({
 
   const highlightMatch = (text: string) => {
     if (!searchQuery) return <>{text}</>;
-    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+    const parts = text.split(
+      new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+    );
     return (
       <>
         {parts.map((part, i) =>
