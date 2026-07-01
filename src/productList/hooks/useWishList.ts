@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getLocalStorage, setLocalStorage } from '../../utils';
+import { getLocalStorage, setLocalStorage } from '@/utils.ts';
 
 export function useWishList() {
   const [wishlist, setWishlist] = useState<number[]>(() => getLocalStorage('wishlist', []));
 
   useEffect(() => {
-    setLocalStorage('wishlist', wishlist);
+    setLocalStorage<number[]>('wishlist', wishlist);
   }, [wishlist]);
 
   const toggleWishlist = (productId: number) => {

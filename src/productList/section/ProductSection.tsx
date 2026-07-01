@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
 import type { Product } from '../types';
-import { MAX_RECENTLY_VIEWED } from '../types';
 import { Product as ProductCard } from '../component/Product';
-import { getLocalStorage, setLocalStorage } from '@/utils.ts';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
 type ProductGridProps = {
   /** 렌더링할 상품 목록 */
@@ -27,19 +25,10 @@ export function ProductSection({
   wishlist,
   onWishlistToggle,
 }: ProductGridProps) {
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>(() =>
-    getLocalStorage('recentlyViewed', []),
-  );
-
-  useEffect(() => {
-    setLocalStorage('recentlyViewed', recentlyViewed);
-  }, [recentlyViewed]);
+  const { addRecentlyViewed } = useRecentlyViewed();
 
   const handleProductClick = (productId: number) => {
-    setRecentlyViewed((prev) => {
-      const without = prev.filter((id) => id !== productId);
-      return [productId, ...without].slice(0, MAX_RECENTLY_VIEWED);
-    });
+    addRecentlyViewed(productId);
   };
 
   return (
