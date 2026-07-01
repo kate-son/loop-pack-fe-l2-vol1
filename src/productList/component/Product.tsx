@@ -1,14 +1,6 @@
 import type { Product as ProductType } from '../types';
-import {
-  HOT_DISCOUNT_RATE,
-  BEST_MIN_RATING,
-  BEST_MIN_REVIEW_COUNT,
-  FREE_SHIPPING_THRESHOLD,
-  ALMOST_SOLD_OUT_STOCK,
-  NEW_PRODUCT_DAYS,
-  MS_PER_DAY,
-} from '../types';
-import { getPriceText } from '@/utils.ts';
+import { useProduct } from '../hooks/useProduct';
+import { highlightMatch } from '@/utils.ts';
 
 type ProductProps = {
   /** 렌더링할 상품 */
@@ -30,40 +22,17 @@ export function Product({
   onWishlistToggle,
   onClick,
 }: ProductProps) {
-  const discountRate = product.originalPrice
-    ? Math.round((1 - product.price / product.originalPrice) * 100)
-    : 0;
-  const formattedPrice = getPriceText(product.price);
-  const formattedOriginal = product.originalPrice ? getPriceText(product.originalPrice) : null;
-  const isAlmostSoldOut = product.stock > 0 && product.stock <= ALMOST_SOLD_OUT_STOCK;
-  const isSoldOut = product.stock === 0;
-  const isHot = discountRate >= HOT_DISCOUNT_RATE;
-  const isBest = product.rating >= BEST_MIN_RATING && product.reviewCount >= BEST_MIN_REVIEW_COUNT;
-  const isFreeShipping = product.price >= FREE_SHIPPING_THRESHOLD;
-  const daysSinceCreated = Math.floor(
-    (new Date().getTime() - new Date(product.createdAt).getTime()) / MS_PER_DAY,
-  );
-  const isNew = daysSinceCreated <= NEW_PRODUCT_DAYS;
-
-  const highlightMatch = (text: string) => {
-    if (!searchQuery) return <>{text}</>;
-    const parts = text.split(
-      new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-    );
-    return (
-      <>
-        {parts.map((part, i) =>
-          part.toLowerCase() === searchQuery.toLowerCase() ? (
-            <mark key={i} style={{ background: '#fff176', padding: 0 }}>
-              {part}
-            </mark>
-          ) : (
-            part
-          ),
-        )}
-      </>
-    );
-  };
+  const {
+    discountRate,
+    formattedPrice,
+    formattedOriginal,
+    isSoldOut,
+    isAlmostSoldOut,
+    isHot,
+    isBest,
+    isFreeShipping,
+    isNew,
+  } = useProduct(product);
 
   return (
     <article className="product-card" onClick={() => onClick(product.id)}>
@@ -78,7 +47,19 @@ export function Product({
       </div>
 
       <div className="card-body">
-        <h3 className="product-name">{highlightMatch(product.name)}</h3>
+        <h3 className="product-name">
+          <>
+            {highlightMatch(product.name, searchQuery).map((part: string, i: number) =>
+              part.toLowerCase() === searchQuery.toLowerCase() ? (
+                <mark key={i} style={{ background: '#fff176', padding: 0 }}>
+                  {part}
+                </mark>
+              ) : (
+                part
+              ),
+            )}
+          </>
+        </h3>
         <div className="price-area">
           {formattedOriginal && <span className="original-price">{formattedOriginal}</span>}
           <span className="price">{formattedPrice}</span>

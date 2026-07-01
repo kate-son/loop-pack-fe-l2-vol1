@@ -18,3 +18,8 @@ export function setLocalStorage<T>(key: string, value: T): void {
     // localStorage 사용 불가 시 무시
   }
 }
+
+export function highlightMatch(text: string, searchQuery: string): string[] {
+  if (!searchQuery) return [text];
+  return text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+}
