@@ -1,27 +1,18 @@
 import type { Product as ProductType } from '../types';
 import { useProduct } from '../hooks/useProduct';
 import { highlightMatch } from '@/common/utils/utils.ts';
+import { useProductListStore } from '../store/productListStore';
 
 type ProductProps = {
   /** 렌더링할 상품 */
   product: ProductType;
   /** 검색어 하이라이팅용 */
   searchQuery: string;
-  /** 위시리스트 포함 여부 */
-  isWished: boolean;
-  /** 위시리스트 토글 시 호출 */
-  onWishlistToggle: (id: number) => void;
-  /** 상품 클릭 시 호출 */
-  onClick: (id: number) => void;
 };
 
-export function Product({
-  product,
-  searchQuery,
-  isWished,
-  onWishlistToggle,
-  onClick,
-}: ProductProps) {
+export function Product({ product, searchQuery }: ProductProps) {
+  const { toggleWishlist, addRecentlyViewed, wishlist } = useProductListStore();
+  const isWished = wishlist.includes(product.id);
   const {
     discountRate,
     formattedPrice,
@@ -35,7 +26,7 @@ export function Product({
   } = useProduct(product);
 
   return (
-    <article className="product-card" onClick={() => onClick(product.id)}>
+    <article className="product-card" onClick={() => addRecentlyViewed(product.id)}>
       <div className="image-wrap">
         <img src={product.imageUrl} alt={product.name} loading="lazy" />
         {discountRate > 0 && <span className="badge badge-discount">{discountRate}% 할인</span>}
@@ -82,7 +73,7 @@ export function Product({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              onWishlistToggle(product.id);
+              toggleWishlist(product.id);
             }}
             aria-label="위시리스트 토글"
           >

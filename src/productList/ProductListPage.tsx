@@ -5,8 +5,8 @@ import { PAGE_SIZE } from './types';
 import { FilterSection } from './section/FilterSection';
 import { ProductSection } from './section/ProductSection';
 import { PaginationSection } from './section/PaginationSection';
-import { useWishList } from './hooks/useWishList';
 import { useProductList } from './hooks/useProductList';
+import { useProductListStore } from './store/productListStore';
 
 const buildSearchParams = (filter: FilterValues, page: number): URLSearchParams => {
   const params = new URLSearchParams();
@@ -30,7 +30,7 @@ const INITIAL_FILTER_VALUES: FilterValues = {
 };
 
 export function ProductListPage() {
-  const { wishlist, toggleWishlist } = useWishList();
+  const { wishlist } = useProductListStore();
   const [filterValues, setFilterValues] = useState<FilterValues>(INITIAL_FILTER_VALUES);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
@@ -89,16 +89,13 @@ export function ProductListPage() {
         onViewModeChange={setViewMode}
       />
 
-      <ProductSection
-        products={products}
-        searchQuery={searchQuery}
-        viewMode={viewMode}
-        isLoading={isLoading}
-        wishlist={wishlist}
-        onWishlistToggle={toggleWishlist}
-      />
+      <ProductSection products={products} searchQuery={searchQuery} viewMode={viewMode} />
 
       <PaginationSection page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+
+      {isLoading && products.length > 0 && (
+        <div className="background-loading">데이터 갱신 중...</div>
+      )}
     </div>
   );
 }

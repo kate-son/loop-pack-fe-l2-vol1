@@ -1,6 +1,5 @@
 import type { Product } from '../types';
 import { Product as ProductCard } from '../component/Product';
-import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
 type ProductGridProps = {
   /** 렌더링할 상품 목록 */
@@ -9,53 +8,21 @@ type ProductGridProps = {
   searchQuery: string;
   /** 그리드/리스트 보기 모드 */
   viewMode: 'grid' | 'list';
-  /** 백그라운드 로딩 여부 */
-  isLoading: boolean;
-  /** 위시리스트 상품 ID 목록 */
-  wishlist: number[];
-  /** 위시리스트 토글 시 호출 */
-  onWishlistToggle: (id: number) => void;
 };
 
-export function ProductSection({
-  products,
-  searchQuery,
-  viewMode,
-  isLoading,
-  wishlist,
-  onWishlistToggle,
-}: ProductGridProps) {
-  const { addRecentlyViewed } = useRecentlyViewed();
-
-  const handleProductClick = (productId: number) => {
-    addRecentlyViewed(productId);
-  };
-
+export function ProductSection({ products, searchQuery, viewMode }: ProductGridProps) {
   return (
-    <>
-      <section
-        className="product-grid"
-        style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
-      >
-        {products.length === 0 ? (
-          <div className="empty">조건에 맞는 상품이 없습니다.</div>
-        ) : (
-          products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              searchQuery={searchQuery}
-              isWished={wishlist.includes(product.id)}
-              onWishlistToggle={onWishlistToggle}
-              onClick={handleProductClick}
-            />
-          ))
-        )}
-      </section>
-
-      {isLoading && products.length > 0 && (
-        <div className="background-loading">데이터 갱신 중...</div>
+    <section
+      className="product-grid"
+      style={viewMode === 'list' ? { gridTemplateColumns: '1fr' } : undefined}
+    >
+      {products.length === 0 ? (
+        <div className="empty">조건에 맞는 상품이 없습니다.</div>
+      ) : (
+        products.map((product) => (
+          <ProductCard key={product.id} product={product} searchQuery={searchQuery} />
+        ))
       )}
-    </>
+    </section>
   );
 }

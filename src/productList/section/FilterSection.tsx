@@ -1,6 +1,7 @@
 import { type ChangeEvent } from 'react';
 import type { FilterValues, SortBy } from '../types';
 import { CATEGORIES, SORT_OPTIONS } from '../types';
+import { Checkbox } from '@/common/components/Checkbox';
 
 type FilterSectionProps = {
   /** 필터 값 */
@@ -90,12 +91,11 @@ export function FilterSection({
 
         <div className="filter-group">
           <label>옵션</label>
-          <label
-            style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 400, fontSize: 13 }}
-          >
-            <input type="checkbox" checked={filter.inStockOnly} onChange={handleInStockToggle} />
-            재고 있는 것만
-          </label>
+          <Checkbox
+            caption="재고 있는 것만"
+            checked={filter.inStockOnly}
+            onChange={handleInStockToggle}
+          />
         </div>
 
         <button className="reset-button" onClick={handleResetFilters}>
