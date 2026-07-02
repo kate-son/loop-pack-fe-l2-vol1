@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Section } from '@/common/components/Section.tsx';
 import { Checkbox } from '@/common/components/Checkbox.tsx';
-import { getPriceText } from '../../common/utils/utils.ts';
+import { getPriceText } from '@/common/utils/utils.ts';
 
 type PointSectionProps = {
   /** 보유 적립금 */

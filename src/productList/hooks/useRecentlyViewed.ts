@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getLocalStorage, setLocalStorage } from '../../common/utils/utils.ts';
+import { getLocalStorage, setLocalStorage } from '@/common/utils/utils.ts';
 import { MAX_RECENTLY_VIEWED } from '../types';
 
 /* AI-generated */

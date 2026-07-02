@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getLocalStorage, setLocalStorage } from '../../common/utils/utils.ts';
+import { getLocalStorage, setLocalStorage } from '@/common/utils/utils.ts';
 
 export function useWishList() {
   const [wishlist, setWishlist] = useState<number[]>(() => getLocalStorage('wishlist', []));
