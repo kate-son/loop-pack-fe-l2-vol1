@@ -7,7 +7,7 @@ type ProductProps = {
   /** 렌더링할 상품 */
   product: ProductType;
   /** 검색어 하이라이팅용 */
-  searchQuery: string;
+  searchQuery?: string;
 };
 
 export function Product({ product, searchQuery }: ProductProps) {
@@ -40,8 +40,8 @@ export function Product({ product, searchQuery }: ProductProps) {
       <div className="card-body">
         <h3 className="product-name">
           <>
-            {highlightMatch(product.name, searchQuery).map((part: string, i: number) =>
-              part.toLowerCase() === searchQuery.toLowerCase() ? (
+            {highlightMatch(product.name, searchQuery || '').map((part: string, i: number) =>
+              part.toLowerCase() === (searchQuery || '').toLowerCase() ? (
                 <mark key={i} style={{ background: '#fff176', padding: 0 }}>
                   {part}
                 </mark>
