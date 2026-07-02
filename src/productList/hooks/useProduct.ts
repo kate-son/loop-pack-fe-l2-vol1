@@ -8,7 +8,7 @@ import {
   NEW_PRODUCT_DAYS,
   MS_PER_DAY,
 } from '../types';
-import { getPriceText } from '@/utils.ts';
+import { getPriceText } from '../../common/utils/utils.ts';
 
 export function useProduct(product: Product) {
   const discountRate = product.originalPrice

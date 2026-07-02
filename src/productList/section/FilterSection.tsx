@@ -1,9 +1,12 @@
-import { type ChangeEvent, useState } from 'react';
+import { type ChangeEvent } from 'react';
 import type { FilterValues, SortBy } from '../types';
 import { CATEGORIES, SORT_OPTIONS } from '../types';
-import { INITIAL_FILTER_VALUES } from '../hooks/useProductList';
 
 type FilterSectionProps = {
+  /** 필터 값 */
+  filter: FilterValues;
+  /** 필터 초기값 (초기화 버튼 클릭 시 사용) */
+  initialValues: FilterValues;
   /** 필터 값이 바뀔 때 호출 (viewMode 제외) */
   onFilterChange: (values: FilterValues) => void;
   /** 보기 모드 현재 값 */
@@ -12,12 +15,15 @@ type FilterSectionProps = {
   onViewModeChange: (mode: 'grid' | 'list') => void;
 };
 
-export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: FilterSectionProps) {
-  const [values, setValues] = useState<FilterValues>(INITIAL_FILTER_VALUES);
-
+export function FilterSection({
+  filter,
+  initialValues,
+  onFilterChange,
+  viewMode,
+  onViewModeChange,
+}: FilterSectionProps) {
   const update = (patch: Partial<FilterValues>) => {
-    const next = { ...values, ...patch };
-    setValues(next);
+    const next = { ...filter, ...patch };
     onFilterChange(next);
   };
 
@@ -40,8 +46,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
     update({ inStockOnly: e.target.checked });
 
   const handleResetFilters = () => {
-    setValues(INITIAL_FILTER_VALUES);
-    onFilterChange(INITIAL_FILTER_VALUES);
+    onFilterChange(initialValues);
   };
 
   return (
@@ -53,7 +58,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.value}
-                className={values.category === cat.value ? 'active' : ''}
+                className={filter.category === cat.value ? 'active' : ''}
                 onClick={() => handleCategoryChange(cat.value)}
               >
                 {cat.label}
@@ -68,7 +73,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
             <input
               type="number"
               placeholder="최소"
-              value={values.minPrice}
+              value={filter.minPrice}
               onChange={handleMinPriceChange}
               min={0}
             />
@@ -76,7 +81,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
             <input
               type="number"
               placeholder="최대"
-              value={values.maxPrice}
+              value={filter.maxPrice}
               onChange={handleMaxPriceChange}
               min={0}
             />
@@ -88,7 +93,7 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
           <label
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 400, fontSize: 13 }}
           >
-            <input type="checkbox" checked={values.inStockOnly} onChange={handleInStockToggle} />
+            <input type="checkbox" checked={filter.inStockOnly} onChange={handleInStockToggle} />
             재고 있는 것만
           </label>
         </div>
@@ -102,11 +107,11 @@ export function FilterSection({ onFilterChange, viewMode, onViewModeChange }: Fi
         <input
           type="search"
           placeholder="상품 검색..."
-          value={values.searchQuery}
+          value={filter.searchQuery}
           onChange={handleSearchChange}
           className="search-input"
         />
-        <select value={values.sortBy} onChange={handleSortChange}>
+        <select value={filter.sortBy} onChange={handleSortChange}>
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

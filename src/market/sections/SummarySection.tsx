@@ -1,4 +1,4 @@
-import { getPriceText } from '@/utils.ts';
+import { getPriceText } from '../../common/utils/utils.ts';
 import { Section } from '@/common/components/Section.tsx';
 import { LineRow } from '@/common/components/LineRow.tsx';
 import { PriceInfo } from '@/common/components/PriceInfo.tsx';

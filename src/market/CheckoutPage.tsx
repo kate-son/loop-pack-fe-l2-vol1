@@ -12,7 +12,7 @@ import { TermsSection } from '@/market/sections/TermsSection';
 import { RecentOrdersSection } from '@/market/sections/RecentOrdersSection';
 import '@/market/market.css';
 import { AddressSection } from './sections/AddressSection';
-import { getPriceText } from '@/utils.ts';
+import { getPriceText } from '../common/utils/utils.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
 import { useCheckout } from './hooks/useCheckout';
 import type { Address } from '@/market/types';

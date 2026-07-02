@@ -1,4 +1,4 @@
-import { getPriceText } from '@/utils.ts';
+import { getPriceText } from '../common/utils/utils.ts';
 
 type CheckoutCompleteProps = {
   finalPrice: number;

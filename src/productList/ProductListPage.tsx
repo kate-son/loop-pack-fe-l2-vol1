@@ -6,7 +6,7 @@ import { FilterSection } from './section/FilterSection';
 import { ProductSection } from './section/ProductSection';
 import { PaginationSection } from './section/PaginationSection';
 import { useWishList } from './hooks/useWishList';
-import { useProductList, INITIAL_FILTER_VALUES } from './hooks/useProductList';
+import { useProductList } from './hooks/useProductList';
 
 const buildSearchParams = (filter: FilterValues, page: number): URLSearchParams => {
   const params = new URLSearchParams();
@@ -18,6 +18,15 @@ const buildSearchParams = (filter: FilterValues, page: number): URLSearchParams 
   if (filter.maxPrice !== '') params.set('maxPrice', String(filter.maxPrice));
   if (filter.inStockOnly) params.set('inStock', 'true');
   return params;
+};
+
+const INITIAL_FILTER_VALUES: FilterValues = {
+  category: 'all',
+  minPrice: '',
+  maxPrice: '',
+  sortBy: 'latest',
+  searchQuery: '',
+  inStockOnly: false,
 };
 
 export function ProductListPage() {
@@ -73,6 +82,8 @@ export function ProductListPage() {
       </header>
 
       <FilterSection
+        filter={filterValues}
+        initialValues={INITIAL_FILTER_VALUES}
         onFilterChange={handleFilterChange}
         viewMode={viewMode}
         onViewModeChange={setViewMode}

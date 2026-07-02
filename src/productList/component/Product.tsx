@@ -1,6 +1,6 @@
 import type { Product as ProductType } from '../types';
 import { useProduct } from '../hooks/useProduct';
-import { highlightMatch } from '@/utils.ts';
+import { highlightMatch } from '../../common/utils/utils.ts';
 
 type ProductProps = {
   /** 렌더링할 상품 */
