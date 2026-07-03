@@ -43,10 +43,6 @@ export function ProductListPage() {
   const { searchQuery } = filterValues;
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [page]);
-
-  useEffect(() => {
     window.history.replaceState(null, '', `?${buildSearchParams(filterValues, page)}`);
   }, [filterValues, page]);
 

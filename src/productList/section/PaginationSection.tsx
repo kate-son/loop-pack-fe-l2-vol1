@@ -1,5 +1,6 @@
 import { PAGINATION_RANGE } from '../types';
 import { getPageNumbers } from '@/common/utils/utils.ts';
+import { useEffect } from 'react';
 
 type PaginationProps = {
   /** 현재 페이지 */
@@ -11,6 +12,10 @@ type PaginationProps = {
 };
 
 export function PaginationSection({ page, totalPages, onPageChange }: PaginationProps) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
+
   if (totalPages <= 1) return null;
 
   const pageNumbers = getPageNumbers(page, totalPages, PAGINATION_RANGE);
