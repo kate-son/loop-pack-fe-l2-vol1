@@ -1,4 +1,5 @@
 import { PAGINATION_RANGE } from '../types';
+import { getPageNumbers } from '@/common/utils/utils.ts';
 
 type PaginationProps = {
   /** 현재 페이지 */
@@ -10,12 +11,9 @@ type PaginationProps = {
 };
 
 export function PaginationSection({ page, totalPages, onPageChange }: PaginationProps) {
-  const startPage = Math.max(1, page - PAGINATION_RANGE);
-  const endPage = Math.min(totalPages, page + PAGINATION_RANGE);
-  const pageNumbers: number[] = [];
-  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
-
   if (totalPages <= 1) return null;
+
+  const pageNumbers = getPageNumbers(page, totalPages, PAGINATION_RANGE);
 
   return (
     <nav className="pagination">

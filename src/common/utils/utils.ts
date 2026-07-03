@@ -43,3 +43,17 @@ export function highlightMatch(text: string, searchQuery: string): string[] {
   if (!searchQuery) return [text];
   return text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
 }
+
+/**
+ * 현재 페이지 기준으로 표시할 페이지 번호 목록 계산
+ * @param page 현재 페이지
+ * @param totalPages 전체 페이지 수
+ * @param range 현재 페이지 앞뒤로 표시할 페이지 수
+ * */
+export function getPageNumbers(page: number, totalPages: number, range: number): number[] {
+  const startPage = Math.max(1, page - range);
+  const endPage = Math.min(totalPages, page + range);
+  const pageNumbers: number[] = [];
+  for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
+  return pageNumbers;
+}

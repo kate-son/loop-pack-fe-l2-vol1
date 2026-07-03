@@ -1,4 +1,4 @@
-import { type ChangeEvent } from 'react';
+import { useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import type { FilterValues, SortBy } from '../types';
 import { CATEGORIES, SORT_OPTIONS } from '../types';
 import { Checkbox } from '@/common/components/Checkbox';
@@ -23,31 +23,44 @@ export function FilterSection({
   viewMode,
   onViewModeChange,
 }: FilterSectionProps) {
+  const [draftSearchQuery, setDraftSearchQuery] = useState(filter.searchQuery);
+  const [draftMinPrice, setDraftMinPrice] = useState(filter.minPrice);
+  const [draftMaxPrice, setDraftMaxPrice] = useState(filter.maxPrice);
+
   const update = (patch: Partial<FilterValues>) => {
     const next = { ...filter, ...patch };
     onFilterChange(next);
   };
 
-  const handleCategoryChange = (category: FilterValues['category']) =>
-    update({ category: category });
+  const handleCategoryChange = (category: FilterValues['category']) => update({ category });
 
   const handleMinPriceChange = (e: ChangeEvent<HTMLInputElement>) =>
-    update({ minPrice: e.target.value === '' ? '' : Number(e.target.value) });
+    setDraftMinPrice(e.target.value === '' ? '' : Number(e.target.value));
 
   const handleMaxPriceChange = (e: ChangeEvent<HTMLInputElement>) =>
-    update({ maxPrice: e.target.value === '' ? '' : Number(e.target.value) });
+    setDraftMaxPrice(e.target.value === '' ? '' : Number(e.target.value));
 
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) =>
     update({ sortBy: e.target.value as SortBy });
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) =>
-    update({ searchQuery: e.target.value });
+    setDraftSearchQuery(e.target.value);
+
+  const handleSearchSubmit = () =>
+    update({ searchQuery: draftSearchQuery, minPrice: draftMinPrice, maxPrice: draftMaxPrice });
+
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSearchSubmit();
+  };
 
   const handleInStockToggle = (e: ChangeEvent<HTMLInputElement>) =>
     update({ inStockOnly: e.target.checked });
 
   const handleResetFilters = () => {
     onFilterChange(initialValues);
+    setDraftSearchQuery(initialValues.searchQuery);
+    setDraftMinPrice(initialValues.minPrice);
+    setDraftMaxPrice(initialValues.maxPrice);
   };
 
   return (
@@ -74,18 +87,23 @@ export function FilterSection({
             <input
               type="number"
               placeholder="최소"
-              value={filter.minPrice}
+              value={draftMinPrice}
               onChange={handleMinPriceChange}
+              onKeyDown={handleSearchKeyDown}
               min={0}
             />
             <span>~</span>
             <input
               type="number"
               placeholder="최대"
-              value={filter.maxPrice}
+              value={draftMaxPrice}
               onChange={handleMaxPriceChange}
+              onKeyDown={handleSearchKeyDown}
               min={0}
             />
+            <button className="search-button" onClick={handleSearchSubmit}>
+              적용
+            </button>
           </div>
         </div>
 
@@ -107,10 +125,14 @@ export function FilterSection({
         <input
           type="search"
           placeholder="상품 검색..."
-          value={filter.searchQuery}
+          value={draftSearchQuery}
           onChange={handleSearchChange}
+          onKeyDown={handleSearchKeyDown}
           className="search-input"
         />
+        <button className="search-button" onClick={handleSearchSubmit}>
+          검색
+        </button>
         <select value={filter.sortBy} onChange={handleSortChange}>
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
