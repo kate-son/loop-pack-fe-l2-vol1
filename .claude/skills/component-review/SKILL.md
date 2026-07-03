@@ -31,6 +31,21 @@ orderHeader.tsx | 검색 로직이 UI단에 있어 분리 필요
 const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 ```
 
+- ✅ prop으로 받은 값을 그대로 커밋하지 않고 임시로 들고 있다가 사용자 액션(제출/Enter 등)으로 반영하는 draft 상태는 계산·검증이 없다면 화면 제어 상태로 본다.
+  - 이 draft를 외부에서 바뀐 prop과 동기화해야 할 때는 `useEffect` 대신 렌더 중 이전 prop과 비교해 재설정하는 패턴을 쓴다 (React 공식 "Adjusting state when a prop changes" 패턴).
+  - 계산·검증이 없고 단일 컴포넌트에서만 쓰인다면 대전제에 따라 훅으로 분리하지 않는다.
+
+```text
+// ✅ draft 상태 + prop 변경 시 렌더 중 재동기화 (useEffect 아님)
+const [draftValue, setDraftValue] = useState(value);
+
+const [prevValue, setPrevValue] = useState(value);
+if (value !== prevValue) {
+  setPrevValue(value);
+  setDraftValue(value);
+}
+```
+
 - ❌ axios, fetch 직접 호출하면 안된다.
 - ❌ 비즈니스 로직이 존재하면 안된다.
   - 비즈니스 로직이란 : 필터 계산, 검색, 페이지네이션 로직 등...을 의미한다

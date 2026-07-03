@@ -27,6 +27,16 @@ export function FilterSection({
   const [draftMinPrice, setDraftMinPrice] = useState(filter.minPrice);
   const [draftMaxPrice, setDraftMaxPrice] = useState(filter.maxPrice);
 
+  /* AI-generated */
+  // filter가 FilterSection 외부에서 바뀌는 경우를 대비한 draft 동기화 (useEffect 없이 렌더 중 처리)
+  const [prevFilter, setPrevFilter] = useState(filter);
+  if (filter !== prevFilter) {
+    setPrevFilter(filter);
+    setDraftSearchQuery(filter.searchQuery);
+    setDraftMinPrice(filter.minPrice);
+    setDraftMaxPrice(filter.maxPrice);
+  }
+
   const update = (patch: Partial<FilterValues>) => {
     const next = { ...filter, ...patch };
     onFilterChange(next);
