@@ -18,6 +18,8 @@ export type ProductListResponse = {
 
 export type SortBy = 'latest' | 'popular' | 'price-asc' | 'price-desc';
 
+export type BadgeVariant = 'discount' | 'new' | 'hot' | 'best' | 'soldout' | 'warning';
+
 export type FilterValues = {
   category: 'all' | Product['category'];
   minPrice: number | '';

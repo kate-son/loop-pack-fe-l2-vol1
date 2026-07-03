@@ -2,6 +2,7 @@ import type { Product as ProductType } from '../types';
 import { useProduct } from '../hooks/useProduct';
 import { highlightMatch } from '@/common/utils/utils.ts';
 import { useProductListStore } from '../store/productListStore';
+import { Badge } from '@/common/components/Badge';
 
 type ProductProps = {
   /** 렌더링할 상품 */
@@ -13,28 +14,15 @@ type ProductProps = {
 export function Product({ product, searchQuery }: ProductProps) {
   const { toggleWishlist, addRecentlyViewed, wishlist } = useProductListStore();
   const isWished = wishlist.includes(product.id);
-  const {
-    discountRate,
-    formattedPrice,
-    formattedOriginal,
-    isSoldOut,
-    isAlmostSoldOut,
-    isHot,
-    isBest,
-    isFreeShipping,
-    isNew,
-  } = useProduct(product);
+  const { formattedPrice, formattedOriginal, isFreeShipping, badges } = useProduct(product);
 
   return (
     <article className="product-card" onClick={() => addRecentlyViewed(product.id)}>
       <div className="image-wrap">
         <img src={product.imageUrl} alt={product.name} loading="lazy" />
-        {discountRate > 0 && <span className="badge badge-discount">{discountRate}% 할인</span>}
-        {isNew && <span className="badge badge-new">NEW</span>}
-        {isHot && <span className="badge badge-hot">특가</span>}
-        {isBest && <span className="badge badge-best">BEST</span>}
-        {isSoldOut && <span className="badge badge-soldout">품절</span>}
-        {!isSoldOut && isAlmostSoldOut && <span className="badge badge-warning">품절 임박</span>}
+        {badges.map((badge) => (
+          <Badge key={badge.variant} label={badge.label} variant={badge.variant} />
+        ))}
       </div>
 
       <div className="card-body">

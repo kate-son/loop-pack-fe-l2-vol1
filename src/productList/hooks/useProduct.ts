@@ -1,4 +1,4 @@
-import type { Product } from '../types';
+import type { BadgeVariant, Product } from '../types';
 import {
   HOT_DISCOUNT_RATE,
   BEST_MIN_RATING,
@@ -26,6 +26,17 @@ export function useProduct(product: Product) {
   );
   const isNew = daysSinceCreated <= NEW_PRODUCT_DAYS;
 
+  const badges = (
+    [
+      discountRate > 0 && { variant: 'discount', label: `${discountRate}% 할인` },
+      isNew && { variant: 'new', label: 'NEW' },
+      isHot && { variant: 'hot', label: '특가' },
+      isBest && { variant: 'best', label: 'BEST' },
+      isSoldOut && { variant: 'soldout', label: '품절' },
+      !isSoldOut && isAlmostSoldOut && { variant: 'warning', label: '품절 임박' },
+    ] as const
+  ).filter((badge): badge is { variant: BadgeVariant; label: string } => Boolean(badge));
+
   return {
     discountRate,
     formattedPrice,
@@ -36,5 +47,6 @@ export function useProduct(product: Product) {
     isBest,
     isFreeShipping,
     isNew,
+    badges,
   };
 }
