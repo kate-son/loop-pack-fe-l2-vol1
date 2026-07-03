@@ -35,7 +35,10 @@ export function ProductListPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
 
-  const { products, totalCount, isLoading, error } = useProductList(filterValues, page);
+  const { products, totalCount, isLoading, isRefetching, error } = useProductList(
+    filterValues,
+    page,
+  );
 
   const { searchQuery } = filterValues;
 
@@ -93,9 +96,7 @@ export function ProductListPage() {
 
       <PaginationSection page={page} totalPages={totalPages} onPageChange={handlePageChange} />
 
-      {isLoading && products.length > 0 && (
-        <div className="background-loading">데이터 갱신 중...</div>
-      )}
+      {isRefetching && <div className="background-loading">데이터 갱신 중...</div>}
     </div>
   );
 }
