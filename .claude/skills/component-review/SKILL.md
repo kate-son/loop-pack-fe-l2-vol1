@@ -79,3 +79,18 @@ const fullName = `${firstName} ${lastName}`;
 - ❌ JSX 반환하면 안된다.
 - ❌ useState, useEffect 등 Hook 사용하면 안된다.
 - ❌ 외부 상태에 의존하면 안된다. (같은 입력인데 다른 출력이 나오는 것)
+
+### 순수 함수 판별 기준
+
+React Hook 사용 여부(useState, useEffect)가 아니라 **같은 입력에 항상 같은 출력이 보장되는가**로 판단한다.
+
+```text
+// ❌ 순수 함수가 아님 — new Date()로 인해 호출 시점마다 결과가 달라짐
+const isNew = (createdAt: string) => {
+  const days = (new Date().getTime() - new Date(createdAt).getTime()) / MS_PER_DAY;
+  return days <= NEW_PRODUCT_DAYS;
+};
+
+// ✅ 순수 함수 — 같은 입력이면 항상 같은 출력
+const formatPrice = (price: number) => price.toLocaleString() + '원';
+```
