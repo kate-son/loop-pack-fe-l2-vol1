@@ -17,7 +17,7 @@ export function useProductList(filter: FilterValues, page: number) {
   if (maxPrice !== '') params.set('maxPrice', String(maxPrice));
   if (inStockOnly) params.set('inStock', 'true');
 
-  const { data, isPending, isFetching, error } = useQuery({
+  const { data, isPending, isFetching, error, refetch } = useQuery({
     queryKey: ['productList', filter, page],
     queryFn: () => productService.getProductList(params),
   });
@@ -28,5 +28,6 @@ export function useProductList(filter: FilterValues, page: number) {
     isLoading: isPending,
     isRefetching: isFetching && !isPending,
     error,
+    refetch,
   };
 }

@@ -27,7 +27,7 @@ export function ProductListPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
 
-  const { products, totalCount, isLoading, isRefetching, error } = useProductList(
+  const { products, totalCount, isLoading, isRefetching, error, refetch } = useProductList(
     filterValues,
     page,
   );
@@ -62,7 +62,7 @@ export function ProductListPage() {
     return (
       <div className="error">
         <p>오류가 발생했습니다: {error.message}</p>
-        <button onClick={() => window.location.reload()}>다시 시도</button>
+        <button onClick={() => refetch()}>다시 시도</button>
       </div>
     );
   }
