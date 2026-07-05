@@ -54,3 +54,4 @@ export const FREE_SHIPPING_THRESHOLD = 50000;
 export const ALMOST_SOLD_OUT_STOCK = 5;
 export const PAGINATION_RANGE = 2;
 export const MS_PER_DAY = 1000 * 60 * 60 * 24;
+export const FILTER_DEBOUNCE_MS = 300;

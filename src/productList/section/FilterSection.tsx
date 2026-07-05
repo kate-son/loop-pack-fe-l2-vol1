@@ -1,6 +1,6 @@
-import { type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import type { FilterValues, SortBy } from '../types';
-import { CATEGORIES, SORT_OPTIONS } from '../types';
+import { CATEGORIES, FILTER_DEBOUNCE_MS, SORT_OPTIONS } from '../types';
 import { Checkbox } from '@/common/components/Checkbox';
 
 type FilterSectionProps = {
@@ -23,24 +23,54 @@ export function FilterSection({
   viewMode,
   onViewModeChange,
 }: FilterSectionProps) {
+  const [searchInput, setSearchInput] = useState(filter.searchQuery);
+  const [minPriceInput, setMinPriceInput] = useState(filter.minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState(filter.maxPrice);
+
+  const [prevFilter, setPrevFilter] = useState(filter);
+  if (filter !== prevFilter) {
+    setPrevFilter(filter);
+    setSearchInput(filter.searchQuery);
+    setMinPriceInput(filter.minPrice);
+    setMaxPriceInput(filter.maxPrice);
+  }
+
   const update = (patch: Partial<FilterValues>) => {
     const next = { ...filter, ...patch };
     onFilterChange(next);
   };
 
+  useEffect(() => {
+    const isUnchanged =
+      searchInput === filter.searchQuery &&
+      minPriceInput === filter.minPrice &&
+      maxPriceInput === filter.maxPrice;
+    if (isUnchanged) return;
+
+    const timer = setTimeout(() => {
+      onFilterChange({
+        ...filter,
+        searchQuery: searchInput,
+        minPrice: minPriceInput,
+        maxPrice: maxPriceInput,
+      });
+    }, FILTER_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, minPriceInput, maxPriceInput, filter, onFilterChange]);
+
   const handleCategoryChange = (category: FilterValues['category']) => update({ category });
 
   const handleMinPriceChange = (e: ChangeEvent<HTMLInputElement>) =>
-    update({ minPrice: e.target.value === '' ? '' : Number(e.target.value) });
+    setMinPriceInput(e.target.value === '' ? '' : Number(e.target.value));
 
   const handleMaxPriceChange = (e: ChangeEvent<HTMLInputElement>) =>
-    update({ maxPrice: e.target.value === '' ? '' : Number(e.target.value) });
+    setMaxPriceInput(e.target.value === '' ? '' : Number(e.target.value));
 
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) =>
     update({ sortBy: e.target.value as SortBy });
 
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) =>
-    update({ searchQuery: e.target.value });
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value);
 
   const handleInStockToggle = (e: ChangeEvent<HTMLInputElement>) =>
     update({ inStockOnly: e.target.checked });
@@ -69,7 +99,7 @@ export function FilterSection({
             <input
               type="number"
               placeholder="최소"
-              value={filter.minPrice}
+              value={minPriceInput}
               onChange={handleMinPriceChange}
               min={0}
             />
@@ -77,7 +107,7 @@ export function FilterSection({
             <input
               type="number"
               placeholder="최대"
-              value={filter.maxPrice}
+              value={maxPriceInput}
               onChange={handleMaxPriceChange}
               min={0}
             />
@@ -102,7 +132,7 @@ export function FilterSection({
         <input
           type="search"
           placeholder="상품 검색..."
-          value={filter.searchQuery}
+          value={searchInput}
           onChange={handleSearchChange}
           className="search-input"
         />
