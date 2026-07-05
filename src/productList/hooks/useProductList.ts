@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { FilterValues } from '../types';
 import { PAGE_SIZE } from '../types';
 import { productService } from '../services/productService';
@@ -20,6 +20,7 @@ export function useProductList(filter: FilterValues, page: number) {
   const { data, isPending, isFetching, error, refetch } = useQuery({
     queryKey: ['productList', filter, page],
     queryFn: () => productService.getProductList(params),
+    placeholderData: keepPreviousData,
   });
 
   return {

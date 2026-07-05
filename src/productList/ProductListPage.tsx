@@ -66,6 +66,10 @@ export function ProductListPage() {
     );
   }
 
+  if (page > totalPages) {
+    handlePageChange(1);
+  }
+
   return (
     <div className="product-list-page">
       <header className="page-header">

@@ -1,16 +1,16 @@
 import type { FilterValues, SortBy } from '@/productList/types.ts';
 import { useState } from 'react';
 
-export function useProductFilter() {
-  const INITIAL_FILTER_VALUES: FilterValues = {
-    category: 'all',
-    minPrice: '',
-    maxPrice: '',
-    sortBy: 'latest',
-    searchQuery: '',
-    inStockOnly: false,
-  };
+const INITIAL_FILTER_VALUES: FilterValues = {
+  category: 'all',
+  minPrice: '',
+  maxPrice: '',
+  sortBy: 'latest',
+  searchQuery: '',
+  inStockOnly: false,
+};
 
+export function useProductFilter() {
   const parseFilterFromURL = (): { filter: FilterValues; page: number } => {
     const params = new URLSearchParams(window.location.search);
     return {
