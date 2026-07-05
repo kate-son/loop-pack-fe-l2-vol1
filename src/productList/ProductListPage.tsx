@@ -23,16 +23,15 @@ const buildSearchParams = (filter: FilterValues, page: number): URLSearchParams 
 
 export function ProductListPage() {
   const { wishlist } = useProductListStore();
-  const { filterValues, applyFilters, resetFilter } = useProductFilter();
+  const { filterValues, applyFilters, resetFilter, parseFilterFromURL } = useProductFilter();
+  const { searchQuery } = filterValues;
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => parseFilterFromURL().page);
 
   const { products, totalCount, isLoading, isRefetching, error, refetch } = useProductList(
     filterValues,
     page,
   );
-
-  const { searchQuery } = filterValues;
 
   useEffect(() => {
     window.history.replaceState(null, '', `?${buildSearchParams(filterValues, page)}`);
