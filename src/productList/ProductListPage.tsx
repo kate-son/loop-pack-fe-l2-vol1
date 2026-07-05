@@ -7,6 +7,7 @@ import { ProductSection } from './section/ProductSection';
 import { PaginationSection } from './section/PaginationSection';
 import { useProductList } from './hooks/useProductList';
 import { useProductListStore } from './store/productListStore';
+import { useProductFilter } from '@/productList/hooks/useProductFilter.ts';
 
 const buildSearchParams = (filter: FilterValues, page: number): URLSearchParams => {
   const params = new URLSearchParams();
@@ -20,18 +21,9 @@ const buildSearchParams = (filter: FilterValues, page: number): URLSearchParams 
   return params;
 };
 
-const INITIAL_FILTER_VALUES: FilterValues = {
-  category: 'all',
-  minPrice: '',
-  maxPrice: '',
-  sortBy: 'latest',
-  searchQuery: '',
-  inStockOnly: false,
-};
-
 export function ProductListPage() {
   const { wishlist } = useProductListStore();
-  const [filterValues, setFilterValues] = useState<FilterValues>(INITIAL_FILTER_VALUES);
+  const { filterValues, applyFilters, resetFilter } = useProductFilter();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
 
@@ -46,13 +38,18 @@ export function ProductListPage() {
     window.history.replaceState(null, '', `?${buildSearchParams(filterValues, page)}`);
   }, [filterValues, page]);
 
+  const handlePageChange = (next: number) => {
+    setPage(next);
+  };
+
   const handleFilterChange = (values: FilterValues) => {
-    setFilterValues(values);
+    applyFilters(values);
     setPage(1);
   };
 
-  const handlePageChange = (next: number) => {
-    setPage(next);
+  const handleResetFilter = () => {
+    resetFilter();
+    setPage(1);
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -82,7 +79,7 @@ export function ProductListPage() {
 
       <FilterSection
         filter={filterValues}
-        initialValues={INITIAL_FILTER_VALUES}
+        onResetFilter={handleResetFilter}
         onFilterChange={handleFilterChange}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
