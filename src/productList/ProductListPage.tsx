@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './ProductListPage.css';
 import type { FilterValues } from './types';
 import { PAGE_SIZE } from './types';
@@ -33,8 +33,25 @@ export function ProductListPage() {
     page,
   );
 
+  const skipHistorySyncRef = useRef(false);
+
   useEffect(() => {
-    window.history.replaceState(null, '', `?${buildSearchParams(filterValues, page)}`);
+    const popState = () => {
+      const { filter, page: urlPage } = parseFilterFromURL();
+      skipHistorySyncRef.current = true;
+      applyFilters(filter);
+      setPage(urlPage);
+    };
+    window.addEventListener('popstate', popState);
+    return () => window.removeEventListener('popstate', popState);
+  }, [applyFilters, parseFilterFromURL]);
+
+  useEffect(() => {
+    if (skipHistorySyncRef.current) {
+      skipHistorySyncRef.current = false;
+      return;
+    }
+    window.history.pushState(null, '', `?${buildSearchParams(filterValues, page)}`);
   }, [filterValues, page]);
 
   const handlePageChange = (next: number) => {
