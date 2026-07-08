@@ -1,4 +1,4 @@
-export default {
+const commitlintConfig = {
   extends: ["@commitlint/config-conventional"],
   ignores: [(commit) => /^Merge branch/.test(commit)],
   rules: {
@@ -14,3 +14,5 @@ export default {
     "header-max-length": [2, "always", 72],
   },
 };
+
+export default commitlintConfig;
