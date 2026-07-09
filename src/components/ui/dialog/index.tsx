@@ -14,13 +14,8 @@
 'use client';
 
 import { DialogContext } from './context/context';
-import {
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { useDialog } from './hooks/useDialog';
 import { Trigger } from './components/trigger';
 import { Overlay } from './components/overlay';
 import { Content } from './components/content';
@@ -51,7 +46,6 @@ type DialogProps = (ControlledProps | UncontrolledProps) & {
   closeOnOutsideInteraction?: boolean;
 };
 
-/* AI-generated */
 export function Dialog({
   open,
   onOpenChange,
@@ -61,54 +55,16 @@ export function Dialog({
   onOverlayClick,
   closeOnOutsideInteraction = true,
 }: DialogProps) {
-  const isControlled = open !== undefined && onOpenChange !== undefined;
-  const [dialogOpen, setDialogOpen] = useState<boolean>(defaultOpen || false);
-  const mergedOpen = isControlled ? open : dialogOpen;
+  const contextValue = useDialog({
+    open,
+    onOpenChange,
+    defaultOpen,
+    onEscapeKeyDown,
+    onOverlayClick,
+    closeOnOutsideInteraction,
+  });
 
-  const handleOpenChange = useCallback(
-    (isOpen: boolean) => {
-      if (!isControlled) {
-        setDialogOpen(isOpen);
-      }
-      onOpenChange?.(isOpen);
-    },
-    [isControlled, onOpenChange],
-  );
-
-  useEffect(() => {
-    if (!mergedOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      onEscapeKeyDown?.(e);
-      if (!closeOnOutsideInteraction) return;
-      if (e.defaultPrevented) return;
-      handleOpenChange(false);
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [mergedOpen, onEscapeKeyDown, closeOnOutsideInteraction, handleOpenChange]);
-
-  useEffect(() => {
-    if (!mergedOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [mergedOpen]);
-
-  return (
-    <DialogContext
-      value={{
-        open: mergedOpen,
-        setOpen: handleOpenChange,
-        onOverlayClick,
-        closeOnOutsideInteraction,
-      }}
-    >
-      {children}
-    </DialogContext>
-  );
+  return <DialogContext value={contextValue}>{children}</DialogContext>;
 }
 
 Dialog.Trigger = Trigger;
