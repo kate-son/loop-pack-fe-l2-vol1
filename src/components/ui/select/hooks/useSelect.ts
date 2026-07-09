@@ -193,9 +193,9 @@ export function useSelect<T extends SelectOptionBase>({
     ref: triggerRef,
     onClick: handleTriggerClick, //마우스 동작
     onKeyDown: handleTriggerKeyDown, //키보드 동작
-    role: 'button' as const,
-    'aria-haspopup': 'listbox' as const,
-    'aria-expanded': open,
+    role: 'button' as const, //button으로 스크린리더 인식할 수 있도록
+    'aria-haspopup': 'listbox' as const, //SelectBox 클릭시 팝업이 뜬다 안내
+    'aria-expanded': open, //SelectBox의 optionList 팝업이 떳다
   });
 
   //SelectBox - ListBox props
@@ -204,6 +204,7 @@ export function useSelect<T extends SelectOptionBase>({
     role: 'listbox' as const,
     tabIndex: -1 as const,
     onKeyDown: handleListboxKeyDown, //키보드 조작시
+    //가상으로 활성화 된 옵션이 어디에 있는지 스크린리더에 알려주는 용도
     'aria-activedescendant':
       highlightedIndex >= 0 ? getOptionDomId(options[highlightedIndex].id) : undefined,
   });
@@ -215,8 +216,8 @@ export function useSelect<T extends SelectOptionBase>({
     return {
       id: getOptionDomId(option.id),
       role: 'option' as const,
-      'aria-selected': isOptionSelected(option, selected),
-      'aria-disabled': disabled,
+      'aria-selected': isOptionSelected(option, selected), //어떤 option이 선택되었다.
+      'aria-disabled': disabled, //어떤 option이 비활성화 되었다.
       onClick: () => {
         //마우스로 클릭되었을 때
         if (disabled) return;
