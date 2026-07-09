@@ -16,6 +16,8 @@ type UseSelectParams<T extends SelectOptionBase> = {
   defaultValue?: T | null;
   /** 선택 시 호출, 옵션 객체 전체를 그대로 돌려준다 */
   onChange?: (option: T) => void;
+  /** 초기 열림 상태 (기본값 false) */
+  defaultOpen?: boolean;
 };
 
 type SelectItem<T extends SelectOptionBase> = {
@@ -42,6 +44,7 @@ export function useSelect<T extends SelectOptionBase>({
   value,
   defaultValue,
   onChange,
+  defaultOpen,
 }: UseSelectParams<T>) {
   //value 유무로만 controlled/unControlled 판별 (defaultValue는 unControlled일 때 초기값으로만 쓰임)
   const isControlled = value !== undefined;
@@ -51,7 +54,7 @@ export function useSelect<T extends SelectOptionBase>({
   const selected = isControlled ? value : internalSelected;
 
   //selectBox가 열렸는지
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen ?? false);
   //지금 키보드 또는 마우스로 가리키고 있는 옵션 인덱스(선택된게 아님)
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
