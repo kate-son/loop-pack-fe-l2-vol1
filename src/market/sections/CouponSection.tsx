@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Coupon } from '@/market/types/coupon.types';
+import type { Coupon } from '@/market/types';
 import { Section } from '@/common/components/Section.tsx';
 import { COUPONS } from '@/market/data.ts';
 

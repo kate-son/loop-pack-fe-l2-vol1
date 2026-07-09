@@ -1,4 +1,4 @@
-import type { OrderStatus, PastOrder } from '@/market/types/order.types';
+import type { OrderStatus, PastOrder } from '@/market/types';
 import { Tag } from '@/common/components/Tag.tsx';
 import { Section } from '@/common/components/Section.tsx';
 import { LineRow } from '@/common/components/LineRow.tsx';

@@ -12,10 +12,10 @@ import { TermsSection } from '@/market/sections/TermsSection';
 import { RecentOrdersSection } from '@/market/sections/RecentOrdersSection';
 import '@/market/market.css';
 import { AddressSection } from './sections/AddressSection';
-import { getPriceText } from '@/utils.ts';
+import { getPriceText } from '../common/utils/utils.ts';
 import { CheckoutCompletePage } from '@/market/CheckoutCompletePage.tsx';
 import { useCheckout } from './hooks/useCheckout';
-import type { Address } from '@/market/types/address.types';
+import type { Address } from '@/market/types';
 
 export function CheckoutPage() {
   const member = MEMBER;
@@ -44,14 +44,13 @@ export function CheckoutPage() {
 
   const handlePlace = () => {
     //결제하기 버튼 클릭시 주문 정보 가져오기
-    const _orderData = {
-      address: selectedAddress,
-      memo: memoRef.current?.getValue() ?? '',
-      payment: paymentRef.current?.getValue() ?? 'card',
-      finalPrice,
-    };
+    // const _orderData = {
+    //   address: selectedAddress,
+    //   memo: memoRef.current?.getValue() ?? '',
+    //   payment: paymentRef.current?.getValue() ?? 'card',
+    //   finalPrice,
+    // };
     setPlaced(true);
-    console.log(_orderData);
   };
 
   const handleGoBack = () => {

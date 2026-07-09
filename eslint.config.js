@@ -35,8 +35,9 @@ export default defineConfig([
             "@typescript-eslint/ban-ts-comment": "error", //ts-ignore, ts-nocheck 같은 주석으로 TypeScript 에러를 숨기는거 방지
             "no-magic-numbers": [
                 "error",
-                {"ignore": [0, 1, -1]}
-            ], // 고정값 상수로 관리하도록 강제. 단, 0(초기값/인덱스), 1(증감), -1(indexOf 실패) 제외
+                {"ignore": [0, 1, -1, 24, 60, 100, 1000]}
+            ], // 고정값 상수로 관리하도록 강제. 단, 0(초기값/인덱스), 1(증감), -1(indexOf 실패),
+               // 24/60/1000(시간 단위 변환), 100(퍼센트) 제외 — 의미가 자명한 단위값
             "no-nested-ternary": "error", //삼항 연산자 중첩 사용 시 가독성 저하로 error 처리
             "no-empty": "error", //빈 블록으로 에러를 무시하는 것을 방지
             "no-var": "error", //var 사용 금지, const/let 사용 강제

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Address } from '@/market/types/address.types.ts';
+import type { Address } from '@/market/types';
 import { Section } from '@/common/components/Section.tsx';
 import { AddressForm } from '@/market/forms/AddressForm.tsx';
 
@@ -29,7 +29,7 @@ export function AddressSection({ selectedAddress, onAddressChange }: AddressSect
         </p>
       )}
       <div hidden={!isExpanded}>
-        <AddressForm onSelectAddress={onAddressChange} />
+        <AddressForm selectedAddress={selectedAddress} onSelectAddress={onAddressChange} />
       </div>
     </Section>
   );
