@@ -11,6 +11,106 @@
 //
 // 아래는 import가 깨지지 않게 둔 placeholder다. 자유롭게 갈아엎어도 된다.
 
-export function Dialog() {
-  return null;
+'use client';
+
+import { DialogContext } from './context/context';
+import {
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
+import { Trigger } from './components/trigger';
+import { Overlay } from './components/overlay';
+import { Content } from './components/content';
+import { Title } from './components/title';
+import { Description } from './components/description';
+import { Close } from './components/close';
+
+type ControlledProps = {
+  //controlled로 사용할 때 onOpenChange 강제하기
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  defaultOpen?: boolean;
+};
+
+type UncontrolledProps = {
+  open?: undefined;
+  onOpenChange?: (isOpen: boolean) => void;
+  defaultOpen?: boolean;
+};
+
+type DialogProps = (ControlledProps | UncontrolledProps) & {
+  children: ReactNode;
+  /** Esc 입력 시 호출. event.preventDefault()를 부르면 닫히지 않는다 */
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
+  /** 오버레이 클릭 시 호출. event.preventDefault()를 부르면 닫히지 않는다 */
+  onOverlayClick?: (event: ReactMouseEvent<HTMLDivElement>) => void;
+  /** false면 Esc/오버레이 클릭 모두로 닫히지 않는다 (기본값: true) */
+  closeOnOutsideInteraction?: boolean;
+};
+
+/* AI-generated */
+export function Dialog({
+  open,
+  onOpenChange,
+  defaultOpen,
+  children,
+  onEscapeKeyDown,
+  onOverlayClick,
+  closeOnOutsideInteraction = true,
+}: DialogProps) {
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const [dialogOpen, setDialogOpen] = useState<boolean>(defaultOpen || false);
+  const mergedOpen = isControlled ? open : dialogOpen;
+
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isControlled) {
+        setDialogOpen(isOpen);
+      }
+      onOpenChange?.(isOpen);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  useEffect(() => {
+    if (!mergedOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      onEscapeKeyDown?.(e);
+      if (!closeOnOutsideInteraction) return;
+      if (e.defaultPrevented) return;
+      handleOpenChange(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [mergedOpen, onEscapeKeyDown, closeOnOutsideInteraction, handleOpenChange]);
+
+  /* AI-generated */
+  useEffect(() => {
+    if (!mergedOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [mergedOpen]);
+
+  return (
+    <DialogContext value={{ open: mergedOpen, setOpen: handleOpenChange }}>
+      <Overlay
+        onOverlayClick={onOverlayClick}
+        closeOnOutsideInteraction={closeOnOutsideInteraction}
+      />
+      {children}
+    </DialogContext>
+  );
 }
+
+Dialog.Trigger = Trigger;
+Dialog.Content = Content;
+Dialog.Title = Title;
+Dialog.Description = Description;
+Dialog.Close = Close;

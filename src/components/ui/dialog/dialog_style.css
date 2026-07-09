@@ -1,0 +1,112 @@
+/* AI-generated */
+/* 1. 배경 오버레이 */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-overlay);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  animation: dialog-fade-in 0.15s ease-out;
+}
+
+/* 2. 다이얼로그 카드(Content) */
+.dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: 100%;
+
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px 28px 20px;
+
+  box-shadow: var(--shadow-md);
+
+  z-index: 1000;
+  animation: dialog-pop-in 0.18s ease-out;
+}
+
+/* 2-1. 사이즈 프리셋 */
+.dialog-content--sm {
+  max-width: 320px;
+}
+
+.dialog-content--md {
+  max-width: 480px;
+}
+
+.dialog-content--lg {
+  max-width: 560px;
+}
+
+/* 3. 제목 (Title -> h3) */
+.dialog-content h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--foreground);
+}
+
+/* 4. 설명 (Description -> p) */
+.dialog-content p {
+  margin: 0 0 28px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--foreground);
+  opacity: 0.7;
+}
+
+/* 5. 액션 버튼 영역 (Trigger/Close 를 감싸는 wrapper) */
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 24px;
+}
+
+/* 6. 액션 버튼 (Close/Trigger 컴포넌트가 렌더링하는 button) */
+.dialog-actions button {
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #6c5ce7; /* 보라색 강조 */
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.dialog-actions button:hover {
+  opacity: 0.75;
+}
+
+.dialog-actions button:focus-visible {
+  outline: 2px solid #6c5ce7;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 7. 애니메이션 */
+@keyframes dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
