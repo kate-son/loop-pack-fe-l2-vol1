@@ -88,7 +88,6 @@ export function Dialog({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [mergedOpen, onEscapeKeyDown, closeOnOutsideInteraction, handleOpenChange]);
 
-  /* AI-generated */
   useEffect(() => {
     if (!mergedOpen) return;
     const originalOverflow = document.body.style.overflow;
@@ -99,11 +98,14 @@ export function Dialog({
   }, [mergedOpen]);
 
   return (
-    <DialogContext value={{ open: mergedOpen, setOpen: handleOpenChange }}>
-      <Overlay
-        onOverlayClick={onOverlayClick}
-        closeOnOutsideInteraction={closeOnOutsideInteraction}
-      />
+    <DialogContext
+      value={{
+        open: mergedOpen,
+        setOpen: handleOpenChange,
+        onOverlayClick,
+        closeOnOutsideInteraction,
+      }}
+    >
       {children}
     </DialogContext>
   );
@@ -114,3 +116,4 @@ Dialog.Content = Content;
 Dialog.Title = Title;
 Dialog.Description = Description;
 Dialog.Close = Close;
+Dialog.Overlay = Overlay;
