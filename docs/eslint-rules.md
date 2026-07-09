@@ -5,7 +5,6 @@
 기준: `eslint-config-next@16.2.10`
 
 - `pnpm exec eslint --print-config <file>` 통해 최신 확인 가능
-- "기본값 유지 or override" / "내 판단 근거"가 비어있는 행은 아직 판단 전.
 
 ## nextVitals (`eslint-config-next/core-web-vitals`)
 
