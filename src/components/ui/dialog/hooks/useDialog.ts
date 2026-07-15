@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 import type { DialogContextValue } from '../context/context';
 
 type UseDialogParams = {
@@ -32,27 +38,41 @@ export function useDialog({
   onOverlayClick,
   closeOnOutsideInteraction,
 }: UseDialogParams): DialogContextValue {
-  //open, onOpenChange가 props로 넘어오면 controlled로 판단
-  const isControlled = open !== undefined && onOpenChange !== undefined;
+  //open이 props로 넘어오면 controlled로 판단
+  const isControlled = open !== undefined;
   //unControlled일 때 Dialog 열기 닫기 관리 상태
   const [dialogOpen, setDialogOpen] = useState<boolean>(defaultOpen || false);
   //controlled, unControlled 관계 없이 데이터를 context로 관리하기 위한 open 데이터
   const mergedOpen = isControlled ? open : dialogOpen;
 
-  const contextValue = useMemo(() => {
-    const setOpen = (isOpen: boolean) => {
+  useEffect(() => {
+    //open은 있는데 onOpenChange가 없으면 Esc/오버레이 클릭으로 닫을 방법이 없는 controlled Dialog가 됨
+    if (open !== undefined && onOpenChange === undefined) {
+      console.warn(
+        '[Dialog] `open` prop이 있지만 `onOpenChange`가 없습니다. Esc/오버레이 클릭으로 닫히지 않는 controlled Dialog가 됩니다.',
+      );
+    }
+  }, [open, onOpenChange]);
+
+  const setOpen = useCallback(
+    (isOpen: boolean) => {
       if (!isControlled) {
         setDialogOpen(isOpen);
       }
       onOpenChange?.(isOpen);
-    };
-    return {
+    },
+    [isControlled, onOpenChange],
+  );
+
+  const contextValue = useMemo(
+    () => ({
       open: mergedOpen,
       setOpen,
       onOverlayClick,
       closeOnOutsideInteraction,
-    };
-  }, [mergedOpen, isControlled, onOpenChange, onOverlayClick, closeOnOutsideInteraction]);
+    }),
+    [mergedOpen, setOpen, onOverlayClick, closeOnOutsideInteraction],
+  );
 
   useEffect(() => {
     //닫혀있을 땐 리스너를 안 붙임(불필요한 전역 이벤트 리스너 방지)
@@ -64,11 +84,11 @@ export function useDialog({
       if (!closeOnOutsideInteraction) return;
       //콜백 안에서 preventDefault()를 부르면 이번 Esc는 닫힘을 취소할 수 있음
       if (e.defaultPrevented) return;
-      contextValue.setOpen(false);
+      setOpen(false);
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [mergedOpen, onEscapeKeyDown, closeOnOutsideInteraction, contextValue]);
+  }, [mergedOpen, onEscapeKeyDown, closeOnOutsideInteraction, setOpen]);
 
   useEffect(() => {
     if (!mergedOpen) return;
