@@ -12,7 +12,7 @@ type SizeOption = {
 type SizeOptionAccordionProps = {
   title: string;
   sizes: SizeOption[];
-  onSelect: (index: number) => void;
+  onSelect: (option: SizeOption) => void;
   defaultExpanded?: boolean;
 };
 
@@ -64,7 +64,7 @@ export function SizeOptionAccordion({
   const { open, selected, items, getTriggerProps, getListboxProps, getOptionProps } = useSelect({
     options: augmentedSizes,
     defaultOpen: defaultExpanded,
-    onChange: (option) => onSelect(option.id),
+    onChange: (option) => onSelect(option),
   });
 
   return (

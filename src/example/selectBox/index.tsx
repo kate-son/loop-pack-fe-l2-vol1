@@ -55,21 +55,9 @@ export function SelectBoxExamples() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <p style={{ fontWeight: 700, marginBottom: 8 }}>Headless</p>
-      <PriceOptionAccordion
-        title="배송 옵션"
-        options={priceOptions}
-        onSelect={(index) => console.log('price selected', index)}
-      />
-      <SizeOptionAccordion
-        title="사이즈 선택"
-        sizes={sizeOptions}
-        onSelect={(index) => console.log('size selected', index)}
-      />
-      <ProductOptionAccordion
-        title="상품 옵션"
-        options={productOptions}
-        onSelect={(index) => console.log('product selected', index)}
-      />
+      <PriceOptionAccordion title="배송 옵션" options={priceOptions} onSelect={() => {}} />
+      <SizeOptionAccordion title="사이즈 선택" sizes={sizeOptions} onSelect={() => {}} />
+      <ProductOptionAccordion title="상품 옵션" options={productOptions} onSelect={() => {}} />
       <div>
         <p style={{ fontWeight: 700, marginBottom: 8 }}>Compound (기본 UI)</p>
         <CompoundSelectBox />

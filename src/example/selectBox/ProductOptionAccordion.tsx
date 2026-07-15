@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useSelect } from '@/components/ui/select/hooks/useSelect';
 import styles from './ProductOptionAccordion.module.css';
 
@@ -14,7 +15,7 @@ type ProductOption = {
 type ProductOptionAccordionProps = {
   title: string;
   options: ProductOption[];
-  onSelect: (index: number) => void;
+  onSelect: (option: ProductOption) => void;
   defaultExpanded?: boolean;
 };
 
@@ -58,7 +59,7 @@ export function ProductOptionAccordion({
   const { open, selected, items, getTriggerProps, getListboxProps, getOptionProps } = useSelect({
     options: augmentedOptions,
     defaultOpen: defaultExpanded,
-    onChange: (option) => onSelect(option.id),
+    onChange: (option) => onSelect(option),
   });
 
   return (
@@ -81,10 +82,12 @@ export function ProductOptionAccordion({
                 data-highlighted={item.highlighted}
                 {...getOptionProps(item.index)}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- 외부 임의 URL을 받는 standalone 예시 컴포넌트라 next/image remotePatterns 설정을 피함 */}
-                <img
+                <Image
                   src={item.option.thumbnailUrl}
                   alt={item.option.name}
+                  width={64}
+                  height={64}
+                  unoptimized
                   className={styles.thumbnail}
                 />
                 <span className={styles.rowText}>

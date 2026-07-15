@@ -16,7 +16,7 @@ type PriceOption = {
 type PriceOptionAccordionProps = {
   title: string;
   options: PriceOption[];
-  onSelect: (index: number) => void;
+  onSelect: (option: PriceOption) => void;
   defaultExpanded?: boolean;
 };
 
@@ -60,7 +60,7 @@ export function PriceOptionAccordion({
   const { open, selected, items, getTriggerProps, getListboxProps, getOptionProps } = useSelect({
     options: augmentedOptions,
     defaultOpen: defaultExpanded,
-    onChange: (option) => onSelect(option.id),
+    onChange: (option) => onSelect(option),
   });
 
   return (
