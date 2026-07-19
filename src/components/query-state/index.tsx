@@ -11,7 +11,6 @@ type QueryStateProps<TData> = {
   children: (data: TData) => React.ReactNode;
 };
 
-/* AI-generated */
 export function QueryState<TData>({
   query,
   renderLoading,
