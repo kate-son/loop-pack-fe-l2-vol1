@@ -1,18 +1,48 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import '../layout.css';
+import { Header } from '../components/Header';
+import { ProductCard } from '../components/ProductCard';
+import type { Product } from '@/types/commerce';
+
+const POPULAR_PRODUCT_PLACEHOLDER: Product = {
+  id: 'p1',
+  brand: 'Loopers Select',
+  name: '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG',
+  category: 'casual',
+  price: 79000,
+  originalPrice: null,
+  image: '/images/products/p1.jpg',
+  freeShipping: true,
+  sizes: [],
+  rating: 4.8,
+  reviewCount: 312,
+  createdAt: '2026-07-09T09:00:00.000Z',
+};
+
+const NEW_PRODUCT_PLACEHOLDER: Product = {
+  id: 'p6',
+  brand: 'Loopers Select',
+  name: 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502',
+  category: 'fashion',
+  price: 69000,
+  originalPrice: null,
+  image: '/images/products/p6.jpg',
+  freeShipping: true,
+  sizes: [],
+  rating: 4.7,
+  reviewCount: 520,
+  createdAt: '2026-07-10T09:00:00.000Z',
+};
+
+const PRODUCT_SECTIONS = [
+  { title: '인기 상품', product: POPULAR_PRODUCT_PLACEHOLDER },
+  { title: '신상품', product: NEW_PRODUCT_PLACEHOLDER },
+];
 
 export default function Home() {
   return (
     <main className="week05-page">
-      <header className="week05-header">
-        <Link href="/home">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-          <span>위시리스트 0</span>
-          <span>장바구니 0</span>
-        </nav>
-      </header>
+      <Header />
       <section className="week05-hero">
         <p>배너 설명</p>
         <h1>홈 배너 제목</h1>
@@ -27,49 +57,16 @@ export default function Home() {
           ))}
         </div>
       </section>
-      {['인기 상품', '신상품'].map((title) => (
+      {PRODUCT_SECTIONS.map(({ title, product }) => (
         <section className="week05-section" key={title}>
           <h2>{title}</h2>
           <div className="week05-grid">
             {Array.from({ length: 4 }, (_, index) => (
-              <article className="week05-product" key={`${title}-${index}`}>
-                <Image
-                  className="week05-image"
-                  src={
-                    title === '인기 상품' ? '/images/products/p1.jpg' : '/images/products/p6.jpg'
-                  }
-                  alt={
-                    title === '인기 상품'
-                      ? '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG'
-                      : 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'
-                  }
-                  width={400}
-                  height={400}
-                />
-                <p>브랜드</p>
-                <h3>
-                  {title === '인기 상품'
-                    ? '[11월 20일 예약배송] Winter Rocky Pants 2color 윈터 로키팬츠 OG'
-                    : 'WOMAN GNRL 케이블 풀오버 [IVORY] / WBC3L05502'}
-                </h3>
-                <strong>0원</strong>
-                <div>
-                  <button
-                    type="button"
-                    aria-label={`${title} ${index + 1}번 상품 위시리스트`}
-                    aria-pressed={false}
-                  >
-                    찜
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`${title} ${index + 1}번 상품 장바구니`}
-                    aria-pressed={false}
-                  >
-                    담기
-                  </button>
-                </div>
-              </article>
+              <ProductCard
+                key={`${title}-${index}`}
+                product={product}
+                label={`${title} ${index + 1}번 상품`}
+              />
             ))}
           </div>
         </section>

@@ -1,18 +1,42 @@
-import Link from 'next/link';
-import Image from 'next/image';
 import '../layout.css';
+import { Header } from '../components/Header';
+import { ProductCard } from '../components/ProductCard';
+import type { Product } from '@/types/commerce';
+
+const PRODUCT_A_PLACEHOLDER: Product = {
+  id: 'p11',
+  brand: '인스테드',
+  name: '하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml',
+  category: 'goods',
+  price: 48000,
+  originalPrice: 58000,
+  image: '/images/products/p11.jpg',
+  freeShipping: false,
+  sizes: [],
+  rating: 4.9,
+  reviewCount: 990,
+  createdAt: '2026-07-07T09:00:00.000Z',
+};
+
+const PRODUCT_B_PLACEHOLDER: Product = {
+  id: 'p16',
+  brand: '스탠리',
+  name: '스탠리 클래식 런치박스',
+  category: 'home',
+  price: 75000,
+  originalPrice: 89000,
+  image: '/images/products/p16.jpg',
+  freeShipping: true,
+  sizes: [],
+  rating: 4.8,
+  reviewCount: 418,
+  createdAt: '2026-07-04T09:00:00.000Z',
+};
 
 export default function ProductListPage() {
   return (
     <main className="week05-page">
-      <header className="week05-header">
-        <Link href="/home">Commerce</Link>
-        <nav aria-label="주요 메뉴">
-          <Link href="/products">상품</Link>
-          <span>위시리스트 0</span>
-          <span>장바구니 0</span>
-        </nav>
-      </header>
+      <Header />
       <section className="week05-section">
         <h1>상품 목록</h1>
         <form className="week05-filters">
@@ -43,42 +67,11 @@ export default function ProductListPage() {
         <p>총 0개</p>
         <div className="week05-grid">
           {Array.from({ length: 8 }, (_, index) => (
-            <article className="week05-product" key={index}>
-              <Image
-                className="week05-image"
-                src={index % 2 === 0 ? '/images/products/p11.jpg' : '/images/products/p16.jpg'}
-                alt={
-                  index % 2 === 0
-                    ? '하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml'
-                    : '스탠리 클래식 런치박스'
-                }
-                width={400}
-                height={400}
-              />
-              <p>브랜드</p>
-              <h2>
-                {index % 2 === 0
-                  ? '하이드레이팅 나이트 립 마스크 25g + 소프트 글로우 결 토너 210ml'
-                  : '스탠리 클래식 런치박스'}
-              </h2>
-              <strong>0원</strong>
-              <div>
-                <button
-                  type="button"
-                  aria-label={`${index + 1}번 상품 위시리스트`}
-                  aria-pressed={false}
-                >
-                  찜
-                </button>
-                <button
-                  type="button"
-                  aria-label={`${index + 1}번 상품 장바구니`}
-                  aria-pressed={false}
-                >
-                  담기
-                </button>
-              </div>
-            </article>
+            <ProductCard
+              key={index}
+              product={index % 2 === 0 ? PRODUCT_A_PLACEHOLDER : PRODUCT_B_PLACEHOLDER}
+              label={`${index + 1}번 상품`}
+            />
           ))}
         </div>
         <nav className="week05-pagination" aria-label="페이지 이동">
