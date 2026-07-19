@@ -20,7 +20,6 @@ type SelectRootProps = UseSelectRootParams & {
   children: ReactNode;
 };
 
-/* AI-generated */
 /**
  * @description 기본으로 제공하는 디자인을 그대로 사용하고자 할때 사용
  * @param param0

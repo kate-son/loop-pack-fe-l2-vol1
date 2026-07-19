@@ -1,6 +1,6 @@
 'use client';
 
-import { useSelect } from '@/components/ui/select/hooks/useSelect';
+import { useSelect } from 'src/components/ui/select/hooks/useSelect';
 import styles from './SizeOptionAccordion.module.css';
 
 type SizeOption = {
@@ -16,7 +16,6 @@ type SizeOptionAccordionProps = {
   defaultExpanded?: boolean;
 };
 
-/* AI-generated */
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
@@ -39,7 +38,6 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
-/* AI-generated */
 function TruckIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -51,7 +49,6 @@ function TruckIcon() {
   );
 }
 
-/* AI-generated */
 export function SizeOptionAccordion({
   title,
   sizes,

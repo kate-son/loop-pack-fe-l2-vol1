@@ -196,7 +196,6 @@ export function useSelect<T extends SelectOptionBase>({
     ref: triggerRef,
     onClick: handleTriggerClick, //마우스 동작
     onKeyDown: handleTriggerKeyDown, //키보드 동작
-    role: 'button' as const, //button으로 스크린리더 인식할 수 있도록
     'aria-haspopup': 'listbox' as const, //SelectBox 클릭시 팝업이 뜬다 안내
     'aria-expanded': open, //SelectBox의 optionList 팝업이 떳다
   });

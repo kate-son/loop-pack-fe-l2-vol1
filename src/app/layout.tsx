@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import '@/components/ui/dialog/dialog_style.css';
 import '@/components/ui/select/select_style.css';
+import { MainProvider } from './providers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,7 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <MainProvider>{children}</MainProvider>
+      </body>
     </html>
   );
 }

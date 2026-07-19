@@ -1,6 +1,6 @@
 'use client';
 
-import { useSelect } from '@/components/ui/select/hooks/useSelect';
+import { useSelect } from 'src/components/ui/select/hooks/useSelect';
 import styles from './PriceOptionAccordion.module.css';
 
 type PriceOption = {
@@ -20,7 +20,6 @@ type PriceOptionAccordionProps = {
   defaultExpanded?: boolean;
 };
 
-/* AI-generated */
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
@@ -47,7 +46,6 @@ function formatPrice(price: number) {
   return `${price.toLocaleString('ko-KR')}원`;
 }
 
-/* AI-generated */
 export function PriceOptionAccordion({
   title,
   options,

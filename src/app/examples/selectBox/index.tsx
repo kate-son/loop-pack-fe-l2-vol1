@@ -5,7 +5,6 @@ import { SizeOptionAccordion } from './SizeOptionAccordion';
 import { ProductOptionAccordion } from './ProductOptionAccordion';
 import { CompoundSelectBox } from './CompoundSelectBox';
 
-/* AI-generated */
 function placeholderThumbnail(hex: string) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${hex}"/></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
@@ -50,7 +49,6 @@ const productOptions = [
   },
 ];
 
-/* AI-generated */
 export function SelectBoxExamples() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
