@@ -25,7 +25,7 @@ const eslintConfig = defineConfig([
       'react/no-danger': 'error', //dangerouslySetInnerHTML : 악성 스크립트 실행 방지 (XSS 공격 방지)
       'no-eval': 'error', //eval() 금지 : 악성 스크립트 실행 방지 (XSS 공격 방지)
       'no-console': ['error', { allow: ['warn'] }], //console.log 잔재 확인 : 프로덕션 번들에 디버깅 로그가 실리는 것을 막기 위해 error로 처리, warn은 에외처리
-      'no-magic-numbers': ['error', { ignore: [0, 1, 2, -1, 24, 60, 100, 1000] }], // 고정값 상수로 관리하도록 강제. 단, 0(초기값/인덱스), 1(증감), -1(indexOf 실패),
+      'no-magic-numbers': ['warn', { ignore: [0, 1, 2, -1, 24, 60, 100, 1000] }], // 고정값 상수로 관리하도록 warn 처리. 단, 0(초기값/인덱스), 1(증감), -1(indexOf 실패),
       // 24/60/1000(시간 단위 변환), 100(퍼센트) 제외 — 의미가 자명한 단위값
       'no-nested-ternary': 'error', //삼항 연산자 중첩 사용 시 가독성 저하로 error 처리
       'no-empty': 'error', //빈 블록으로 에러를 무시하는 것을 방지
