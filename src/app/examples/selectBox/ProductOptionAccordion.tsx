@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useSelect } from 'src/components/ui/select/hooks/useSelect';
+import { useSelect } from '@/components/ui/select/hooks/useSelect';
 import styles from './ProductOptionAccordion.module.css';
 
 type ProductOption = {

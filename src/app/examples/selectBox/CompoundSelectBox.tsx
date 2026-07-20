@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Select } from 'src/components/ui/select';
-import type { SelectOption } from 'src/components/ui/select/types';
+import { Select } from '@/components/ui/select';
+import type { SelectOption } from '@/components/ui/select/types';
 
 const paymentOptions: SelectOption[] = [
   { id: 'card', label: '카드 결제' },

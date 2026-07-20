@@ -1,6 +1,6 @@
 'use client';
 
-import { useSelect } from 'src/components/ui/select/hooks/useSelect';
+import { useSelect } from '@/components/ui/select/hooks/useSelect';
 import styles from './PriceOptionAccordion.module.css';
 
 type PriceOption = {

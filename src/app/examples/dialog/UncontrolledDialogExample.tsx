@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog } from 'src/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import styles from './dialog-example.module.css';
 
 const addressOptions = ['집 (서울시 강남구 테헤란로)', '회사 (서울시 중구 을지로)', '기타'];

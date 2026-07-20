@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from 'src/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import styles from './dialog-example.module.css';
 
 const couponOptions = ['10% 할인 쿠폰', '무료배송 쿠폰', '첫 구매 5,000원 할인'];
