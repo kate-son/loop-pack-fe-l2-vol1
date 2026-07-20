@@ -1,5 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import type { Product } from '@/types/commerce';
+import { useWishlistStore } from '../store/useWishlistStore';
+import { useCartStore } from '../store/useCartStore';
 
 type ProductCardProps = {
   /** 카드에 표시할 상품 데이터 */
@@ -9,6 +13,12 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product, label }: ProductCardProps) {
+  const isWished = useWishlistStore((state) => state.productIds.has(product.id));
+  const isInCart = useCartStore((state) => state.productIds.has(product.id));
+
+  const toggleWish = useWishlistStore((state) => state.setSingleIdInWishlist);
+  const toggleCart = useCartStore((state) => state.setSingleIdInCart);
+
   return (
     <article className="week05-product">
       <Image
@@ -22,10 +32,22 @@ export function ProductCard({ product, label }: ProductCardProps) {
       <h3>{product.name}</h3>
       <strong>{product.price.toLocaleString()}원</strong>
       <div>
-        <button type="button" aria-label={`${label} 위시리스트`} aria-pressed={false}>
+        <button
+          type="button"
+          className={isWished ? 'toggled' : ''}
+          aria-label={`${label} 위시리스트`}
+          aria-pressed={isWished}
+          onClick={() => toggleWish(product.id)}
+        >
           찜
         </button>
-        <button type="button" aria-label={`${label} 담기`} aria-pressed={false}>
+        <button
+          type="button"
+          className={isInCart ? 'toggled' : ''}
+          aria-label={`${label} 담기`}
+          aria-pressed={isInCart}
+          onClick={() => toggleCart(product.id)}
+        >
           담기
         </button>
       </div>

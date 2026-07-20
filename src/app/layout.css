@@ -94,6 +94,11 @@
   outline-offset: 3px;
 }
 
+.toggled {
+  color: #2557a7;
+  font-weight: bold;
+}
+
 @media (max-width: 960px) {
   .week05-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

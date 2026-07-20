@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, ProductListQuery, ProductListResponse } from '@/types/commerce';
+import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
 import { apiResponseResult } from '@/app/utils';
 
 const DEFAULT_PAGE_SIZE = 12;
