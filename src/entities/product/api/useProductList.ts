@@ -1,17 +1,9 @@
-import { useEffect } from 'react';
-import { keepPreviousData, queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ProductListQuery } from '../model/product';
-import { fetchProductList } from './productsService';
-import { PRODUCT_PRICE_GC_TIME, PRODUCT_PRICE_STALE_TIME } from '../model/constants';
+'use client';
 
-const productsQueryOptions = (query: ProductListQuery) =>
-  queryOptions({
-    queryKey: ['products', query],
-    queryFn: () => fetchProductList(query),
-    staleTime: PRODUCT_PRICE_STALE_TIME,
-    gcTime: PRODUCT_PRICE_GC_TIME,
-    placeholderData: keepPreviousData,
-  });
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ProductListQuery } from '../model/product';
+import { productsQueryOptions } from './productsQueryOptions';
 
 export function useProductList(query: ProductListQuery) {
   const result = useQuery(productsQueryOptions(query));
@@ -26,7 +18,7 @@ export function useProductList(query: ProductListQuery) {
     const hasNextPage = page < totalPages;
 
     if (hasNextPage) {
-      queryClient.prefetchQuery(useProductList.queryOptions({ q, category, sort, page: page + 1 }));
+      queryClient.prefetchQuery(productsQueryOptions({ q, category, sort, page: page + 1 }));
     }
   }, [isUnfiltered, result.data, page, q, category, sort, queryClient]);
 

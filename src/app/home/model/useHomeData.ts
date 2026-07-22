@@ -5,12 +5,16 @@ import {
   PRODUCT_PRICE_STALE_TIME,
 } from '@/entities/product/model/constants';
 
-export function useHomeData() {
-  const homeQueryOptions = queryOptions({
+const homeQueryOptions = () =>
+  queryOptions({
     queryKey: ['home'],
     queryFn: fetchHome,
     staleTime: PRODUCT_PRICE_STALE_TIME,
     gcTime: PRODUCT_PRICE_GC_TIME,
   });
-  return useQuery(homeQueryOptions);
+
+export function useHomeData() {
+  return useQuery(homeQueryOptions());
 }
+
+useHomeData.queryOptions = homeQueryOptions;
