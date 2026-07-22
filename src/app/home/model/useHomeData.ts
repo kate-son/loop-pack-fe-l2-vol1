@@ -1,6 +1,9 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import { fetchHome } from '../services/homeService';
-import { PRODUCT_PRICE_GC_TIME, PRODUCT_PRICE_STALE_TIME } from '../constants';
+import { fetchHome } from '../api/homeService';
+import {
+  PRODUCT_PRICE_GC_TIME,
+  PRODUCT_PRICE_STALE_TIME,
+} from '@/entities/product/model/constants';
 
 export function useHomeData() {
   const homeQueryOptions = queryOptions({

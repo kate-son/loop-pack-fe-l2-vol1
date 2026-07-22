@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { CategoryId, ProductListQuery, ProductSort } from '@/types/commerce';
+import type { CategoryId } from '@/entities/category/model/category';
+import type { ProductListQuery, ProductSort } from '@/entities/product/model/product';
 
 type ProductFiltersProps = {
   /** 현재 적용된 검색어/카테고리/정렬 */

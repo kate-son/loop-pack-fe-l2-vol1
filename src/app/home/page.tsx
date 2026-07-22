@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import '../layout.css';
-import { Header } from '../components/Header';
-import { ProductCard } from '../components/ProductCard';
-import { QueryState } from '@/components/query-state';
-import { useHomeData } from '../queries/hooks/useHomeData';
-import type { Product } from '@/types/commerce';
+import { Header } from '@/widgets/header/ui/Header';
+import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
+import { QueryState } from '@/shared/ui/QueryState';
+import { useHomeData } from './model/useHomeData';
+import type { Product } from '@/entities/product/model/product';
 
 export default function Home() {
   const homeQuery = useHomeData();

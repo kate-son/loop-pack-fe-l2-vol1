@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import type { ProductListQuery } from '@/types/commerce';
-import { fetchProductList } from '../services/productsService';
-import { PRODUCT_PRICE_GC_TIME, PRODUCT_PRICE_STALE_TIME } from '../constants';
+import type { ProductListQuery } from '../model/product';
+import { fetchProductList } from './productsService';
+import { PRODUCT_PRICE_GC_TIME, PRODUCT_PRICE_STALE_TIME } from '../model/constants';
 
 const productsQueryOptions = (query: ProductListQuery) =>
   queryOptions({

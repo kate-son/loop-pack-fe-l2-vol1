@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { setReplacer, setReviver, toggleSetItem } from '@/app/utils';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { createWebStorage } from '@/app/store/createWebStorage';
+import { createWebStorage } from '@/shared/lib/webStorage';
+import { setReplacer, setReviver, toggleSetItem } from '@/shared/lib/set';
 
 type WishlistState = { productIds: Set<string> };
 

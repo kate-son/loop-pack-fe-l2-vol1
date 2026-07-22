@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { categories, homeBanner, products, waitForMockApi } from '@/app/api/_data/commerce';
 import type { NextRequest } from 'next/server';
-import type { ApiErrorResponse, HomeResponse, MockApiScenario } from '@/types/commerce';
+import type { ApiErrorResponse, MockApiScenario } from '@/shared/api/response';
+import type { HomeResponse } from '@/app/home/model/types';
 
 const HOME_SECTION_ITEM_LIMIT = 6;
 

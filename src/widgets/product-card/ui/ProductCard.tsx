@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import type { Product } from '@/types/commerce';
-import { useWishlistStore } from '../store/useWishlistStore';
-import { useCartStore } from '../store/useCartStore';
+import type { Product } from '@/entities/product/model/product';
+import { useWishlistStore } from '@/features/wishlist/model/useWishlistStore';
+import { useCartStore } from '@/features/cart/model/useCartStore';
 
 type ProductCardProps = {
   /** 카드에 표시할 상품 데이터 */

@@ -1,5 +1,6 @@
 import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
-import { CATEGORY_IDS, type CategoryId, PRODUCT_SORTS, type ProductSort } from '@/types/commerce';
+import { CATEGORY_IDS, type CategoryId } from '@/entities/category/model/category';
+import { PRODUCT_SORTS, type ProductSort } from '@/entities/product/model/product';
 
 export function useProductListParams() {
   const [param, setParam] = useQueryStates(

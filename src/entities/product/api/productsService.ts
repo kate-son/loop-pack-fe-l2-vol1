@@ -1,5 +1,5 @@
-import type { ProductListQuery, ProductListResponse } from '@/types/commerce';
-import { apiResponseResult } from '@/app/utils';
+import type { ProductListQuery, ProductListResponse } from '../model/product';
+import { apiResponseResult } from '@/shared/api/response';
 
 const DEFAULT_PAGE_SIZE = 12;
 

@@ -1,13 +1,13 @@
 'use client';
 
 import '../layout.css';
-import { Header } from '../components/Header';
-import { ProductCard } from '../components/ProductCard';
-import { ProductFilters } from '../components/ProductFilters';
-import { Pagination } from '../components/Pagination';
-import { QueryState } from '@/components/query-state';
-import { useProductListParams } from '../queries/hooks/useProductListParams';
-import { useProductList } from '../queries/hooks/useProductList';
+import { Header } from '@/widgets/header/ui/Header';
+import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
+import { ProductFilters } from '@/features/product-filter/ui/ProductFilters';
+import { useProductListParams } from '@/features/product-filter/model/useProductListParams';
+import { Pagination } from '@/shared/ui/Pagination/Pagination';
+import { QueryState } from '@/shared/ui/QueryState';
+import { useProductList } from '@/entities/product/api/useProductList';
 
 export default function ProductListPage() {
   const { q, category, sort, page, setQuery, setCategory, setSort, setPage } =
