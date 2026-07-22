@@ -1,8 +1,8 @@
-'use client';
-
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CategoryId } from '@/entities/category/model/category';
 import type { ProductListQuery, ProductSort } from '@/entities/product/model/product';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 type ProductFiltersProps = {
   /** 현재 적용된 검색어/카테고리/정렬 */
@@ -40,11 +40,26 @@ export function ProductFilters({
   const appliedQuery = filters.q ?? '';
   const [prevAppliedQuery, setPrevAppliedQuery] = useState(appliedQuery);
   const [draftQuery, setDraftQuery] = useState(appliedQuery);
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
 
   if (appliedQuery !== prevAppliedQuery) {
     setPrevAppliedQuery(appliedQuery);
     setDraftQuery(appliedQuery);
   }
+
+  useEffect(() => {
+    if (draftQuery === appliedQuery) return;
+
+    const timer = setTimeout(() => {
+      onSearchRef.current(draftQuery);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [draftQuery, appliedQuery]);
 
   return (
     <form

@@ -1,15 +1,30 @@
 'use client';
 
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import '../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
 import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
 import { QueryState } from '@/shared/ui/QueryState';
+import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useHomeData } from './model/useHomeData';
+import { useProductList } from '@/entities/product/api/useProductList';
+import { DEFAULT_PRODUCT_LIST_QUERY } from '@/entities/product/model/product';
 import type { Product } from '@/entities/product/model/product';
+import type { CategoryId } from '@/entities/category/model/category';
 
 export default function Home() {
   const homeQuery = useHomeData();
+  const queryClient = useQueryClient();
+
+  const prefetchProductList = (categoryId: CategoryId | 'all') => {
+    queryClient.prefetchQuery(
+      useProductList.queryOptions({
+        ...DEFAULT_PRODUCT_LIST_QUERY,
+        category: categoryId,
+      }),
+    );
+  };
 
   return (
     <main className="week05-page">
@@ -17,7 +32,9 @@ export default function Home() {
       <QueryState
         query={homeQuery}
         renderLoading={() => <p>불러오는 중입니다…</p>}
-        renderError={(error) => <p role="alert">{error.message}</p>}
+        renderError={(error) => (
+          <ErrorRetry message={error.message} onRetry={() => homeQuery.refetch()} />
+        )}
       >
         {(data) => (
           <>
@@ -29,7 +46,11 @@ export default function Home() {
               <h2>카테고리</h2>
               <div className="week05-categories">
                 {data.categories.map((category) => (
-                  <Link key={category.id} href={`/products?category=${category.id}`}>
+                  <Link
+                    key={category.id}
+                    href={`/products?category=${category.id}`}
+                    onMouseEnter={() => prefetchProductList(category.id)}
+                  >
                     {category.name}
                   </Link>
                 ))}

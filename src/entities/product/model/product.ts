@@ -26,6 +26,15 @@ export type ProductListQuery = {
   pageSize?: number;
 };
 
+export const DEFAULT_PRODUCT_LIST_QUERY: Required<
+  Pick<ProductListQuery, 'q' | 'category' | 'sort' | 'page'>
+> = {
+  q: '',
+  category: 'all',
+  sort: 'latest',
+  page: 1,
+};
+
 export type ProductListResponse = {
   products: Product[];
   categories: Category[];

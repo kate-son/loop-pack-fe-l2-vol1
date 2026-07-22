@@ -7,6 +7,7 @@ import { ProductFilters } from '@/features/product-filter/ui/ProductFilters';
 import { useProductListParams } from '@/features/product-filter/model/useProductListParams';
 import { Pagination } from '@/shared/ui/Pagination/Pagination';
 import { QueryState } from '@/shared/ui/QueryState';
+import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useProductList } from '@/entities/product/api/useProductList';
 
 export default function ProductListPage() {
@@ -29,7 +30,9 @@ export default function ProductListPage() {
       <QueryState
         query={productListQuery}
         renderLoading={() => <p>불러오는 중입니다…</p>}
-        renderError={(error) => <p role="alert">{error.message}</p>}
+        renderError={(error) => (
+          <ErrorRetry message={error.message} onRetry={() => productListQuery.refetch()} />
+        )}
       >
         {(data) => (
           <section className="week05-section" aria-label="상품 검색 결과">
