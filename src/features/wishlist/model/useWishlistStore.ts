@@ -23,11 +23,29 @@ export const useWishlistStore = create<WishlistStore>()(
     }),
     {
       name: 'WISH_LIST_STORE',
+      version: 1,
+      migrate: (persisted, version) => {
+        const state = persisted as { productIds?: unknown };
+        if (version === 0) {
+          const ids =
+            state.productIds instanceof Set
+              ? state.productIds
+              : new Set<string>(Array.isArray(state.productIds) ? state.productIds : []);
+          return { ...state, productIds: ids };
+        }
+        return state as WishlistStore;
+      },
       storage: createJSONStorage(() => createWebStorage('sessionStorage'), {
         replacer: setReplacer,
         reviver: setReviver,
       }),
       skipHydration: true,
+      onRehydrateStorage: () => (_state, error) => {
+        if (error) {
+          console.warn('위시리스트 저장값이 손상되어 초기화합니다.', error);
+          useWishlistStore.persist.clearStorage();
+        }
+      },
     },
   ),
 );
