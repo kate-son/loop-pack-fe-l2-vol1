@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
 import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
@@ -10,10 +11,30 @@ import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useProductList } from '@/entities/product/api/useProductList';
 
+const INITIAL_PAGE = 1;
+
 export default function ProductView() {
   const { q, category, sort, page, setQuery, setCategory, setSort, setPage } =
     useProductListParams();
   const productListQuery = useProductList({ q, category, sort, page });
+
+  useEffect(() => {
+    if (productListQuery.data) {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(productListQuery.data.totalCount / productListQuery.data.pageSize),
+      );
+
+      if (page > totalPages) {
+        setPage(INITIAL_PAGE);
+      }
+      return;
+    }
+
+    if (productListQuery.isError && page !== INITIAL_PAGE) {
+      setPage(INITIAL_PAGE);
+    }
+  }, [productListQuery.data, productListQuery.isError, page, setPage]);
 
   return (
     <main className="week05-page">
@@ -46,12 +67,14 @@ export default function ProductView() {
                 ))}
               </div>
             )}
-            <Pagination
-              page={data.page}
-              pageSize={data.pageSize}
-              totalCount={data.totalCount}
-              onPageChange={setPage}
-            />
+            {!productListQuery.isFetching && (
+              <Pagination
+                page={data.page}
+                pageSize={data.pageSize}
+                totalCount={data.totalCount}
+                onPageChange={setPage}
+              />
+            )}
           </section>
         )}
       </QueryState>

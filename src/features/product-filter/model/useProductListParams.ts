@@ -6,7 +6,7 @@ import type { ProductSort } from '@/entities/product/model/product';
 import { productSearchParams } from './productSearchParams';
 
 export function useProductListParams() {
-  const [param, setParam] = useQueryStates(productSearchParams, { history: 'push' });
+  const [param, setParam] = useQueryStates(productSearchParams, { history: 'push', scroll: true });
 
   const setQuery = (q: string) => setParam({ q, page: 1 });
   const setCategory = (category: CategoryId | 'all') => setParam({ category, page: 1 });
