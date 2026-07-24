@@ -26,9 +26,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - name: Install Playwright Chromium #run quality check error로 추가
-        run: pnpm exec playwright install --with-deps chromium
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium #run quality check error로 추가
+        run: pnpm exec playwright install --with-deps chromium chromium-headless-shell
       - name: Run quality checks
         run: pnpm check
