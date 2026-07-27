@@ -47,10 +47,12 @@ export function useDialog({
 
   useEffect(() => {
     //open은 있는데 onOpenChange가 없으면 Esc/오버레이 클릭으로 닫을 방법이 없는 controlled Dialog가 됨
-    if (open !== undefined && onOpenChange === undefined) {
-      console.warn(
-        '[Dialog] `open` prop이 있지만 `onOpenChange`가 없습니다. Esc/오버레이 클릭으로 닫히지 않는 controlled Dialog가 됩니다.',
-      );
+    if (process.env.NODE_ENV !== 'production') {
+      if (open !== undefined && onOpenChange === undefined) {
+        console.warn(
+          '[Dialog] `open` prop이 있지만 `onOpenChange`가 없습니다. Esc/오버레이 클릭으로 닫히지 않는 controlled Dialog가 됩니다.',
+        );
+      }
     }
   }, [open, onOpenChange]);
 

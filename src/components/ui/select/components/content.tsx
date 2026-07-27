@@ -1,6 +1,5 @@
 import { useSelectContext } from '../hooks/useSelectContext';
 
-/* AI-generated */
 export function Content() {
   const { open, items, getListboxProps, getOptionProps } = useSelectContext();
 
