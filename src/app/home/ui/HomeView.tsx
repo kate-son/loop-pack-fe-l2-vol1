@@ -8,10 +8,10 @@ import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useHomeData } from '../model/useHomeData';
-import { useProductList } from '@/entities/product/api/useProductList';
-import { DEFAULT_PRODUCT_LIST_QUERY } from '@/entities/product/model/product';
 import type { Product } from '@/entities/product/model/product';
+import { DEFAULT_PRODUCT_LIST_QUERY } from '@/entities/product/model/product';
 import type { CategoryId } from '@/entities/category/model/category';
+import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions';
 
 export function HomeView() {
   const homeQuery = useHomeData();
@@ -19,7 +19,7 @@ export function HomeView() {
 
   const prefetchProductList = (categoryId: CategoryId | 'all') => {
     queryClient.prefetchQuery(
-      useProductList.queryOptions({
+      productsQueryOptions({
         ...DEFAULT_PRODUCT_LIST_QUERY,
         category: categoryId,
       }),

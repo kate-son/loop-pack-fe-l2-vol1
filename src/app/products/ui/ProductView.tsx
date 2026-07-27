@@ -19,22 +19,14 @@ export default function ProductView() {
   const productListQuery = useProductList({ q, category, sort, page });
 
   useEffect(() => {
-    if (productListQuery.data) {
-      const totalPages = Math.max(
-        1,
-        Math.ceil(productListQuery.data.totalCount / productListQuery.data.pageSize),
-      );
+    const data = productListQuery.data;
+    if (!data || data.totalCount === 0) return;
 
-      if (page > totalPages) {
-        setPage(INITIAL_PAGE);
-      }
-      return;
-    }
-
-    if (productListQuery.isError && page !== INITIAL_PAGE) {
+    const totalPages = Math.ceil(data.totalCount / data.pageSize);
+    if (page > totalPages) {
       setPage(INITIAL_PAGE);
     }
-  }, [productListQuery.data, productListQuery.isError, page, setPage]);
+  }, [productListQuery.data, page, setPage]);
 
   return (
     <main className="week05-page">
