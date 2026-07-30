@@ -3,9 +3,7 @@
 import { useEffect } from 'react';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
-import { ProductCard } from '@/entities/product/ui/ProductCard';
-import { ToggleWishlistButton } from '@/features/toggle-wishlist/ui/ToggleWishlistButton';
-import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
+import { Body } from '@/widgets/body/ui/Body';
 import { ProductFilters } from '@/features/product-filter/ui/ProductFilters';
 import { useProductListParams } from '@/features/product-filter/model/useProductListParams';
 import { Pagination } from '@/shared/ui/Pagination/Pagination';
@@ -50,23 +48,14 @@ export default function ProductView() {
         )}
       >
         {(data) => (
-          <section className="week05-section" aria-label="상품 검색 결과">
-            <p>총 {data.totalCount}개</p>
-            {data.products.length === 0 ? (
-              <p>검색 결과가 없습니다.</p>
-            ) : (
-              <div className="week05-grid">
-                {data.products.map((product, index) => {
-                  const label = `${index + 1}번 상품`;
-                  return (
-                    <ProductCard key={product.id} product={product}>
-                      <ToggleWishlistButton productId={product.id} label={label} />
-                      <AddToCartButton productId={product.id} label={label} />
-                    </ProductCard>
-                  );
-                })}
-              </div>
-            )}
+          <>
+            <Body
+              products={data.products}
+              emptyMessage="검색 결과가 없습니다."
+              sectionLabel="상품 검색 결과"
+            >
+              <p>총 {data.totalCount}개</p>
+            </Body>
             {!productListQuery.isFetching && (
               <Pagination
                 page={data.page}
@@ -75,7 +64,7 @@ export default function ProductView() {
                 onPageChange={setPage}
               />
             )}
-          </section>
+          </>
         )}
       </QueryState>
     </main>

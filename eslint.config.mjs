@@ -23,6 +23,9 @@ const eslintConfig = defineConfig([
         { type: 'entities', pattern: 'src/entities/*/**', capture: ['slice'] },
         { type: 'shared', pattern: 'src/shared/**' },
       ],
+      // 테스트 파일은 "test" 카테고리로 분류 — 통합 테스트가 여러 슬라이스를 가로질러 import해야
+      // 하는 건 정상이라, 아래 정책에서 이 카테고리만 예외로 허용한다.
+      'boundaries/files': [{ category: 'test', pattern: '**/*.test.{ts,tsx}' }],
     },
     rules: {
       'boundaries/dependencies': [
@@ -30,6 +33,11 @@ const eslintConfig = defineConfig([
         {
           default: 'disallow',
           policies: [
+            // 테스트 파일은 레이어/슬라이스 규칙 대상에서 제외 — 통합 검증이 목적이라 자유롭게 import 가능
+            {
+              from: { file: { categories: 'test' } },
+              allow: { to: { element: { types: ['app', 'widgets', 'features', 'entities', 'shared'] } } },
+            },
             { from: { element: { type: 'shared' } }, allow: { to: { element: { type: 'shared' } } } },
             { from: { element: { type: 'entities' } }, allow: { to: { element: { type: 'shared' } } } },
             {

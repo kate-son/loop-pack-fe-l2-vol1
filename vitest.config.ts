@@ -24,6 +24,7 @@ export default defineConfig({
             'src/entities/wishlist/model/useWishlistStore.test.ts',
             'src/entities/product/ui/ProductCard.test.tsx',
             'src/widgets/header/ui/Header.test.tsx',
+            'src/widgets/body/ui/Body.test.tsx',
           ],
         },
       },
@@ -39,6 +40,7 @@ export default defineConfig({
             'src/entities/wishlist/model/useWishlistStore.test.ts',
             'src/entities/product/ui/ProductCard.test.tsx',
             'src/widgets/header/ui/Header.test.tsx',
+            'src/widgets/body/ui/Body.test.tsx',
           ],
           setupFiles: ['./vitest.setup.ts'],
           browser: {
