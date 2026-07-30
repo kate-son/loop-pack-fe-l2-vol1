@@ -3,8 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ProductCard } from './ProductCard';
 import { Header } from '@/widgets/header/ui/Header';
-import { useWishlistStore } from '@/features/wishlist/model/useWishlistStore';
-import { useCartStore } from '@/features/cart/model/useCartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 import type { Product } from '@/entities/product/model/product';
 
 const PRODUCT: Product = {

@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import type { Product } from '@/entities/product/model/product';
-import { useWishlistStore } from '@/features/wishlist/model/useWishlistStore';
-import { useCartStore } from '@/features/cart/model/useCartStore';
+import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
+import { useCartStore } from '@/entities/cart/model/useCartStore';
 
 type ProductCardProps = {
   /** 카드에 표시할 상품 데이터 */
