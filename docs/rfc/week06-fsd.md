@@ -435,10 +435,54 @@ barrel을 안 쓰므로 "공개 파일"이 곧 다른 슬라이스가 import하�
 - 클라이언트 재요청(필터 변경 등)은 `placeholderData: keepPreviousData`로 이전 화면을 그대로 보여주다가 조용히 갱신되는 쪽을 유지한다. 여러 섹션(`Body` 인스턴스 등)이 각자 로딩 스피너를 따로 띄우면 화면이 산만해진다고 판단해, 의도적으로 컴포넌트 단위 로딩을 만들지 않는다.
 - 이 결정은 0단계에서 이미 확인한 사실과도 맞아떨어진다 — `keepPreviousData` + SSR prefetch 때문에 `QueryState`의 `isPending` 분기는 애초에 거의 도달 불가능했다. `QueryState`는 `renderLoading` prop을 없애고 `isError`/성공 두 가지만 다루도록 단순화한다.
 
+### 이벤트 핸들러 · 비동기 콜백 에러는 Error Boundary가 못 잡는다
+
+React Error Boundary(`error.tsx` 포함)는 **렌더링 중** 발생하는 에러만 잡는다. `onClick`/`onChange`/`onMouseEnter` 같은 이벤트 핸들러 안에서 던져지는 에러나, 그 안의 비동기 콜백(`.then`/`await` 이후)에서 나는 에러는 렌더링 흐름 밖이라 Error Boundary가 감지하지 못한다.
+
+이 프로젝트의 실제 이벤트 핸들러를 전부 점검한 결과:
+
+| 핸들러                                                | 실제로 하는 일                                      | 실패 가능성                                                                                                                                             |
+| ----------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ErrorRetry`의 `onRetry`                              | `query.refetch()`                                   | Promise를 반환하지만 TanStack Query는 쿼리가 실패해도 이 Promise를 **reject하지 않는다**(결과를 `isError` 상태로 담아 resolve). 명시적 에러 처리 불필요 |
+| `Header`/`HomeView`의 `onMouseEnter` 프리페치         | `queryClient.prefetchQuery(...)`                    | TanStack Query가 내부적으로 실패를 흡수하도록 설계되어 있어(기본적으로 throw/reject 안 함) 명시적 처리 불필요                                           |
+| `ProductFilters`의 `onSubmit`/`onChange`              | `setQuery`/`setCategory`/`setSort`(nuqs `setParam`) | 동기 함수, 외부 I/O 없음. 실패할 방법이 없음                                                                                                            |
+| `Pagination`의 `onClick`                              | `onPageChange`(nuqs `setPage`)                      | 위와 동일                                                                                                                                               |
+| `ProductCard`(→ features 버튼)의 찜/담기 `onClick`    | Zustand `set()`으로 `productIds` 토글               | 동기 함수, 순수 상태 변경. 실패할 방법이 없음                                                                                                           |
+| dialog/select 내부 `onClick`(trigger, overlay, close) | 로컬 `useState` 토글                                | 위와 동일                                                                                                                                               |
+
+**결론**: 지금 있는 핸들러는 전부 그냥 상태만 바꾸거나(찜 버튼, 페이지 이동, 검색어 입력) TanStack Query가 알아서 실패를 감싸주는 함수(`refetch`, `prefetchQuery`)뿐이라 실패할 일이 사실상 없다. 그래서 별도의 에러 처리 장치(전역 `window.onerror` 로깅 등)를 지금 만들 필요는 없다고 판단했다. 혹시 진짜 버그가 나더라도 React 19에서는 그 인터랙션 하나만 실패하고 앱 전체가 죽진 않는다. 나중에 서버에 실제로 요청을 보내는 버튼(예: 주문하기)이 생기면, 그때 그 버튼에 `try-catch`를 추가하면 된다.
+
 ## 5단계 — 삭제 시나리오 자가 검증
 
-- **위시리스트 기능을 통째로 제거한다면**: 직접 작성
-- **신상품 뱃지를 상품 카드에 추가한다면**: 직접 작성
+### 위시리스트 기능을 통째로 제거한다면
+
+**삭제할 폴더 (2개)**
+
+- `src/entities/wishlist/`(`model/useWishlistStore.ts`, `model/useWishlistStore.test.ts`)
+- `src/features/toggle-wishlist/`(`ui/ToggleWishlistButton.tsx`)
+
+**삭제 후 수정이 필요한 파일 (4개)**
+
+| 파일                                | 수정 내용                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `widgets/header/ui/Header.tsx`      | `entities/wishlist`의 카운트 selector import 제거, "위시리스트 {count}" 마크업 제거 |
+| `widgets/header/ui/Header.test.tsx` | 위시리스트 카운트 검증 케이스 제거                                                  |
+| `widgets/body/ui/Body.tsx`          | `ToggleWishlistButton`을 `ProductCard`의 `children`으로 조합하던 부분 제거          |
+| `widgets/body/ui/Body.test.tsx`     | 위시리스트 관련 검증(Header 카운트 동기화 중 위시리스트 부분) 제거                  |
+
+**판정**: 삭제 대상이 `entities/wishlist`, `features/toggle-wishlist` 두 슬라이스로 응집돼 있고, 수정 대상도 "위시리스트를 소비하는 쪽"(Header, Body) 4곳으로 grep(`wishlist`, `Wishlist`) 한 번이면 다 찾을 수 있다. `entities/product`(`ProductCard` 포함)·`features/product-filter`·페이지 쪽은 전혀 안 건드려도 된다 — 응집 성공.
+
+### 신상품 뱃지를 상품 카드에 추가한다면
+
+**터치할 파일 (2~3개, 전부 `entities/product` 안)**
+
+| 파일                                              | 변경 내용                                                                                                                           |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `entities/product/model/isNewProduct.ts` (신규)   | `createdAt` 기준으로 "신상품" 여부를 판정하는 순수 함수. 임계값(예: N일 이내)은 `entities/product/model/constants.ts`에 상수로 추가 |
+| `entities/product/ui/ProductCard.tsx`             | `isNewProduct(product)`가 true면 뱃지 렌더링                                                                                        |
+| `entities/product/ui/ProductCard.test.tsx` (선택) | 뱃지 노출 조건 테스트 추가                                                                                                          |
+
+**판정**: `ProductCard`가 홈·상품목록 양쪽에서 동일 컴포넌트로 재사용되고 있어서, `entities/product` 안에서만 고치면 두 화면 모두에 자동으로 반영된다. `widgets/body`, `HomeView`, `ProductView`, 다른 entity/feature는 전혀 안 건드려도 된다 — "이 상품이 신상품인가"라는 판단은 순전히 `Product` 도메인 지식이라 `entities/product` 밖으로 새어나갈 이유가 없었기 때문. 자신 있게 예측 가능한 범위라 경계 설계가 잘 됐다고 판단.
 
 ## Advanced (선택)
 
