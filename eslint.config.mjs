@@ -5,11 +5,90 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 // (타입 추론이 필요한 규칙은 없음 — parserOptions.project가 꺼져 있어 타입 정보 자체를 못 봄)
 import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier';
+import boundaries from 'eslint-plugin-boundaries';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettierConfig,
+  // FSD 의존성 하네스 — 6주차 RFC(docs/rfc/week06-fsd.md)의 레이어 정의를 기계로 강제한다.
+  // 규칙: ① 상위 레이어만 하위 레이어를 import할 수 있다 ② 같은 레이어의 다른 슬라이스는 직접 import할 수 없다(같은 슬라이스 내부는 허용).
+  {
+    plugins: { boundaries },
+    settings: {
+      'boundaries/elements': [
+        { type: 'app', pattern: 'src/app/**' },
+        { type: 'widgets', pattern: 'src/widgets/*/**', capture: ['slice'] },
+        { type: 'features', pattern: 'src/features/*/**', capture: ['slice'] },
+        { type: 'entities', pattern: 'src/entities/*/**', capture: ['slice'] },
+        { type: 'shared', pattern: 'src/shared/**' },
+      ],
+    },
+    rules: {
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'disallow',
+          policies: [
+            { from: { element: { type: 'shared' } }, allow: { to: { element: { type: 'shared' } } } },
+            { from: { element: { type: 'entities' } }, allow: { to: { element: { type: 'shared' } } } },
+            {
+              from: { element: { type: 'entities' } },
+              allow: {
+                to: {
+                  element: {
+                    type: 'entities',
+                    captured: { slice: '{{from.element.captured.slice}}' },
+                  },
+                },
+              },
+            },
+            // 다른 슬라이스라도 타입 전용 참조(예: Product.category: CategoryId)는 예외로 허용.
+            // 값(런타임 로직) import는 여전히 금지 — 아래 default: 'disallow'로 막힘.
+            {
+              from: { element: { type: 'entities' } },
+              allow: { to: { element: { type: 'entities' } } },
+              importKind: 'type',
+            },
+            {
+              from: { element: { type: 'features' } },
+              allow: { to: { element: { types: ['shared', 'entities'] } } },
+            },
+            {
+              from: { element: { type: 'features' } },
+              allow: {
+                to: {
+                  element: {
+                    type: 'features',
+                    captured: { slice: '{{from.element.captured.slice}}' },
+                  },
+                },
+              },
+            },
+            {
+              from: { element: { type: 'widgets' } },
+              allow: { to: { element: { types: ['shared', 'entities', 'features'] } } },
+            },
+            {
+              from: { element: { type: 'widgets' } },
+              allow: {
+                to: {
+                  element: {
+                    type: 'widgets',
+                    captured: { slice: '{{from.element.captured.slice}}' },
+                  },
+                },
+              },
+            },
+            {
+              from: { element: { type: 'app' } },
+              allow: { to: { element: { types: ['shared', 'entities', 'features', 'widgets'] } } },
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     rules: {
       // 아래 5개는 nextVitals/nextTs 기본값과 완전히 같은 값이라 재선언해도 실제 동작에는 아무 효과가 없는 중복(no-op)이라 주석 처리함.
