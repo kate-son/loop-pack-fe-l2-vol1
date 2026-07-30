@@ -14,7 +14,7 @@ export function Header() {
 
   return (
     <header className="week05-header">
-      <Link href="/home">Commerce</Link>
+      <Link href="/">Commerce</Link>
       <nav aria-label="주요 메뉴">
         <Link
           href="/products"
