@@ -48,7 +48,7 @@ const eslintConfig = defineConfig([
             {
               from: { element: { type: 'entities' } },
               allow: { to: { element: { type: 'entities' } } },
-              importKind: 'type',
+              dependency: { kind: 'type' },
             },
             {
               from: { element: { type: 'features' } },
