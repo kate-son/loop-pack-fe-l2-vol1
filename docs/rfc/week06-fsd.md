@@ -82,6 +82,7 @@
 ### 이번 주에 하지 않을 것과 그 이유
 
 - **[2026.07.28] Advanced (A. 의존성 하네스, B. 변경 반경 실험) — 아직 결정 보류.** 기본 과제(RFC, FSD 전환, Public API 결정, 에러 처리 경계, 삭제 시나리오 검증)만으로도 범위가 커서, 지금 시점에 Advanced를 한다/안 한다를 못박기보다 FSD 전환이 어느 정도 진행된 뒤 여유와 실현 가능성을 보고 재판단하기로 함. 특히 B(변경 반경 실험)는 새 구조 위에서 실제로 기능을 추가해봐야 하는 작업이라, 전환이 끝나기 전에는 범위를 가늠하기 어려움
+- **[2026.07.31] Advanced A(의존성 하네스) — 진행함, 미리 구축.** `eslint-plugin-boundaries`로 상위→하위 import 규칙과 같은 레이어 다른 슬라이스 직접 import 금지 규칙을 강제하는 하네스를 파일 이동 전에 먼저 설치·구성했다. 마이그레이션 자체를 이 하네스로 검증하려는 목적이라 "전환이 어느 정도 진행된 뒤"가 아니라 오히려 맨 먼저 하는 게 맞다고 판단을 바꿈. B(변경 반경 실험)는 여전히 보류 — 이 판단은 그대로 유지
 
 ## A — Architecture
 
@@ -166,6 +167,8 @@ src/
 ├── app/                                    # Next.js 라우팅 디렉터리
 │   ├── (home)/                             # Route Group — URL은 '/' 그대로 (7번 문제 해결)
 │   │   ├── page.tsx                        # 서버 컴포넌트, homeQueryOptions로 prefetch
+│   │   ├── loading.tsx                     # 라우트 전환 시 화면 전체 로딩 (4단계)
+│   │   ├── error.tsx                       # 예상 못한 렌더링 오류의 최후 방어선 (4단계)
 │   │   ├── _api/homeQueryOptions.ts        # /api/home 요청 하나만 소유. staleTime 60s는 독립 정의 (문제 6 해결)
 │   │   └── _ui/
 │   │       └── HomeView.tsx                # entities의 mapper를 가져와 select로 실제 조립
@@ -173,6 +176,8 @@ src/
 │   │
 │   ├── products/
 │   │   ├── page.tsx                        # 서버 컴포넌트, prefetch만
+│   │   ├── loading.tsx                     # (4단계)
+│   │   ├── error.tsx                       # (4단계)
 │   │   └── _ui/
 │   │       └── ProductView.tsx
 │   │
@@ -203,8 +208,8 @@ src/
 │   ├── product-filter/
 │   │   ├── model/{productSearchParams, loadProductSearchParams, useProductListParams}.ts
 │   │   └── ui/ProductFilters.tsx
-│   ├── toggle-wishlist/                    # 신규 — 버튼 UI만. entities/wishlist의 액션을 가져다 씀
-│   └── add-to-cart/                        # 신규 — 버튼 UI만. entities/cart의 액션을 가져다 씀
+│   ├── toggle-wishlist/ui/ToggleWishlistButton.tsx  # 신규 — 버튼 UI만. entities/wishlist의 액션을 가져다 씀
+│   └── add-to-cart/ui/AddToCartButton.tsx           # 신규 — 버튼 UI만. entities/cart의 액션을 가져다 씀
 │
 ├── widgets/
 │   ├── header/ui/Header.tsx                # entities/wishlist·entities/cart를 읽기 전용으로 참조
@@ -392,9 +397,10 @@ barrel을 안 쓰므로 "공개 파일"이 곧 다른 슬라이스가 import하�
 
 ### 기타
 
-| 현재 위치                        | 목표 위치                         | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유         |
-| -------------------------------- | --------------------------------- | ---------------------------- | ------------------------------- |
-| `src/examples/week-05-layout/**` | `docs/examples/week-05-layout/**` | -                            | `src` 밖으로 이동, 삭제는 안 함 |
+| 현재 위치                        | 목표 위치                                                                  | 레이어 / 슬라이스 / 세그먼트 | 이동 또는 유지하는 이유                                      |
+| -------------------------------- | -------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------ |
+| `src/examples/week-05-layout/**` | `docs/examples/week-05-layout/**`                                          | -                            | `src` 밖으로 이동, 삭제는 안 함                              |
+| 신규                             | `eslint.config.mjs`(수정), `package.json`(`eslint-plugin-boundaries` 추가) | -                            | Advanced A(의존성 하네스) — 마이그레이션 전에 미리 설치·구성 |
 
 ## 애매한 파일 5개 이상 결정표
 
@@ -482,11 +488,33 @@ React Error Boundary(`error.tsx` 포함)는 **렌더링 중** 발생하는 에�
 | `entities/product/ui/ProductCard.tsx`             | `isNewProduct(product)`가 true면 뱃지 렌더링                                                                                        |
 | `entities/product/ui/ProductCard.test.tsx` (선택) | 뱃지 노출 조건 테스트 추가                                                                                                          |
 
-**판정**: `ProductCard`가 홈·상품목록 양쪽에서 동일 컴포넌트로 재사용되고 있어서, `entities/product` 안에서만 고치면 두 화면 모두에 자동으로 반영된다. `widgets/body`, `HomeView`, `ProductView`, 다른 entity/feature는 전혀 안 건드려도 된다 — "이 상품이 신상품인가"라는 판단은 순전히 `Product` 도메인 지식이라 `entities/product` 밖으로 새어나갈 이유가 없었기 때문. 자신 있게 예측 가능한 범위라 경계 설계가 잘 됐다고 판단.
+**판정**: `ProductCard`가 홈·상품목록 양쪽에서 동일 컴포넌트로 재사용되고 있어서, `entities/product` 안에서만 고치면 두 화면 모두에 자동으로 반영된다. `widgets/body`, `HomeView`, `ProductView`, 다른 entity/feature는 전혀 안 건드려도 된다 — "이 상품이 신상품인가"라는 판단은 순전히 `Product` 도메인 지식이라 `entities/product` 밖으로 새어나갈 이유가 없었기 때문이다.
 
 ## Advanced (선택)
 
-직접 작성
+### A. 의존성 하네스 — 진행함
+
+**도구**: `eslint-plugin-boundaries` (`pnpm lint`/`pnpm check`에 자동 통합, 별도 실행 불필요)
+
+**선택 이유**: FSD 전환을 "어느 정도 진행한 뒤" 하려던 원래 계획을 뒤집어, 파일을 옮기기 전에 먼저 구축했다. 규칙을 사람이 리뷰로만 지키게 하면 마이그레이션 도중 실수를 놓칠 수 있는데, 하네스를 먼저 깔아두면 파일을 옮기는 과정 자체를 하네스가 검증해준다.
+
+**강제하는 두 규칙** (`eslint.config.mjs`):
+
+1. 상위 레이어만 하위 레이어를 import 가능 (`app → widgets → features → entities → shared`, 역방향 금지)
+2. 같은 레이어의 다른 슬라이스는 직접 import 금지 (같은 슬라이스 내부는 허용) — `boundaries/elements`의 `capture: ['slice']`로 슬라이스를 추출하고, `captured: { slice: '{{from.element.captured.slice}}' }`로 같은 슬라이스만 허용
+
+**추가한 복잡도**: `entities/product`가 `entities/category`의 `CategoryId` 타입을 참조하는 정당한 케이스가 있어(외래키 성격 참조), 값(런타임 로직) import는 여전히 금지하되 `importKind: 'type'` 조건으로 타입 전용 import만 예외적으로 허용하는 정책을 추가했다.
+
+**검증 결과**: `pnpm lint` 실행 결과 위반 2건 발견.
+
+- `entities/product/model/product.ts` → `entities/category`: 타입 전용 참조였음이 확인되어 예외 규칙으로 해소
+- `widgets/product-card/ui/ProductCard.test.tsx` → `widgets/header/ui/Header`: 문제 5번에서 이미 발견했던 실제 위반. **의도적으로 안 고치고 남겨둠** — 마이그레이션 3~4단계(`ProductCard`를 entity로 이동, 테스트를 `Body.test.tsx`로 이관)가 끝나면 자연히 해소되는 위반이라, 하네스가 실제로 유효하다는 증거로 남긴다. 즉 지금은 `pnpm check`가 이 1건 때문에 실패하는 상태이고, 이는 의도된 것이다.
+
+`typecheck`/`build`는 하네스 도입과 무관하게 정상 통과 확인.
+
+### B. 변경 반경 실험 — 보류 유지
+
+R 섹션에서 정한 대로 보류. 기본 과제와 하네스만으로도 이번 주 범위가 충분히 크다고 판단했고, 실제 코드 마이그레이션(2단계)이 끝난 뒤에도 여유가 있으면 재검토한다.
 
 ## FSD 이해 확인 질문
 
