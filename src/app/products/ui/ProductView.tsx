@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
 import { Body } from '@/widgets/body/ui/Body';
+import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';
 import { ProductFilters } from '@/features/product-filter/ui/ProductFilters';
 import { useProductListParams } from '@/features/product-filter/model/useProductListParams';
 import { Pagination } from '@/shared/ui/Pagination/Pagination';
@@ -31,8 +32,8 @@ export default function ProductView() {
   return (
     <main className="week05-page">
       <Header />
+      <PageHeading title="상품 목록" />
       <section className="week05-section">
-        <h1>상품 목록</h1>
         <ProductFilters
           filters={{ q, category, sort }}
           onSearch={setQuery}

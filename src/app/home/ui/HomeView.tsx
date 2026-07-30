@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
 import { Body } from '@/widgets/body/ui/Body';
+import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useHomeData } from '../model/useHomeData';
@@ -38,10 +39,7 @@ export function HomeView() {
       >
         {(data) => (
           <>
-            <section className="week05-hero">
-              <p>{data.banner.description}</p>
-              <h1>{data.banner.title}</h1>
-            </section>
+            <PageHeading title={data.banner.title} description={data.banner.description} />
             <section className="week05-section">
               <h2>카테고리</h2>
               <div className="week05-categories">
