@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
-import { ProductCard } from '@/widgets/product-card/ui/ProductCard';
+import { ProductCard } from '@/entities/product/ui/ProductCard';
+import { ToggleWishlistButton } from '@/features/toggle-wishlist/ui/ToggleWishlistButton';
+import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useHomeData } from '../model/useHomeData';
@@ -68,13 +70,15 @@ export function HomeView() {
                   <p>상품이 없습니다.</p>
                 ) : (
                   <div className="week05-grid">
-                    {products.map((product, index) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        label={`${title} ${index + 1}번 상품`}
-                      />
-                    ))}
+                    {products.map((product, index) => {
+                      const label = `${title} ${index + 1}번 상품`;
+                      return (
+                        <ProductCard key={product.id} product={product}>
+                          <ToggleWishlistButton productId={product.id} label={label} />
+                          <AddToCartButton productId={product.id} label={label} />
+                        </ProductCard>
+                      );
+                    })}
                   </div>
                 )}
               </section>

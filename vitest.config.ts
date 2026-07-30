@@ -21,8 +21,8 @@ export default defineConfig({
           exclude: [
             '**/node_modules/**',
             'src/features/product-filter/model/useProductListParams.test.tsx',
-            'src/features/wishlist/model/useWishlistStore.test.ts',
-            'src/widgets/product-card/ui/ProductCard.test.tsx',
+            'src/entities/wishlist/model/useWishlistStore.test.ts',
+            'src/entities/product/ui/ProductCard.test.tsx',
             'src/widgets/header/ui/Header.test.tsx',
           ],
         },
@@ -36,8 +36,8 @@ export default defineConfig({
           name: 'browser',
           include: [
             'src/features/product-filter/model/useProductListParams.test.tsx',
-            'src/features/wishlist/model/useWishlistStore.test.ts',
-            'src/widgets/product-card/ui/ProductCard.test.tsx',
+            'src/entities/wishlist/model/useWishlistStore.test.ts',
+            'src/entities/product/ui/ProductCard.test.tsx',
             'src/widgets/header/ui/Header.test.tsx',
           ],
           setupFiles: ['./vitest.setup.ts'],
