@@ -1,5 +1,5 @@
-import { SelectBoxExamples } from './selectBox';
-import { DialogExamples } from './dialog';
+import { SelectBoxExamples } from './_selectBox';
+import { DialogExamples } from './_dialog';
 
 /**
  * week4에서 작성한 커스텀 컴포넌트 페이지
