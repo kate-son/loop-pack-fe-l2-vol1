@@ -7,38 +7,93 @@
 
 폴더 이동 전, 현재 코드(`feat/week-06`, `pnpm dev` 기준)에서 아래 항목을 직접 확인했다.
 
-| 항목                         | 결과                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm check`                 | 통과 — test 46/46, lint 에러 0 · warning 30(전부 mock 데이터의 `no-magic-numbers`, 구조 변경과 무관한 기존 경고), typecheck 통과, build 성공                                                                                                                                                                                                                                                                      |
-| 홈 화면 정상 상태            | 배너 · 카테고리 · 인기 상품 · 신상품 정상 렌더링                                                                                                                                                                                                                                                                                                                                                                  |
-| 상품 목록 정상 상태          | 총 30개, 페이지네이션 1/3 정상                                                                                                                                                                                                                                                                                                                                                                                    |
-| 검색                         | `q=셔츠` → 서버가 `총 1개`로 정확히 필터링, 새로고침해도 결과 유지                                                                                                                                                                                                                                                                                                                                                |
-| 카테고리 필터                | `category=digital` → 총 6개로 정상 필터링                                                                                                                                                                                                                                                                                                                                                                         |
-| 정렬                         | `sort=price-asc` 등 URL에 정상 반영                                                                                                                                                                                                                                                                                                                                                                               |
-| URL 공유 · 새로고침          | 쿼리 파라미터 포함 URL 새로고침 시 동일한 필터 결과 유지                                                                                                                                                                                                                                                                                                                                                          |
-| 뒤로/앞으로 가기             | products → home 이동 후 뒤로 가기 시 검색 상태 복원, 앞으로 가기 정상                                                                                                                                                                                                                                                                                                                                             |
-| 장바구니 · 위시리스트 동기화 | 상품 목록에서 찜 · 담기 토글 → 헤더에 "위시리스트 1 / 장바구니 1" 반영, 홈으로 이동해도 카운트 유지(Zustand 정상 공유)                                                                                                                                                                                                                                                                                            |
-| 로딩 상태                    | 0단계에서는 강제로 검증하지 않음. 현재 `QueryState`의 `renderLoading`으로만 처리되고 있어 범위(route `loading.tsx`/Suspense vs `isPending`)가 정해지지 않음 → 4단계에서 구조와 함께 정의                                                                                                                                                                                                                          |
-| 빈 상태 / 에러 상태          | 0단계에서는 강제로 검증하지 않음. `?scenario=empty`, `?scenario=error`로 URL을 조작해도 화면은 정상 데이터를 그대로 보여줌 — `scenario`가 `ProductListQuery`/`productSearchParams`에 없어(과제 지침에 따라 의도적으로 제외) 클라이언트가 API로 전달하지 않기 때문. `error.tsx`도 프로젝트 전체에 존재하지 않음. 버그가 아니라 4단계(에러 처리 경계)가 아직 구현되지 않아 생기는 공백 → 4단계에서 구조와 함께 정의 |
+| 항목                                       | 결과                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                               | 통과 — test 46/46, lint 에러 0 · warning 30(전부 mock 데이터의 `no-magic-numbers`, 구조 변경과 무관한 기존 경고), typecheck 통과, build 성공                                                                                                                                                                                                                                                          |
+| 홈 화면 정상 상태                          | 배너 · 카테고리 · 인기 상품 · 신상품 정상 렌더링                                                                                                                                                                                                                                                                                                                                                      |
+| 상품 목록 정상 상태                        | 총 30개, 페이지네이션 1/3 정상                                                                                                                                                                                                                                                                                                                                                                        |
+| 검색                                       | `q=셔츠` → 서버가 `총 1개`로 정확히 필터링, 새로고침해도 결과 유지                                                                                                                                                                                                                                                                                                                                    |
+| 카테고리 필터                              | `category=digital` → 총 6개로 정상 필터링                                                                                                                                                                                                                                                                                                                                                             |
+| 정렬                                       | `sort=price-asc` 등 URL에 정상 반영                                                                                                                                                                                                                                                                                                                                                                   |
+| URL 공유 · 새로고침                        | 쿼리 파라미터 포함 URL 새로고침 시 동일한 필터 결과 유지                                                                                                                                                                                                                                                                                                                                              |
+| 뒤로/앞으로 가기                           | products → home 이동 후 뒤로 가기 시 검색 상태 복원, 앞으로 가기 정상                                                                                                                                                                                                                                                                                                                                 |
+| 장바구니 · 위시리스트 동기화               | 상품 목록에서 찜 · 담기 토글 → 헤더에 "위시리스트 1 / 장바구니 1" 반영, 홈으로 이동해도 카운트 유지(Zustand 정상 공유)                                                                                                                                                                                                                                                                                |
+| 빈 상태 (실제 검색)                        | `scenario` 없이 실제로 매칭되지 않는 검색어(`q=존재하지않는상품명zzz`)로 확인 — "검색 결과가 없습니다" 정상 표시                                                                                                                                                                                                                                                                                      |
+| 네트워크 에러 (클라이언트 재요청)          | Playwright로 카테고리 변경 시 클라이언트 재요청을 강제로 실패시켜 확인. TanStack Query 기본 재시도(3회, 지수 백오프)가 끝나는 **약 8~10초 후**에야 `ErrorRetry`("Failed to fetch" + 다시 시도 버튼)가 렌더링됨. **그 사이 8~10초 동안은 이전 필터의 데이터가 그대로 남아있고 로딩·에러 표시가 전혀 없어 사용자에게는 "아무 반응 없음"으로 보임** — 4단계 설계에 반영 필요                             |
+| 로딩 상태 (클라이언트 재요청)              | 필터 변경 시 응답에 지연을 걸어도 `QueryState`의 `renderLoading`("불러오는 중입니다…")은 **한 번도 렌더링되지 않음**. `placeholderData: keepPreviousData`로 인해 필터 변경 시 `isPending`이 항상 false가 되기 때문 — 최초 진입도 SSR prefetch가 항상 먼저 끝나 있어 사실상 `renderLoading` 분기는 현재 구조에서 도달 불가능에 가까움 → 4단계에서 로딩 표시 범위(스켈레톤/`isFetching` 등) 재설계 필요 |
+| `scenario` 기반 에러/빈 상태 (mock 제어값) | `?scenario=empty`, `?scenario=error`로 URL을 조작해도 화면은 정상 데이터를 그대로 보여줌 — `scenario`가 `ProductListQuery`/`productSearchParams`에 없어(과제 지침에 따라 의도적으로 제외) 클라이언트가 API로 전달하지 않기 때문. `error.tsx`도 프로젝트 전체에 존재하지 않음. 버그가 아니라 4단계(에러 처리 경계)가 아직 구현되지 않아 생기는 공백 → 4단계에서 구조와 함께 정의                       |
 
 ### 발견한 기존 버그
 
-직접 작성 (있다면 `재현 방법 · 원인 · 수정 위치 · 검증 결과`를 구조 변경 커밋과 분리해서 기록)
+없음. `fix: 5주차 과제 피드백 적용`(7625258)에서 이미 다음을 수정함:
+
+- 훅 함수에 `.queryOptions` static property를 붙여 Server Component에서 재사용하던 편법을 `homeQueryOptions`/`productsQueryOptions` 독립 함수로 분리
+- `ProductView`의 페이지 초과 리셋 로직에서 `isError` 분기 제거, `totalCount === 0` early return으로 단순화
+- 검색 디바운스가 `history: 'push'`로 히스토리를 스팸처럼 쌓던 것을 `replace`로 변경
+
+이후 `useWishlistStore`/`useCartStore`(직렬화·마이그레이션·rehydrate), `Pagination`(경계값), `set.ts`(Set 직렬화)를 코드 리뷰 + 브라우저 확인(검색·카테고리·정렬·페이지네이션·URL·장바구니/위시리스트 동기화)으로 다시 점검했지만 추가로 발견한 버그는 없음.
+
+**추가로 발견한 구조적 결함 (동작 버그는 아님):**
+
+- **원인**: `src/app/home/{api,model,ui}`, `src/app/products/ui`가 Next.js App Router 라우팅 디렉터리(`src/app/**`) 안에 있는데 언더스코어 접두사가 없다. Next.js는 `_folderName`처럼 언더스코어로 시작하는 폴더만 private folder로 취급해 라우팅 대상에서 완전히 제외한다. 지금은 그 안에 `page.tsx`/`route.ts`가 없어서 우연히 라우팅되지 않을 뿐, 나중에 실수로 `src/app/home/ui/page.tsx` 같은 파일이 추가되면 `/home/ui`가 그대로 라우트로 노출된다. 과제 문서가 "FSD App/Pages 레이어가 필요하면 예약 디렉터리와 구분되도록 `src/_app`·`src/_pages`를 쓴다"고 명시한 것과 같은 원칙이 라우트 세그먼트 내부 구현 폴더에도 적용돼야 한다.
+- **현재 영향**: 없음 — 지금은 실제로 라우팅되는 페이지가 없어 사용자에게 보이는 동작 문제는 없다.
+- **처리 방침**: 별도 버그 수정 커밋을 만들지 않는다. 이 폴더들은 어차피 이번 FSD 전환에서 옮겨지므로, 마이그레이션 결과물 자체가 이 문제를 해소한다 (예: `src/app/home/ui/HomeView.tsx` 같은 페이지 조합 파일이 라우팅 디렉터리에 남는다면 `_ui`처럼 언더스코어를 붙이거나 `src/_pages`로 이동).
 
 ---
 
 ## R — Requirements
 
-- **5주차까지의 기능 요구사항**: 직접 작성
-- **비기능 요구사항**: 직접 작성
-- **이번 주에 반드시 보존할 동작**: 위 0단계 표 참고
-- **이번 주에 하지 않을 것과 그 이유**: 직접 작성
+### 5주차까지의 기능 요구사항
+
+- Home 화면에서 API호출
+- Home에서 조회된 상품 찜/담기 클릭시 header의 위시리스트 0 장바구니 0 에 즉시 표현되어야 함
+- Home에서 카테고리 선택시 해당 카테고리 상품 목록 페이지로 이동
+- 상품 목록에서 필터 선택시 필터에 맞는 상품 조회
+- 상품 목록에서 조회된 상품 찜/담기 클릭시 header의 위시리스트 0 장바구니 0에 즉시 표현되어야 함
+- 위시리스트에 포함된 상품은 찜에 표기됨
+- 장바구니에 포함된 상품은 동일 상품 담기 클릭시 장바구니에서 해제됨 (위시리스트도 동일)
+- 페이지 클릭시 해당 페이징의 상품 조회
+- 뒤로가기 클릭시 이전 필터 조건으로 상품 조회됨
+- 사용자의 다음 행위 (다음 페이지 이동, 또는 Home에서 카테고리 위에 호버)에 대한 선 API조회
+
+**코드에서 추가로 확인한 요구사항** (위 목록에 없던 것만):
+
+- 상품 목록에서 검색어(q)로 필터링 — 브랜드+상품명 기준, 대소문자 구분 없이 비교(`toLocaleLowerCase('ko')`)
+- 상품 목록에서 정렬(최신순/인기순/가격 낮은순/가격 높은순) 적용
+- 검색·필터 결과가 0건이면 목록은 "검색 결과가 없습니다", 홈은 "상품이 없습니다"(인기/신상품 섹션 각각) 문구 표시
+- 필터 변경으로 총 페이지 수가 줄어들면 자동으로 1페이지로 리셋
+- 위시리스트·장바구니 상태는 새로고침해도 유지(`sessionStorage` 기반, 탭/세션 종료 전까지 — 로그인 개념 없음)
+- 로딩 중(`isFetching`)에는 페이지네이션을 숨김
+- 검색 입력은 300ms 디바운스 + 즉시 제출(Enter) 가능, 디바운스 중 URL 히스토리는 `replace`로 스팸 방지
+- 홈/목록 최초 진입 시 서버에서 prefetch → Hydration으로 클라이언트 재요청 없이 초기 데이터 표시(SSR)
+
+### 비기능 요구사항
+
+- **캐싱 정책** — `staleTime`/`gcTime`으로 불필요한 재조회 방지, `keepPreviousData`로 필터 변경 시 깜빡임 없이 이전 데이터 유지
+- **접근성** — 찜/담기 버튼에 `aria-label`·`aria-pressed`로 토글 상태 명시, 페이지네이션 nav에 `aria-label`
+- **타입 안전성** — `tsc --noEmit` 통과가 `pnpm check`의 필수 게이트
+- **정적 분석** — ESLint(매직넘버 금지 등) 통과가 커밋 전 자동 검사 대상
+- **SSR 초기 로드 성능** — 홈/목록 진입 시 서버 prefetch로 클라이언트 워터폴 방지
+
+### 이번 주에 반드시 보존할 동작
+
+위 기능 요구사항 전체 + 0단계 표 참고
+
+### 이번 주에 하지 않을 것과 그 이유
+
+- **[2026.07.28] Advanced (A. 의존성 하네스, B. 변경 반경 실험) — 아직 결정 보류.** 기본 과제(RFC, FSD 전환, Public API 결정, 에러 처리 경계, 삭제 시나리오 검증)만으로도 범위가 커서, 지금 시점에 Advanced를 한다/안 한다를 못박기보다 FSD 전환이 어느 정도 진행된 뒤 여유와 실현 가능성을 보고 재판단하기로 함. 특히 B(변경 반경 실험)는 새 구조 위에서 실제로 기능을 추가해봐야 하는 작업이라, 전환이 끝나기 전에는 범위를 가늠하기 어려움
 
 ## A — Architecture
 
 ### 현재 겪는 문제 (3개 이상)
 
-직접 작성
+1. **예시/데모 코드와 실제 화면 코드가 뒤섞여 있고, private folder 컨벤션이 전혀 적용되지 않음** — `src/app/home/{api,model,ui}`, `src/app/products/ui`뿐 아니라 `src/app/examples/{dialog,selectBox}`도 언더스코어 없이 라우팅 디렉터리(`src/app/**`) 안에 있다. `src/examples/week-05-layout`처럼 라우팅 밖에 있는 예시 코드도 섞여 있어, 위치만 봐서는 실제 화면 코드인지 데모인지 구분되지 않는다. Next.js는 `_folderName`으로 시작하는 폴더만 라우팅 대상에서 완전히 제외하므로, 지금은 우연히 `page.tsx`가 없어 라우팅되지 않을 뿐 실수로 추가되면 그대로 라우트로 노출된다.
+2. **FSD 레이어 골격은 있지만 세그먼트 내부 규칙이 러프함** — `dialog`/`select` 같은 compound 컴포넌트를 `shared/ui`로 어떻게 편입할지, 슬라이스 안에서 UI를 어떻게 합성할지가 정해지지 않았다. 너무 세밀하게 규칙을 만들면 오버엔지니어링이 될 수 있어, UI를 먼저 재정의하고 그 결과로 파일 구조를 도출하는 순서로 접근한다.
+3. **에러·로딩(Suspense) 경계가 구체적으로 정의되지 않음** — `error.tsx`가 프로젝트에 없고, `QueryState`의 `renderLoading`도 `placeholderData: keepPreviousData` 때문에 구조상 거의 도달 불가능하다(0단계에서 확인). 컴포넌트 단위로 UI 범위를 다시 잡으면서 함께 정의할 예정이다.
+4. **`/api/home`이 BFF 형태로 여러 도메인을 한 번에 묶어서 응답함** — `src/app/api/home/route.ts`가 `banner`(홈 전용) + `categories`(entities/category와 동일 데이터) + `popularProducts`/`newProducts`(entities/product를 `popular`/`latest` 정렬로 상위 6개만 자체 재정렬)를 한 응답으로 합쳐서 내려준다. 이미 `entities/product`에 동일한 정렬 옵션(`productsQueryOptions`)이 있는데도 홈은 별도 엔드포인트에서 정렬 로직을 중복 구현하고 있어, 도메인별 소유권이 불분명하다. **해결 방향(확정)**: 요청 자체는 쪼개지 않고(네트워크 워터폴 방지 요구사항 유지), `homeQueryOptions`는 페이지(`_api`)가 하나의 쿼리로 소유한다. `entities/product`(`popularProductsMapper`/`newProductsMapper`)와 `entities/category`(`categoriesMapper`)는 순수 mapper 함수만 export하고 `homeQueryOptions`를 직접 import하지 않는다(entity가 app 하위 파일을 import하면 역방향 의존이 되므로). 실제 `useQuery({ ...homeQueryOptions, select: mapper })` 연결은 페이지(`HomeView`)가 담당해 client 쪽 소유권을 정리한다. `route.ts`의 서버 쪽 정렬 로직 중복은 이번 전환 범위에서 제외한다(과제 문서가 `src/app/api` Route Handler를 전환 범위 제외로 허용).
+5. **테스트 코드가 같은 레이어의 다른 슬라이스를 직접 import함** — `src/widgets/product-card/ui/ProductCard.test.tsx`가 다른 widget인 `@/widgets/header/ui/Header`를 가져와 "ProductCard에서 찜/담기를 누르면 Header 카운트도 같이 바뀐다"를 검증한다. 검증 의도(Header·ProductCard가 공유하는 Zustand store 동기화)는 타당하지만, 같은 레이어의 다른 슬라이스를 직접 import하지 않는다는 규칙을 테스트 코드가 어기고 있고, 실제로는 두 widget의 "조합"을 검증하는 테스트가 `product-card` 슬라이스 한쪽에 얹혀 있는 상태다.
+6. **캐시 정책 상수가 이름과 다른 곳에서 재사용됨** — `entities/product/model/constants.ts`의 `PRODUCT_PRICE_STALE_TIME`/`PRODUCT_PRICE_GC_TIME`는 이름상 "상품 가격" 전용 캐시 정책인데, `src/app/home/model/homeQueryOptions.ts`가 이를 그대로 가져다 배너·카테고리·인기/신상품이 섞인 홈 응답 전체의 캐시 정책으로 사용한다. 홈 데이터는 가격과 무관한데 이름이 "가격"인 상수를 재사용하고 있어 이름과 실제 쓰임이 어긋난다. **해결(확정)**: `homeQueryOptions`가 페이지 소유(`_api`)로 옮겨가면서 `entities/product`의 상수를 빌려 쓸 이유 자체가 없어졌다. 홈 쿼리는 자기 자신의 staleTime을 페이지 쪽에 독립적으로 정의한다. 값은 기존과 동일한 60초로 유지한다 — 인기/신상품도 결국 가격이 자주 바뀌는 상품이라 같은 민감도(짧은 재확인 주기)가 여전히 유효하기 때문이다.
+7. **`/` 경로가 홈이 아니라 `/home`으로 리다이렉트만 함** — `src/app/page.tsx`는 콘텐츠 없이 `redirect('/home')`만 수행하고, 실제 홈 콘텐츠는 `/home`에 있다. 일반적으로는 `/`가 곧 홈이어야 하는데 불필요한 리다이렉트 한 단계가 껴 있다. 이번 주에 Route Group(`src/app/(home)/page.tsx`)으로 전환해 `/` 경로에서 바로 홈 콘텐츠를 렌더링하고, 폴더명은 `(home)`으로 남겨 의도를 유지하기로 함.
 
 ### Before — 현재 폴더 구조 (화면 기준)
 
@@ -98,23 +153,129 @@ src/
 - **`/home`**: `page.tsx`(prefetch) → `HomeView`(app/home/ui) → `Header`(widget) + `ProductCard`(widget, 카테고리별 반복) + `productsQueryOptions`(entities, hover prefetch용) 직접 조합
 - **`/products`**: `page.tsx`(prefetch) → `ProductView`(app/products/ui) → `Header` + `ProductFilters`(feature) + `useProductListParams`(feature) + `useProductList`(entities) + `ProductCard`(widget) + `Pagination`(shared)
 
-관찰: `home`은 자기 전용 `api/model`을 갖고 있는데 `products`는 없어서 두 화면의 구조가 서로 다르다. `HomeView`/`ProductView` 자체도 아직 FSD 세그먼트 밖(라우팅 디렉터리 안)에 있다.
+관찰: `home`은 자기 전용 `api/model`을 갖고 있는데 `products`는 없어서 두 화면의 구조가 서로 다르다. `HomeView`/`ProductView` 자체도 아직 FSD 세그먼트 밖(라우팅 디렉터리 안)에 있다. `select`/`dialog`도 `shared/ui`가 아니라 `src/components/ui/{dialog,select}`라는 FSD 레이어 밖의 별도 폴더에 있어서, 공용 UI를 찾으려면 `shared/ui`와 `components/ui` 두 곳을 다 봐야 한다.
 
 ### After — 목표 폴더 구조
 
-직접 작성
+지금까지 나온 결정을 전부 반영한 최종 트리다.
+
+`src/_pages` 레이어는 쓰지 않기로 확정했다 — 홈·상품목록 모두 라우트 1개 : 페이지 조합 1개로 정확히 대응하고 여러 라우트가 공유하는 페이지 조합도 없어서, 프레임워크 라우팅과 분리해야 할 이유가 없다. `src/app/**/_ui`의 private folder만으로 "라우팅 제외 + 라우트와 동거"라는 목적이 충분히 달성된다.
+
+```
+src/
+├── app/                                    # Next.js 라우팅 디렉터리
+│   ├── (home)/                             # Route Group — URL은 '/' 그대로 (7번 문제 해결)
+│   │   ├── page.tsx                        # 서버 컴포넌트, homeQueryOptions로 prefetch
+│   │   ├── _api/homeQueryOptions.ts        # /api/home 요청 하나만 소유. staleTime 60s는 독립 정의 (문제 6 해결)
+│   │   └── _ui/
+│   │       └── HomeView.tsx                # entities의 mapper를 가져와 select로 실제 조립
+│   │                                        # (배너는 mapper 없이 select로 여기서 바로 projection)
+│   │
+│   ├── products/
+│   │   ├── page.tsx                        # 서버 컴포넌트, prefetch만
+│   │   └── _ui/
+│   │       └── ProductView.tsx
+│   │
+│   ├── examples/                           # 실제 라우트('/examples'), 그대로 유지
+│   │   ├── page.tsx
+│   │   ├── _dialog/                        # private folder — 라우트 아님 (문제 1 해결)
+│   │   └── _selectBox/                     # private folder — 라우트 아님
+│   ├── layout.tsx / providers.tsx / globals.css
+│   └── api/{home,products}/route.ts        # 전환 범위 제외 (assignment 명시)
+│
+├── entities/
+│   ├── product/
+│   │   ├── model/product.ts                # Product, ProductListQuery 등
+│   │   ├── model/constants.ts              # PRODUCT_PRICE_* — productsQueryOptions 전용으로 범위 확정
+│   │   ├── api/{productsService, productsQueryOptions, useProductList}.ts
+│   │   ├── model/popularProductsMapper.ts  # 순수 함수. 홈 응답의 존재를 모름 (신규)
+│   │   ├── model/newProductsMapper.ts      # 순수 함수 (신규)
+│   │   └── ui/ProductCard.tsx              # 서브타이틀·타이틀·가격만. 액션은 children으로 받음
+│   ├── category/
+│   │   ├── model/category.ts
+│   │   └── model/categoriesMapper.ts       # 순수 함수 (신규)
+│   ├── wishlist/                           # 신규 — 상태(productIds) + read selector만
+│   │   └── model/useWishlistStore.ts
+│   └── cart/                               # 신규 — 상태(productIds) + read selector만
+│       └── model/useCartStore.ts
+│
+├── features/
+│   ├── product-filter/
+│   │   ├── model/{productSearchParams, loadProductSearchParams, useProductListParams}.ts
+│   │   └── ui/ProductFilters.tsx
+│   ├── toggle-wishlist/                    # 신규 — 토글 행위 + 버튼 UI
+│   └── add-to-cart/                        # 신규 — 토글 행위 + 버튼 UI
+│
+├── widgets/
+│   ├── header/ui/Header.tsx                # entities/wishlist·entities/cart를 읽기 전용으로 참조
+│   └── body/ui/Body.tsx                    # 신규 — text 슬롯(children) + 그리드(ProductCard+features 조합)
+│
+└── shared/
+    ├── api/{getQueryClient, response}.ts
+    ├── lib/{set, webStorage}.ts
+    └── ui/
+        ├── ErrorRetry/, Pagination/, QueryState/
+        ├── PageHeading/                    # 신규 — title(필수)+description(선택)
+        ├── dialog/                         # src/components/ui/dialog에서 이동
+        └── select/                         # src/components/ui/select에서 이동
+```
+
+**`src` 밖으로 이동**: `src/examples/week-05-layout/`(`HomeLayoutExample.tsx`, `ProductListLayoutExample.tsx`, `week-05-layout.css`, `README.md`) — grep 결과 다른 코드에서 참조 없음 확인. `src`(실제 애플리케이션 코드)에서는 완전히 빠지되, 5주차 레이아웃 실험 기록 자체는 자료로 남기기 위해 삭제하지 않고 `docs/examples/week-05-layout/`로 이동한다.
 
 ### 사용할 레이어만 선택한 근거
 
-직접 작성
+- **사용**: `entities`, `features`, `widgets`, `shared` — 이미 코드에서 실제로 역할을 하고 있고, 이번 주 결정들(entity+feature 분리, `widgets/body` 등)도 전부 이 네 레이어 안에서 해결됨
+- **미사용 — `_pages`**: 라우트 1개 : 페이지 조합 1개로 정확히 대응하고 여러 라우트가 공유하는 페이지 조합이 없어, 프레임워크 라우팅과 분리해야 할 이유가 없다. `src/app/**/_ui`(private folder)만으로 충분
+- **미사용 — `processes`**: 과제 문서가 사용하지 않는다고 명시. 이 프로젝트에 여러 페이지에 걸친 비즈니스 프로세스(예: 결제 단계)가 없어서 필요성도 없음
 
 ### 허용/금지 import 예시
 
-직접 작성
+**허용 (상위 → 하위)**
+
+```ts
+// widgets/body/ui/Body.tsx
+import { ProductCard } from '@/entities/product/ui/ProductCard'; // widget → entity
+import { ToggleWishlistButton } from '@/features/toggle-wishlist'; // widget → feature
+
+// src/app/(home)/_ui/HomeView.tsx (page 조합 코드)
+import { popularProductsMapper } from '@/entities/product/model/popularProductsMapper'; // page → entity
+import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions'; // page → entity (카테고리 호버 프리페치)
+
+// widgets/header/ui/Header.tsx
+import { useWishlistCount } from '@/entities/wishlist/model/useWishlistStore'; // widget → entity (읽기 전용)
+```
+
+**금지 (하위 → 상위, 같은 레이어 간)**
+
+```ts
+// ❌ entities/product/ui/ProductCard.tsx
+import { useWishlistStore } from '@/features/toggle-wishlist'; // entity → feature (역방향)
+
+// ❌ entities/product/model/popularProductsMapper.ts
+import { homeQueryOptions } from '@/app/(home)/_api/homeQueryOptions'; // entity → app (역방향, 더 심각)
+
+// ❌ widgets/product-card 안에서
+import { Header } from '@/widgets/header/ui/Header'; // widget → widget (같은 레이어 다른 슬라이스, 문제 5에서 발견한 테스트 코드 위반 사례)
+
+// ❌ entities/category/ui/... 안에서
+import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions'; // entity → entity (같은 레이어 다른 슬라이스)
+```
 
 ### 단계별 마이그레이션 계획과 검증 방법
 
-직접 작성
+| 단계 | 작업                                                                                                           | 검증                                                          |
+| ---- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1    | `src/components/ui/{dialog,select}` → `shared/ui/{dialog,select}` (경로만 이동, 로직 변경 없음)                | `pnpm check`, `/examples` 페이지 육안 확인                    |
+| 2    | cart/wishlist store를 `entities/{cart,wishlist}`(상태) + `features/{add-to-cart,toggle-wishlist}`(토글)로 분리 | 기존 wishlist/cart 테스트 통과, 찜·담기 동작 육안 확인        |
+| 3    | `ProductCard`를 `widgets/product-card` → `entities/product/ui`로 이동, 찜/담기를 children으로 받게 변경        | 홈·목록에서 카드 렌더링 + 찜/담기 동작 확인                   |
+| 4    | `widgets/body` 생성(텍스트 슬롯 + 그리드), Home·Products가 이걸 쓰도록 교체                                    | 홈 "인기상품/신상품" 섹션, 목록 "총 N개" 섹션 육안 확인       |
+| 5    | `shared/ui/PageHeading` 생성, 배너/제목 영역 교체                                                              | 홈 배너, 목록 제목 육안 확인                                  |
+| 6    | 홈 API 재구성 — `_api/homeQueryOptions.ts` + entities별 mapper 연결                                            | 홈 데이터 정상 로드, 카테고리 호버 프리페치 동작 확인         |
+| 7    | `/` → Route Group `(home)`으로 전환, `HomeView`/`ProductView`를 `_ui`로 이동                                   | `/`, `/products` 라우팅 정상, `pnpm build`로 라우트 트리 확인 |
+| 8    | `src/app/examples/{dialog,selectBox}` → `_dialog`/`_selectBox`, `src/examples/week-05-layout` → `docs/`로 이동 | `/examples` 페이지 정상 동작                                  |
+| 9    | (4단계 별도) 에러 처리 경계 설계·구현                                                                          | 인위적 실패 재현으로 검증                                     |
+
+각 단계가 끝나면 공통으로 `pnpm check` 통과 + 0단계 체크리스트(검색·카테고리·정렬·페이지네이션·URL·장바구니/위시리스트 동기화) 중 해당 단계와 관련된 항목만 빠르게 재확인한다.
 
 ## D — Data Model
 
@@ -149,13 +310,17 @@ src/
 
 ## 애매한 파일 5개 이상 결정표
 
-| 대상                                | 후보 A                   | 후보 B                          | 최종 결정 | 기준      |
-| ----------------------------------- | ------------------------ | ------------------------------- | --------- | --------- |
-| `ProductCard`                       | `entities/product/ui`    | `widgets/product-card`          | 직접 작성 | 직접 작성 |
-| 상품 목록 queryOptions              | `entities/product/api`   | 상품 목록 페이지의 `api`        | 직접 작성 | 직접 작성 |
-| 장바구니 store                      | `entities/cart/model`    | 장바구니 행위 feature의 `model` | 직접 작성 | 직접 작성 |
-| `Product` 타입                      | `entities/product/model` | `shared/types` 유지             | 직접 작성 | 직접 작성 |
-| `HomeResponse` / `homeQueryOptions` | 직접 작성                | 직접 작성                       | 직접 작성 | 직접 작성 |
+| 대상                                                               | 후보 A                                                                                  | 후보 B                                                                                                                                | 최종 결정                                                | 기준                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProductCard`                                                      | `entities/product/ui`                                                                   | `widgets/product-card`                                                                                                                | **`entities/product/ui`, 찜/담기는 `children`으로 받음** | entity는 features를 import할 수 없다(역방향 의존). 찜/담기 없이 순수 상품 정보만 필요한 곳도 있을 수 있어, ProductCard는 서브타이틀·타이틀·가격만 그리고, 찜/담기 버튼(features)은 `widgets/body`가 `children`으로 조합해서 넘김                                                                                                                                                                                                                                                                                                                                                                                 |
+| 상품 목록 queryOptions                                             | `entities/product/api`                                                                  | 상품 목록 페이지의 `api`                                                                                                              | **`entities/product/api` 유지**                          | `ProductView`(`useProductList`), `HomeView`(카테고리 호버 프리페치), `Header`(상품 메뉴 호버 프리페치) 3곳에서 이미 재사용 중 — "여러 페이지에서 재사용되는가" 기준을 명확히 충족                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 장바구니 store                                                     | `entities/cart/model`(상태·read selector) + `features/add-to-cart`(토글 행위)           | 통짜로 `features/cart/model` 유지                                                                                                     | **entity+feature 분리**                                  | 카운트 조회(`Header`)처럼 도메인 상태를 읽기만 하는 소비처와, 토글이라는 사용자 행위를 수행하는 소비처(`ProductCard`)의 필요가 다르다. `Header`는 행위 없이 읽기만 하므로 feature를 몰라도 되게 만들고 싶다                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 위시리스트 store                                                   | `entities/wishlist/model`(상태·read selector) + `features/toggle-wishlist`(토글 행위)   | 통짜로 `features/wishlist/model` 유지                                                                                                 | **entity+feature 분리**                                  | 장바구니 store와 동일한 기준. 과제 문서 예시 문장에도 `features/toggle-wishlist`라는 이름이 그대로 등장해 기대하는 분리 방향과 일치                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Product` 타입                                                     | `entities/product/model`                                                                | `shared/types` 유지                                                                                                                   | **`entities/product/model` 유지**                        | `Product`는 도메인 타입이라 `shared/types`로 옮기면 `shared`가 비즈니스 지식을 갖게 되는 역효과가 난다. 이번 RFC 내내 적용한 "shared는 비즈니스 로직·도메인 지식 없음" 원칙(`PageHeading`이 shared에 들어간 이유, `homeQueryOptions`가 shared에 못 들어간 이유)과 동일 기준                                                                                                                                                                                                                                                                                                                                      |
+| `HomeResponse` / `homeQueryOptions`                                | 도메인별로 요청을 쪼갠다(배너/카테고리/인기/신상품 각각 별도 요청)                      | `homeQueryOptions`는 하나로 유지(페이지 소유), 각 entity는 mapper 함수만 export, 실제 `select` 조립은 페이지가 함                     | **요청은 하나로 유지, entity는 mapper만, 조립은 페이지** | 홈 진입 시 요청이 여러 개로 늘어나면 "클라이언트 워터폴 방지"라는 비기능 요구사항과 충돌한다. `entities/product`(`popularProductsMapper`/`newProductsMapper`), `entities/category`(`categoriesMapper`)는 순수 함수만 export하고 `homeQueryOptions`의 존재 자체를 몰라야 한다 — entity가 `homeQueryOptions`(app 하위)를 직접 import하면 역방향 의존이 되기 때문. 대신 `HomeView`(페이지)가 `useQuery({ ...homeQueryOptions, select: mapper })`로 실제 연결한다. 배너는 어떤 entity에도 속하지 않는 순수 페이지 콘텐츠라 mapper 없이 페이지에서 바로 `select`로 뽑는다. `route.ts`의 서버 정렬 중복은 전환 범위 밖 |
+| 홈 배너·상품목록 제목 영역 (`week05-hero` / `<h1>상품 목록</h1>`)  | 각 화면 JSX에 개별 유지 + CSS만 통일                                                    | `shared/ui/PageHeading`(`title` 필수, `description` 선택) 컴포넌트로 추출                                                             | **`shared/ui/PageHeading`로 추출**                       | 비즈니스 로직 없는 순수 프레젠테이션(제목+선택적 설명)이라 도메인 용어 없이도 이름을 지을 수 있음. CLAUDE.md의 "같은 UI 3곳 이상" 기준은 아직 못 채우지만(현재 2곳), 페이지 헤딩이라는 패턴 자체가 반복될 것으로 보여 선제적으로 추출                                                                                                                                                                                                                                                                                                                                                                            |
+| 홈의 카테고리 목록 + 호버 프리페치                                 | `widgets/category-nav`로 분리 (entities/category + entities/product 조합 전용 슬라이스) | `HomeView`(페이지 조합 코드)에 인라인 유지, `entities/product`의 `productsQueryOptions`만 직접 import                                 | **인라인 유지, 새 슬라이스 안 만듦**                     | entities끼리는 서로 못 보지만, page/widget 레벨이 여러 entity를 조합하는 건 규칙 위반이 아니다. 이 블록은 홈 1곳에서만 쓰여 재사용이 없고(3곳 기준 미달), `widgets/header`가 이미 동일한 패턴(`productsQueryOptions` + hover prefetch)으로 검증돼 있어 새 슬라이스를 만들 근거가 없다. `productsQueryOptions`는 부작용 없는 순수 설정 함수라 결합도 부담도 크지 않다.                                                                                                                                                                                                                                            |
+| 홈의 상품 섹션(제목+그리드) / 상품목록의 결과 영역(총 개수+그리드) | 화면마다 각자 그리드 마크업 유지                                                        | `widgets/body` 하나로 통일 (text 영역은 `children`/slot, 그리드 각 칸은 `entities/product/ui/ProductCard` + `features`(찜/담기) 조합) | **`widgets/body`로 통일**                                | Home의 "인기 상품/신상품" 제목 영역과 Products의 "총 N개" 영역은 텍스트 내용만 다르고 그리드 렌더링(ProductCard 나열)은 완전히 동일한 반복 구조라 `widgets/body`로 통일한다. 텍스트 부분은 화면마다 다르므로 `Body`가 내용을 모르게 슬롯(children)으로 받는다. `Pagination`(shared)은 `Body` 밖, `ProductView`에서 형제로 배치 — Home에는 페이지네이션이 없어 `Body` 안에 넣으면 Home에 불필요한 prop이 생긴다                                                                                                                                                                                                   |
 
 ## 4단계 — 에러 처리 경계 설계
 
