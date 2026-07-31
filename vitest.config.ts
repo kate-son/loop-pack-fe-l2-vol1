@@ -36,7 +36,13 @@ export default defineConfig({
         },
       },
       {
-        resolve: { alias },
+        resolve: {
+          alias: {
+            ...alias,
+            // "type": "module" 환경에서 next/image의 CJS 재수출이 esbuild에 이중으로 감싸지는 문제 회피 (test/mocks/next-image.tsx 참고)
+            'next/image': fileURLToPath(new URL('./test/mocks/next-image.tsx', import.meta.url)),
+          },
+        },
         define: {
           'process.env': JSON.stringify({ NODE_ENV: 'test' }),
         },
