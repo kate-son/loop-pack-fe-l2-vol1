@@ -35,7 +35,6 @@ export function HomeView() {
       <Header />
       <QueryState
         query={homeQuery}
-        renderLoading={() => <p>불러오는 중입니다…</p>}
         renderError={(error) => (
           <ErrorRetry message={error.message} onRetry={() => homeQuery.refetch()} />
         )}

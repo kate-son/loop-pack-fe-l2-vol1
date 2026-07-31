@@ -43,7 +43,6 @@ export default function ProductView() {
       </section>
       <QueryState
         query={productListQuery}
-        renderLoading={() => <p>불러오는 중입니다…</p>}
         renderError={(error) => (
           <ErrorRetry message={error.message} onRetry={() => productListQuery.refetch()} />
         )}
