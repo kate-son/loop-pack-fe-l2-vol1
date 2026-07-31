@@ -15,7 +15,7 @@ import { useProductList } from '@/entities/product/api/useProductList';
 const INITIAL_PAGE = 1;
 
 export default function ProductView() {
-  const { q, category, sort, page, setQuery, setCategory, setSort, setPage } =
+  const { q, category, sort, page, setQuery, setCategory, setSort, setPage, resetQuery } =
     useProductListParams();
   const productListQuery = useProductList({ q, category, sort, page });
 
@@ -39,6 +39,7 @@ export default function ProductView() {
           onSearch={setQuery}
           onCategoryChange={setCategory}
           onSortChange={setSort}
+          onReset={resetQuery}
         />
       </section>
       <QueryState
