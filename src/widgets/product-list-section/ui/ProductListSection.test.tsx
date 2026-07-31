@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Body } from './Body';
+import { ProductListSection } from './ProductListSection';
 import { Header } from '@/widgets/header/ui/Header';
 import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
@@ -22,29 +22,29 @@ const PRODUCT: Product = {
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
-function renderHeaderAndBody() {
+function renderHeaderAndProductListSection() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
       <Header />
-      <Body products={[PRODUCT]} emptyMessage="상품이 없습니다.">
+      <ProductListSection products={[PRODUCT]} emptyMessage="상품이 없습니다.">
         <h2>테스트 섹션</h2>
-      </Body>
+      </ProductListSection>
     </QueryClientProvider>,
   );
 }
 
 /* AI-generated : week06-fsd.md 4단계 기준 — widgets/product-card/ui/ProductCard.test.tsx에서 이관.
-   Body가 ProductCard+features(찜/담기 버튼)를 실제로 조합하는 주체이므로, 여기서 Header와 함께
-   렌더링해 store 동기화를 검증한다 */
-describe('Header/Body의 store 동기화 (홈·목록이 공유하는 store 검증)', () => {
+   ProductListSection이 ProductCard+features(찜/담기 버튼)를 실제로 조합하는 주체이므로, 여기서 Header와 함께
+   렌더링해 store 동기화를 검증한다. (이름 변경: Body → ProductListSection) */
+describe('Header/ProductListSection의 store 동기화 (홈·목록이 공유하는 store 검증)', () => {
   beforeEach(() => {
     useWishlistStore.setState({ productIds: new Set() });
     useCartStore.setState({ productIds: new Set() });
   });
 
-  it('Body에서 찜을 누르면 Header 위시리스트 개수도 같이 바뀐다', () => {
-    renderHeaderAndBody();
+  it('ProductListSection에서 찜을 누르면 Header 위시리스트 개수도 같이 바뀐다', () => {
+    renderHeaderAndProductListSection();
     expect(screen.getByText('위시리스트 0')).toBeTruthy();
 
     fireEvent.click(screen.getByLabelText('1번 상품 위시리스트'));
@@ -52,8 +52,8 @@ describe('Header/Body의 store 동기화 (홈·목록이 공유하는 store 검�
     expect(screen.getByText('위시리스트 1')).toBeTruthy();
   });
 
-  it('Body에서 담기를 누르면 Header 장바구니 개수도 같이 바뀐다', () => {
-    renderHeaderAndBody();
+  it('ProductListSection에서 담기를 누르면 Header 장바구니 개수도 같이 바뀐다', () => {
+    renderHeaderAndProductListSection();
     expect(screen.getByText('장바구니 0')).toBeTruthy();
 
     fireEvent.click(screen.getByLabelText('1번 상품 담기'));
@@ -62,13 +62,13 @@ describe('Header/Body의 store 동기화 (홈·목록이 공유하는 store 검�
   });
 });
 
-describe('Body', () => {
+describe('ProductListSection', () => {
   it('상품이 없으면 안내 문구를 보여준다', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <Body products={[]} emptyMessage="검색 결과가 없습니다.">
+        <ProductListSection products={[]} emptyMessage="검색 결과가 없습니다.">
           <p>총 0개</p>
-        </Body>
+        </ProductListSection>
       </QueryClientProvider>,
     );
 

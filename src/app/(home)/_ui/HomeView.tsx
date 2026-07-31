@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
-import { Body } from '@/widgets/body/ui/Body';
+import { ProductListSection } from '@/widgets/product-list-section/ui/ProductListSection';
 import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
@@ -69,14 +69,14 @@ export function HomeView() {
                   { title: '신상품', products: newProducts },
                 ] satisfies { title: string; products: Product[] }[]
               ).map(({ title, products }) => (
-                <Body
+                <ProductListSection
                   key={title}
                   products={products}
                   emptyMessage="상품이 없습니다."
                   labelPrefix={title}
                 >
                   <h2>{title}</h2>
-                </Body>
+                </ProductListSection>
               ))}
             </>
           );

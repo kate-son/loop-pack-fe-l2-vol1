@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
-import { Body } from '@/widgets/body/ui/Body';
+import { ProductListSection } from '@/widgets/product-list-section/ui/ProductListSection';
 import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';
 import { ProductFilters } from '@/features/product-filter/ui/ProductFilters';
 import { useProductListParams } from '@/features/product-filter/model/useProductListParams';
@@ -49,13 +49,13 @@ export default function ProductView() {
       >
         {(data) => (
           <>
-            <Body
+            <ProductListSection
               products={data.products}
               emptyMessage="검색 결과가 없습니다."
               sectionLabel="상품 검색 결과"
             >
               <p>총 {data.totalCount}개</p>
-            </Body>
+            </ProductListSection>
             {!productListQuery.isFetching && (
               <Pagination
                 page={data.page}

@@ -4,8 +4,8 @@ import { ProductCard } from '@/entities/product/ui/ProductCard';
 import { ToggleWishlistButton } from '@/features/toggle-wishlist/ui/ToggleWishlistButton';
 import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 
-type BodyProps = {
-  /** 텍스트 영역(제목 또는 총 개수 등). 화면마다 다른 내용이라 Body는 내용을 모르게 슬롯으로만 받는다 */
+type ProductListSectionProps = {
+  /** 텍스트 영역(제목 또는 총 개수 등). 화면마다 다른 내용이라 이 컴포넌트는 내용을 모르게 슬롯으로만 받는다 */
   children: ReactNode;
   /** 그리드에 나열할 상품 목록 */
   products: Product[];
@@ -17,8 +17,14 @@ type BodyProps = {
   sectionLabel?: string;
 };
 
-/* AI-generated : week06-fsd.md 4단계 기준 — 텍스트 슬롯 + 그리드(ProductCard+features 조합) 위젯 */
-export function Body({ children, products, emptyMessage, labelPrefix, sectionLabel }: BodyProps) {
+/* AI-generated : week06-fsd.md 4단계 기준 — 텍스트 슬롯 + 그리드(ProductCard+features 조합) 위젯. 이름 변경(Body → ProductListSection)은 RFC 애매한 파일 결정표 참고 */
+export function ProductListSection({
+  children,
+  products,
+  emptyMessage,
+  labelPrefix,
+  sectionLabel,
+}: ProductListSectionProps) {
   return (
     <section className="week05-section" aria-label={sectionLabel}>
       {children}

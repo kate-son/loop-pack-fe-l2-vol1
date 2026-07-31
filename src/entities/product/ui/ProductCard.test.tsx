@@ -18,7 +18,7 @@ const PRODUCT: Product = {
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
-/* AI-generated : week06-fsd.md 3단계 기준 — 순수 상품 표현 + children 슬롯만 검증. 찜/담기 행위 검증은 widgets/body/ui/Body.test.tsx로 이관(4단계) */
+/* AI-generated : week06-fsd.md 3단계 기준 — 순수 상품 표현 + children 슬롯만 검증. 찜/담기 행위 검증은 widgets/product-list-section/ui/ProductListSection.test.tsx로 이관(4단계) */
 describe('ProductCard', () => {
   it('브랜드·상품명·가격을 표시한다', () => {
     render(<ProductCard product={PRODUCT} />);
