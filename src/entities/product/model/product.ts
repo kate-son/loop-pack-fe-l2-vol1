@@ -5,6 +5,7 @@ export type Category = {
   name: string;
 };
 
+export const PRODUCT_SORTS = ['latest', 'popular', 'price-asc', 'price-desc'] as const;
 export type ProductSort = 'latest' | 'popular' | 'price-asc' | 'price-desc';
 
 export type MockApiScenario = 'empty' | 'error' | 'slow';
@@ -37,6 +38,15 @@ export type HomeResponse = {
   categories: Category[];
   popularProducts: Product[];
   newProducts: Product[];
+};
+
+export const DEFAULT_PRODUCT_LIST_QUERY: Required<
+  Pick<ProductListQuery, 'q' | 'category' | 'sort' | 'page'>
+> = {
+  q: '',
+  category: 'all',
+  sort: 'latest',
+  page: 1,
 };
 
 export type ProductListResponse = {
