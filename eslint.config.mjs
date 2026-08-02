@@ -6,6 +6,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier';
 import boundaries from 'eslint-plugin-boundaries';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -109,7 +110,10 @@ const eslintConfig = defineConfig([
     // react-hooks 플러그인은 nextVitals가 '**/*.{js,jsx,mjs,ts,tsx,mts,cts}'에만 등록함(.cjs 등은 제외).
     // 이 블록도 같은 범위로 제한하지 않으면 commitlint.config.cjs 같은 파일에서
     // "plugin 없이 react-hooks/exhaustive-deps 룰만 적용"되어 ESLint가 전체 실행 중단됨.
+    // 파일 범위(files)만으로는 nextVitals의 병합 순서에 기대게 되어 불안정할 수 있어,
+    // 이 설정 객체 안에서 플러그인을 직접 선언해 nextVitals 병합 여부와 무관하게 항상 해석되도록 함.
     files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
+    plugins: { 'react-hooks': reactHooks },
     rules: {
       // 아래 5개는 nextVitals/nextTs 기본값과 완전히 같은 값이라 재선언해도 실제 동작에는 아무 효과가 없는 중복(no-op)이라 주석 처리함.
       // 'react/react-in-jsx-scope': 'off', // nextVitals 기본값이 이미 'off'
