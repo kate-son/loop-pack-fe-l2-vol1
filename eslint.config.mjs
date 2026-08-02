@@ -9,7 +9,13 @@ import boundaries from 'eslint-plugin-boundaries';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
+  ...nextVitals.map((config) => ({
+    ...config,
+    plugins: {
+      ...config.plugins,
+      'react-hooks': reactHooks,
+    },
+  })),
   ...nextTs,
   prettierConfig,
   // FSD 의존성 하네스 — 6주차 RFC(docs/rfc/week06-fsd.md)의 레이어 정의를 기계로 강제한다.
@@ -113,7 +119,6 @@ const eslintConfig = defineConfig([
     // 파일 범위(files)만으로는 nextVitals의 병합 순서에 기대게 되어 불안정할 수 있어,
     // 이 설정 객체 안에서 플러그인을 직접 선언해 nextVitals 병합 여부와 무관하게 항상 해석되도록 함.
     files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
-    plugins: { 'react-hooks': reactHooks },
     rules: {
       // 아래 5개는 nextVitals/nextTs 기본값과 완전히 같은 값이라 재선언해도 실제 동작에는 아무 효과가 없는 중복(no-op)이라 주석 처리함.
       // 'react/react-in-jsx-scope': 'off', // nextVitals 기본값이 이미 'off'
