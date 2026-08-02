@@ -1,7 +1,21 @@
-import type { Category, CategoryId } from '@/entities/category/model/category';
+export type CategoryId = 'casual' | 'fashion' | 'goods' | 'home' | 'digital';
 
-export const PRODUCT_SORTS = ['latest', 'popular', 'price-asc', 'price-desc'] as const;
-export type ProductSort = (typeof PRODUCT_SORTS)[number];
+export type Category = {
+  id: CategoryId;
+  name: string;
+};
+
+export type ProductSort = 'latest' | 'popular' | 'price-asc' | 'price-desc';
+
+export type MockApiScenario = 'empty' | 'error' | 'slow';
+
+export type ProductListQuery = {
+  q?: string;
+  category?: CategoryId | 'all';
+  sort?: ProductSort;
+  page?: number;
+  pageSize?: number;
+};
 
 export type Product = {
   id: string;
@@ -18,21 +32,11 @@ export type Product = {
   createdAt: string;
 };
 
-export type ProductListQuery = {
-  q?: string;
-  category?: CategoryId | 'all';
-  sort?: ProductSort;
-  page?: number;
-  pageSize?: number;
-};
-
-export const DEFAULT_PRODUCT_LIST_QUERY: Required<
-  Pick<ProductListQuery, 'q' | 'category' | 'sort' | 'page'>
-> = {
-  q: '',
-  category: 'all',
-  sort: 'latest',
-  page: 1,
+export type HomeResponse = {
+  banner: { title: string; description: string; image: string };
+  categories: Category[];
+  popularProducts: Product[];
+  newProducts: Product[];
 };
 
 export type ProductListResponse = {
@@ -41,4 +45,8 @@ export type ProductListResponse = {
   totalCount: number;
   page: number;
   pageSize: number;
+};
+
+export type ApiErrorResponse = {
+  message: string;
 };
