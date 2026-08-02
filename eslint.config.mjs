@@ -36,10 +36,18 @@ const eslintConfig = defineConfig([
             // 테스트 파일은 레이어/슬라이스 규칙 대상에서 제외 — 통합 검증이 목적이라 자유롭게 import 가능
             {
               from: { file: { categories: 'test' } },
-              allow: { to: { element: { types: ['app', 'widgets', 'features', 'entities', 'shared'] } } },
+              allow: {
+                to: { element: { types: ['app', 'widgets', 'features', 'entities', 'shared'] } },
+              },
             },
-            { from: { element: { type: 'shared' } }, allow: { to: { element: { type: 'shared' } } } },
-            { from: { element: { type: 'entities' } }, allow: { to: { element: { type: 'shared' } } } },
+            {
+              from: { element: { type: 'shared' } },
+              allow: { to: { element: { type: 'shared' } } },
+            },
+            {
+              from: { element: { type: 'entities' } },
+              allow: { to: { element: { type: 'shared' } } },
+            },
             {
               from: { element: { type: 'entities' } },
               allow: {
@@ -98,6 +106,10 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // react-hooks 플러그인은 nextVitals가 '**/*.{js,jsx,mjs,ts,tsx,mts,cts}'에만 등록함(.cjs 등은 제외).
+    // 이 블록도 같은 범위로 제한하지 않으면 commitlint.config.cjs 같은 파일에서
+    // "plugin 없이 react-hooks/exhaustive-deps 룰만 적용"되어 ESLint가 전체 실행 중단됨.
+    files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
     rules: {
       // 아래 5개는 nextVitals/nextTs 기본값과 완전히 같은 값이라 재선언해도 실제 동작에는 아무 효과가 없는 중복(no-op)이라 주석 처리함.
       // 'react/react-in-jsx-scope': 'off', // nextVitals 기본값이 이미 'off'
