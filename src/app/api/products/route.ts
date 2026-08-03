@@ -6,7 +6,7 @@ import type {
   MockApiScenario,
   ProductListResponse,
   ProductSort,
-} from '@/types/commerce';
+} from '@/entities/product/model/product';
 
 const sortValues = [
   'latest',
@@ -81,6 +81,8 @@ export async function GET(
           return b.price - a.price;
         case 'latest':
           return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+        default:
+          return 0;
       }
     });
   }
