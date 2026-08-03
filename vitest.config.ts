@@ -32,7 +32,6 @@ export default defineConfig({
             'src/app/error.test.tsx',
             'src/app/(home)/error.test.tsx',
             'src/app/products/error.test.tsx',
-            'src/examples/week-07-performance/HeroSection.test.tsx',
           ],
         },
       },
@@ -62,7 +61,6 @@ export default defineConfig({
             'src/app/error.test.tsx',
             'src/app/(home)/error.test.tsx',
             'src/app/products/error.test.tsx',
-            'src/examples/week-07-performance/HeroSection.test.tsx',
           ],
           setupFiles: ['./vitest.setup.ts'],
           browser: {
