@@ -48,5 +48,4 @@ next-env.d.ts
 
 # claude local-only files
 .claude/settings.json
-docs/rfc/assets/hero-image-fix.svg
-docs/rfc/week07-hero-image-fix.md
+docs/local/*
