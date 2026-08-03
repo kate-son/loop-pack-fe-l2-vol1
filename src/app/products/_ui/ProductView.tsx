@@ -11,6 +11,7 @@ import { Pagination } from '@/shared/ui/Pagination/Pagination';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useProductList } from '@/entities/product/api/useProductList';
+import { HERO_BANNER_IMAGE } from '@/shared/lib/heroBanner';
 
 const INITIAL_PAGE = 1;
 
@@ -32,7 +33,7 @@ export default function ProductView() {
   return (
     <main className="week05-page">
       <Header />
-      <PageHeading title="상품 목록" />
+      <PageHeading title="상품 목록" image={HERO_BANNER_IMAGE} />
       <section className="week05-section">
         <ProductFilters
           filters={{ q, category, sort }}

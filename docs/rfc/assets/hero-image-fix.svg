@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 760" font-family="'Pretendard', -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a8a8a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f7a4d"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1040" height="760" fill="#ffffff"/>
+
+  <text x="520" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">Hero 이미지 버그 → 수정 흐름</text>
+  <text x="520" y="62" text-anchor="middle" font-size="13" fill="#666666">PageHeading이 banner.image를 렌더링하지 않던 문제 (범위: HomeView만, /products는 영향 없음)</text>
+
+  <!-- BEFORE SECTION -->
+  <text x="40" y="104" font-size="16" font-weight="700" fill="#c0392b">BEFORE — 버그</text>
+  <rect x="40" y="118" width="960" height="180" rx="10" fill="#fdf2f0" stroke="#e3b3ac"/>
+
+  <!-- API data box -->
+  <rect x="64" y="146" width="230" height="120" rx="8" fill="#ffffff" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="179" y="168" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">homeBanner (API)</text>
+  <text x="79" y="192" font-size="11.5" fill="#333333">title: '매일 새롭게...'</text>
+  <text x="79" y="211" font-size="11.5" fill="#333333">description: '지금 가장...'</text>
+  <text x="79" y="230" font-size="11.5" fill="#1f7a4d" font-weight="700">image: '/images/products/p6.jpg' ✓ 존재</text>
+  <text x="79" y="252" font-size="11" fill="#999999">src/app/api/_data/commerce.ts:15</text>
+
+  <!-- arrow to HomeView -->
+  <line x1="294" y1="206" x2="360" y2="206" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+  <!-- HomeView box -->
+  <rect x="364" y="146" width="220" height="120" rx="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1.5"/>
+  <text x="474" y="168" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">HomeView.tsx:51</text>
+  <text x="379" y="196" font-size="11.5" fill="#333333">&lt;PageHeading</text>
+  <text x="391" y="214" font-size="11.5" fill="#333333">title={"{data.banner.title}"}</text>
+  <text x="391" y="232" font-size="11.5" fill="#333333">description={"{...description}"}</text>
+  <text x="391" y="250" font-size="11.5" fill="#c0392b" font-weight="700">/&gt; ← image 전달 안 함</text>
+
+  <!-- arrow to PageHeading -->
+  <line x1="588" y1="206" x2="654" y2="206" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <!-- PageHeading box -->
+  <rect x="658" y="146" width="200" height="120" rx="8" fill="#ffffff" stroke="#c0392b" stroke-width="1.5"/>
+  <text x="758" y="168" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">PageHeading.tsx</text>
+  <text x="673" y="196" font-size="11.5" fill="#333333">props: title,</text>
+  <text x="673" y="214" font-size="11.5" fill="#333333">description</text>
+  <text x="673" y="238" font-size="11.5" fill="#c0392b" font-weight="700">image prop 자체가</text>
+  <text x="673" y="256" font-size="11.5" fill="#c0392b" font-weight="700">없음 → &lt;img&gt; 미렌더</text>
+
+  <!-- arrow to result -->
+  <line x1="862" y1="206" x2="928" y2="206" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+  <!-- result box (gray box) -->
+  <rect x="880" y="146" width="100" height="120" rx="6" fill="#e9e9e9" stroke="#8a8a8a"/>
+  <text x="930" y="196" text-anchor="middle" font-size="11" fill="#555555">회색 박스</text>
+  <text x="930" y="212" text-anchor="middle" font-size="11" fill="#555555">텍스트만</text>
+  <text x="930" y="228" text-anchor="middle" font-size="11" fill="#555555">이미지</text>
+  <text x="930" y="244" text-anchor="middle" font-size="11" fill="#555555">없음</text>
+
+  <!-- AFTER SECTION -->
+  <text x="40" y="352" font-size="16" font-weight="700" fill="#1f7a4d">AFTER — 수정</text>
+  <rect x="40" y="366" width="960" height="200" rx="10" fill="#eef7f1" stroke="#a9d4bb"/>
+
+  <rect x="64" y="394" width="230" height="140" rx="8" fill="#ffffff" stroke="#1f7a4d" stroke-width="1.5"/>
+  <text x="179" y="416" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">homeBanner (API)</text>
+  <text x="79" y="440" font-size="11.5" fill="#333333">title / description</text>
+  <text x="79" y="460" font-size="11.5" fill="#1f7a4d" font-weight="700">image: '/images/products/p6.jpg'</text>
+  <text x="79" y="482" font-size="11" fill="#999999">변경 없음 (이미 존재하던 데이터)</text>
+
+  <line x1="294" y1="464" x2="360" y2="464" stroke="#1f7a4d" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <rect x="364" y="394" width="220" height="140" rx="8" fill="#ffffff" stroke="#1f7a4d" stroke-width="1.5"/>
+  <text x="474" y="416" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">HomeView.tsx:51</text>
+  <text x="379" y="444" font-size="11.5" fill="#333333">&lt;PageHeading</text>
+  <text x="391" y="462" font-size="11.5" fill="#333333">title={"{...title}"}</text>
+  <text x="391" y="480" font-size="11.5" fill="#333333">description={"{...description}"}</text>
+  <text x="391" y="498" font-size="11.5" fill="#1f7a4d" font-weight="700">image={"{data.banner.image}"} /&gt;</text>
+
+  <line x1="588" y1="464" x2="654" y2="464" stroke="#1f7a4d" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <rect x="658" y="394" width="200" height="140" rx="8" fill="#ffffff" stroke="#1f7a4d" stroke-width="1.5"/>
+  <text x="758" y="416" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1a1a1a">PageHeading.tsx</text>
+  <text x="673" y="440" font-size="11" fill="#333333">image 있으면:</text>
+  <text x="673" y="458" font-size="11" fill="#1f7a4d">next/image fill</text>
+  <text x="673" y="474" font-size="11" fill="#1f7a4d">+ 그라디언트 오버레이</text>
+  <text x="673" y="490" font-size="11" fill="#1f7a4d">+ .week05-hero--banner</text>
+  <text x="673" y="510" font-size="10.5" fill="#999999">image 없으면 기존과 동일</text>
+
+  <line x1="862" y1="464" x2="928" y2="464" stroke="#1f7a4d" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <rect x="876" y="394" width="108" height="140" rx="6" fill="#2c2c2c"/>
+  <text x="930" y="450" text-anchor="middle" font-size="11" fill="#ffffff">배경 이미지</text>
+  <text x="930" y="466" text-anchor="middle" font-size="11" fill="#ffffff">+ 오버레이</text>
+  <text x="930" y="482" text-anchor="middle" font-size="11" fill="#ffffff">텍스트 표시</text>
+
+  <!-- Scope isolation note -->
+  <rect x="40" y="592" width="960" height="120" rx="10" fill="#f7f7f7" stroke="#c9c9c9"/>
+  <text x="60" y="618" font-size="13.5" font-weight="700" fill="#1a1a1a">영향 범위 분리 — /products는 그대로</text>
+
+  <rect x="64" y="632" width="230" height="60" rx="6" fill="#ffffff" stroke="#8a8a8a"/>
+  <text x="179" y="656" text-anchor="middle" font-size="11.5" fill="#333333">ProductView.tsx</text>
+  <text x="179" y="674" text-anchor="middle" font-size="11" fill="#666666">&lt;PageHeading title="상품 목록" /&gt;</text>
+
+  <line x1="294" y1="662" x2="360" y2="662" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+  <rect x="364" y="632" width="220" height="60" rx="6" fill="#ffffff" stroke="#8a8a8a"/>
+  <text x="474" y="656" text-anchor="middle" font-size="11.5" fill="#333333">PageHeading</text>
+  <text x="474" y="674" text-anchor="middle" font-size="11" fill="#666666">image 없음 → week05-hero만</text>
+
+  <line x1="588" y1="662" x2="654" y2="662" stroke="#8a8a8a" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+  <rect x="658" y="632" width="200" height="60" rx="6" fill="#ececec" stroke="#8a8a8a"/>
+  <text x="758" y="656" text-anchor="middle" font-size="11.5" fill="#333333">기존과 동일한</text>
+  <text x="758" y="674" text-anchor="middle" font-size="11.5" fill="#333333">회색 박스 제목 영역</text>
+</svg>

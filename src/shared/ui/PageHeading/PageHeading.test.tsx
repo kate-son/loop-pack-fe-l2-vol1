@@ -21,4 +21,18 @@ describe('PageHeading', () => {
 
     expect(screen.getByText('원하는 상품을 찾아보세요')).toBeTruthy();
   });
+
+  it('image가 없으면 배경 이미지를 렌더링하지 않는다', () => {
+    const { container } = render(<PageHeading title="상품 목록" />);
+
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('image가 있으면 배경 이미지를 렌더링한다', () => {
+    const { container } = render(
+      <PageHeading title="매일 새롭게 발견하는 취향" image="/images/products/p6.jpg" />,
+    );
+
+    expect(container.querySelector('img')).toBeTruthy();
+  });
 });
