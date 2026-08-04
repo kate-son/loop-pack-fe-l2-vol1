@@ -48,11 +48,7 @@ export function HomeView() {
 
           return (
             <>
-              <PageHeading
-                title={data.banner.title}
-                description={data.banner.description}
-                image={data.banner.image}
-              />
+              <PageHeading title={data.banner.title} description={data.banner.description} />
               <section className="week05-section">
                 <h2>카테고리</h2>
                 <div className="week05-categories">

@@ -1,22 +1,29 @@
-import Image from 'next/image';
+import styles from './PageHeading.module.css';
 
 type PageHeadingProps = {
   /** 페이지 제목 */
   title: string;
-  /** 제목 위에 보여줄 설명 (선택) */
-  description?: string;
-  /** 배경으로 보여줄 배너 이미지 경로 (선택) */
-  image?: string;
+  /** 제목 위에 보여줄 설명 */
+  description: string;
 };
 
-/* AI-generated : week06-fsd.md 애매한 파일 결정표 기준 — 비즈니스 로직 없는 순수 프레젠테이션 */
-/* AI-generated : image가 있을 때만 next/image 배경 + week05-hero--banner modifier 적용, /products처럼 image 없는 사용처는 기존 동작 그대로 */
-export function PageHeading({ title, description, image }: PageHeadingProps) {
+/* AI-generated : Home·Products 공통 Hero — shared는 entities/app을 몰라야 하므로 타입을 로컬에 선언하고 스타일도 shared 내부로 옮김 (FSD boundaries 위반 수정) */
+export function PageHeading({ title, description }: PageHeadingProps) {
   return (
-    <section className={image ? 'week05-hero week05-hero--banner' : 'week05-hero'}>
-      {image && <Image src={image} alt="" fill priority className="week05-hero-image" />}
-      {description && <p>{description}</p>}
-      <h1>{title}</h1>
+    <section className={styles.hero} aria-labelledby="week07-hero-title">
+      {/* eslint-disable-next-line @next/next/no-img-element -- Week 7 intentionally starts with an unoptimized LCP image. */}
+      <img
+        className={styles.image}
+        src="/images/week-07/hero-original.jpg"
+        alt=""
+        width={3840}
+        height={2160}
+      />
+      <div className={styles.copy}>
+        <p className={styles.eyebrow}>이번 주의 발견</p>
+        <h2 id="week07-hero-title">{title}</h2>
+        <p>{description}</p>
+      </div>
     </section>
   );
 }

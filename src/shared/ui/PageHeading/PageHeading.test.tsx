@@ -2,35 +2,25 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { PageHeading } from './PageHeading';
 
-/* AI-generated : week06-fsd.md 애매한 파일 결정표 기준 — 비즈니스 로직 없는 순수 프레젠테이션 렌더링만 검증 */
+/* AI-generated : PageHeading이 Home/Products 공통 Hero를 전담하도록 계약 변경 — title·description 둘 다 필수, hero 배경 이미지는 항상 렌더링 */
 describe('PageHeading', () => {
   it('title을 표시한다', () => {
-    render(<PageHeading title="상품 목록" />);
+    render(
+      <PageHeading title="상품 목록" description="카테고리와 조건으로 원하는 상품을 찾아보세요." />,
+    );
 
     expect(screen.getByText('상품 목록')).toBeTruthy();
   });
 
-  it('description이 없으면 렌더링하지 않는다', () => {
-    const { container } = render(<PageHeading title="상품 목록" />);
-
-    expect(container.querySelector('p')).toBeNull();
-  });
-
-  it('description이 있으면 함께 표시한다', () => {
+  it('description을 함께 표시한다', () => {
     render(<PageHeading title="상품 목록" description="원하는 상품을 찾아보세요" />);
 
     expect(screen.getByText('원하는 상품을 찾아보세요')).toBeTruthy();
   });
 
-  it('image가 없으면 배경 이미지를 렌더링하지 않는다', () => {
-    const { container } = render(<PageHeading title="상품 목록" />);
-
-    expect(container.querySelector('img')).toBeNull();
-  });
-
-  it('image가 있으면 배경 이미지를 렌더링한다', () => {
+  it('hero 배경 이미지를 항상 렌더링한다', () => {
     const { container } = render(
-      <PageHeading title="매일 새롭게 발견하는 취향" image="/images/products/p6.jpg" />,
+      <PageHeading title="상품 목록" description="카테고리와 조건으로 원하는 상품을 찾아보세요." />,
     );
 
     expect(container.querySelector('img')).toBeTruthy();
