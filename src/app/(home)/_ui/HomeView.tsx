@@ -17,6 +17,7 @@ import { categoriesMapper } from '@/entities/category/model/categoriesMapper';
 import type { CategoryId } from '@/entities/category/model/category';
 import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions';
 
+/* AI-generated : Week 7 Part 1 — PageHeading을 QueryState 밖으로 빼서 Header처럼 homeQuery pending 여부와 무관하게 즉시 렌더. 배너 데이터 도착 전엔 고정 fallback 문구를 보여주다가 도착하면 실제 title/description으로 교체 */
 export function HomeView() {
   const homeQuery = useQuery(homeQueryOptions());
   const queryClient = useQueryClient();
@@ -33,6 +34,10 @@ export function HomeView() {
   return (
     <main className="week05-page">
       <Header />
+      <PageHeading
+        title={homeQuery.data?.banner.title ?? '다양한 상품을 만나보세요'}
+        description={homeQuery.data?.banner.description ?? '지금 준비된 상품을 확인해보세요.'}
+      />
       <QueryState
         query={homeQuery}
         renderError={(error) => (
@@ -40,15 +45,13 @@ export function HomeView() {
         )}
       >
         {(data) => {
-          // 배너는 어떤 entity에도 속하지 않는 순수 페이지 콘텐츠라 mapper 없이 여기서 바로 뽑는다.
-          // 카테고리/인기·신상품은 각 entity가 소유한 mapper로 projection한다.
+          // 배너는 PageHeading이 QueryState 밖에서 이미 소유하므로 여기서는 카테고리/인기·신상품만 각 entity의 mapper로 projection한다.
           const categories = categoriesMapper(data);
           const popularProducts = popularProductsMapper(data);
           const newProducts = newProductsMapper(data);
 
           return (
             <>
-              <PageHeading title={data.banner.title} description={data.banner.description} />
               <section className="week05-section">
                 <h2>카테고리</h2>
                 <div className="week05-categories">
