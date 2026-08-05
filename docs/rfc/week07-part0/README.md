@@ -8,7 +8,6 @@
 - **viewport**: `--preset=desktop` → **데스크톱 에뮬레이션**(`1350×940`, `deviceScaleFactor 1`, `mobile: false`)
 - **측정 일시**: 데스크톱 재측정 2026-08-05(UTC)
 - **실행 방식**: `pnpm build && pnpm start` 이후 `http://localhost:3000/`, `http://localhost:3000/products` 각각 cold load 5회(매 회 새 headless Chrome 인스턴스, 캐시 없음)
-- **raw JSON(로컬 전용)**: `docs/local/week7/part0/lighthouse-desktop/{home,products}/run-{1..5}.json`
 - **눈으로 보는 리포트(이 커밋에 포함됨)**: [`./lighthouse/home/run-1.html`](./lighthouse/home/run-1.html), [`./lighthouse/products/run-1.html`](./lighthouse/products/run-1.html) — run-1의 원본 JSON을 Lighthouse 자체 리포트 생성기로 변환한 파일(데스크톱 모드). 인터넷 연결이나 외부 업로드 없이 브라우저로 더블클릭해서 열면 익숙한 점수 화면(성능 점수, filmstrip, opportunities 등)을 그대로 볼 수 있다. run-2~5는 raw 값이 표에 이미 있어 대표로 run-1만 변환함
 
 ---
@@ -58,7 +57,7 @@
 
 ## `/products` URL 쿼리 변경별 성능 (category/sort/검색/page, 데스크톱 모드)
 
-`/products`는 검색·카테고리·정렬·페이지 조건에 따라 초기 HTML(SSR prefetch로 채워지는 상품 데이터)이 달라진다. 조건이 바뀌어도 Lighthouse 지표가 달라지는지 각 조건별로 cold load 3회씩 측정했다(기본값인 무조건 `/products`는 위 5회 결과를 기준선으로 사용). raw JSON은 로컬 전용(`docs/local/week7/part0/lighthouse-desktop/products-query/{category,sort,search,page2}/run-{1..3}.json`), 눈으로 보는 HTML 리포트(조건별 run-1 대표, 이 커밋에 포함됨): [`category`](./lighthouse/products-query/category/run-1.html), [`sort`](./lighthouse/products-query/sort/run-1.html), [`search`](./lighthouse/products-query/search/run-1.html), [`page2`](./lighthouse/products-query/page2/run-1.html)
+`/products`는 검색·카테고리·정렬·페이지 조건에 따라 초기 HTML(SSR prefetch로 채워지는 상품 데이터)이 달라진다. 조건이 바뀌어도 Lighthouse 지표가 달라지는지 각 조건별로 cold load 3회씩 측정했다(기본값인 무조건 `/products`는 위 5회 결과를 기준선으로 사용). 눈으로 보는 HTML 리포트(조건별 run-1 대표, 이 커밋에 포함됨): [`category`](./lighthouse/products-query/category/run-1.html), [`sort`](./lighthouse/products-query/sort/run-1.html), [`search`](./lighthouse/products-query/search/run-1.html), [`page2`](./lighthouse/products-query/page2/run-1.html)
 
 | 쿼리 조건            | URL                         | FCP 중앙값(ms) | LCP 중앙값(ms) | CLS 중앙값 |
 | -------------------- | --------------------------- | -------------- | -------------- | ---------- |
@@ -87,7 +86,7 @@
   즉 "Hero 이미지 요청이 늦게 시작돼서" 느린 게 아니라, **거의 즉시(45ms) 발견·요청되는데도 파일 자체가 너무 커서 전송에 오래 걸리는 것**이 확정적인 원인이다.
 
 - **CLS 0.000인 이유**: `<img>`에 `width={3840}`/`height={2160}`가 명시돼 있어 로드 전에도 `aspect-ratio`로 공간이 이미 확보됨(레이아웃 이동 자체가 없음) — 이 부분은 이미 잘 되어 있어 Part 4에서 회귀만 확인하면 됨
-- **Layout Shifts 트랙 직접 확인(추가 검증)**: Lighthouse의 CLS 수치만이 아니라, DevTools Performance 패널이 쓰는 것과 같은 CDP `Tracing` API로 홈·상품목록 각각 6초짜리 실제 성능 트레이스를 떴다(같은 throttle 조건, `docs/local/week7/part0/traces/{home,products}-trace.json`). 트레이스 안의 `LayoutShift` 이벤트를 세어보니 **둘 다 0건** — Lighthouse 수치와 정확히 일치. 이 `.json` 파일은 Chrome DevTools의 Performance 패널(Load profile) 확인시 "Layout shifts" 트랙을 직접 눈으로 봐도 아무 것도 안 뜬다(이벤트 자체가 없으므로).
+- **Layout Shifts 트랙 직접 확인(추가 검증)**: Lighthouse의 CLS 수치만이 아니라, DevTools Performance 패널이 쓰는 것과 같은 CDP `Tracing` API로 홈·상품목록 각각 6초짜리 실제 성능 트레이스를 떴다(같은 throttle 조건). 트레이스 안의 `LayoutShift` 이벤트를 세어보니 **둘 다 0건** — Lighthouse 수치와 정확히 일치. 이 `.json` 파일은 Chrome DevTools의 Performance 패널(Load profile) 확인시 "Layout shifts" 트랙을 직접 눈으로 봐도 아무 것도 안 뜬다(이벤트 자체가 없으므로).
 
 ---
 
@@ -103,7 +102,7 @@
 
 ## 실제 브라우저(Playwright+Chromium) 확인 — 브라우저 확장 없이 devDependency로 보완, 데스크톱 throttle 조건
 
-CDP `Network.emulateNetworkConditions`로 Lighthouse desktop 프리셋과 동일한 조건(RTT 40ms, downloadThroughput/uploadThroughput 모두 10,240Kbps≈1,280KB/s)을 직접 재현하고, `Page.captureScreenshot`(폰트 대기 없는 CDP 직접 호출)로 filmstrip을, `PerformanceObserver`로 실제 FCP/LCP 항목을 확보했다. 스크린샷은 로컬 전용(`docs/local/week7/part0/recording-desktop/`).
+CDP `Network.emulateNetworkConditions`로 Lighthouse desktop 프리셋과 동일한 조건(RTT 40ms, downloadThroughput/uploadThroughput 모두 10,240Kbps≈1,280KB/s)을 직접 재현하고, `Page.captureScreenshot`(폰트 대기 없는 CDP 직접 호출)로 filmstrip을, `PerformanceObserver`로 실제 FCP/LCP 항목을 확보했다.
 
 ### 홈 — filmstrip (데스크톱 throttle)
 
@@ -204,7 +203,7 @@ Playwright의 `page.route()`로 `/api/products` 요청에 `scenario=slow`를 항
 
 ## 부록 — 최초 모바일 모드 측정값(참고용)
 
-최초 측정 때 Lighthouse에 `--form-factor`를 안 줘서 기본값인 모바일 에뮬레이션(`412×823`, RTT 150ms, downlink ≈1.47Mbps, CPU 4x)으로 측정됐던 값. 이후 데스크톱 모드로 재측정해 위 본문 수치로 교체했다. raw JSON은 로컬 전용(`docs/local/week7/part0/lighthouse/{home,products}/run-{1..5}.json`).
+최초 측정 때 Lighthouse에 `--form-factor`를 안 줘서 기본값인 모바일 에뮬레이션(`412×823`, RTT 150ms, downlink ≈1.47Mbps, CPU 4x)으로 측정됐던 값. 이후 데스크톱 모드로 재측정해 위 본문 수치로 교체했다.
 
 ### 홈 (`/`) — 5회 raw 값(모바일 모드)
 
