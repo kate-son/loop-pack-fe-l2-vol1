@@ -83,11 +83,16 @@
   gap: 8px;
 }
 
-.week05-image {
-  display: block;
+/* AI-generated : Week 7 Part 1 Round 4 — 카드 이미지가 width:100%(반응형)인데 next/image에 고정 width/height(400)를 주면 실제 렌더 폭보다 큰 srcset이 선택돼(예: 5열 그리드에서 실렌더 폭 ≈224px인데 400px 기준으로 다운로드) "compression/oversized" 경고가 뜨는 문제 — fill 모드로 바꾸면서 position 기준을 이 wrap이 담당하도록 분리. height:400px는 기존 <img width={400} height={400}>가 만들던 모양(폭은 그리드에 따라 가변, 높이는 400px 고정)을 그대로 유지하기 위한 값 — 용량 최적화 범위를 벗어나는 비율 변경은 하지 않는다 */
+.week05-image-wrap {
+  position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  height: 400px;
   background: #ececec;
+  overflow: hidden;
+}
+
+.week05-image {
   object-fit: cover;
 }
 

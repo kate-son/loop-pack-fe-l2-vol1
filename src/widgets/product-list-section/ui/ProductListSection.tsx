@@ -4,6 +4,9 @@ import { ProductCard } from '@/entities/product/ui/ProductCard';
 import { ToggleWishlistButton } from '@/features/toggle-wishlist/ui/ToggleWishlistButton';
 import { AddToCartButton } from '@/features/add-to-cart/ui/AddToCartButton';
 
+/** 데스크톱 그리드 열 수(5열)와 맞춘 값 — 이보다 앞선 카드는 뷰포트 진입 전에도 즉시 로드한다 */
+const ABOVE_FOLD_COUNT = 5;
+
 type ProductListSectionProps = {
   /** 텍스트 영역(제목 또는 총 개수 등). 화면마다 다른 내용이라 이 컴포넌트는 내용을 모르게 슬롯으로만 받는다 */
   children: ReactNode;
@@ -37,7 +40,11 @@ export function ProductListSection({
               ? `${labelPrefix} ${index + 1}번 상품`
               : `${index + 1}번 상품`;
             return (
-              <ProductCard key={product.id} product={product}>
+              <ProductCard
+                key={product.id}
+                product={product}
+                isAboveFold={index < ABOVE_FOLD_COUNT}
+              >
                 <ToggleWishlistButton productId={product.id} label={label} />
                 <AddToCartButton productId={product.id} label={label} />
               </ProductCard>
