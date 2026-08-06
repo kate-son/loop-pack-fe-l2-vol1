@@ -446,7 +446,7 @@ if (process.env.TEMP_FAIL_SORT && params.get('sort') === process.env.TEMP_FAIL_S
 
 **이번 Part에서는 관찰만 남기고 고치지 않는다.** Part 2의 "검색 CLS 0건" 결론은 결과 개수가 크게 바뀌지 않는 시나리오에서 얻은 것이라 **틀렸다기보다 범위가 좁았다**. cold load CLS는 최종 After 5회 전부 **0.000**이라 Lighthouse 점수에는 나타나지 않는다.
 
-### 관찰만 남기는 것 — `/products` 초기 HTML의 `h2` id 중복
+### 고친 것 — `/products` 초기 HTML의 `h2` id 중복
 
 3단계 증거로 쓰는 "JavaScript 없이 받은 초기 HTML"을 다시 확인하다 발견했다.
 
@@ -461,7 +461,19 @@ if (process.env.TEMP_FAIL_SORT && params.get('sort') === process.env.TEMP_FAIL_S
 - **반증 방법**: `loading.tsx`에서 `PageHeading`을 빼고도 중복이 남으면 원인은 fallback이 아니다.
 - **가장 작은 변경**: `PageHeading`이 제목 id를 prop으로 받게 하고 `loading.tsx`에서만 다른 값을 넘긴다.
 
-제목·설명·링크·구조가 JS 없이 보이는지를 묻는 체크 항목 자체는 충족한다(전부 보인다). 다만 **중복 `id`는 HTML 유효성과 `aria-labelledby` 지시 대상이 모호해지는 문제**라 숨기지 않고 남긴다.
+체크 항목이 묻는 것(제목·설명·링크·구조가 JS 없이 보이는가)은 원래도 충족했지만, **중복 `id`는 HTML 유효성과 `aria-labelledby` 지시 대상이 모호해지는 문제**다. 원인이 확정됐고 변경이 작아 이번에 고쳤다.
+
+`PageHeading`이 `titleId`를 prop으로 받게 하고(기본값은 기존 id 그대로), `loading.tsx`에서만 `week07-hero-title-loading`을 넘긴다. 공통 컴포넌트가 "한 문서에 둘 이상 실릴 수 있다"는 사정을 스스로 알 필요는 없으므로, 그 사정을 아는 호출부가 id를 정하게 했다.
+
+|                                 | 수정 전                | 수정 후                                           |
+| ------------------------------- | ---------------------- | ------------------------------------------------- |
+| `/products` 초기 HTML의 `h2` id | `week07-hero-title` ×2 | `week07-hero-title-loading` + `week07-hero-title` |
+| 같은 id 중복                    | **2건**                | **0건**                                           |
+| `aria-labelledby`               | 둘 다 같은 id를 가리킴 | 각자 자기 제목을 가리킴                           |
+| 홈(`loading.tsx` 없음)          | 1건                    | 1건(변화 없음)                                    |
+| JS ON 하이드레이션 후           | `h2` 1개               | `h2` 1개(변화 없음)                               |
+
+`PageHeading.test.tsx`에 두 케이스를 넣어 고정했다 — 기본값일 때 id와 `aria-labelledby`가 같은 값을 가리키는 것, 그리고 **한 문서에 둘을 함께 그려도 id가 겹치지 않는 것**(실제 `/products`의 상황을 그대로 재현).
 
 ---
 
