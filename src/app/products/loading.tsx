@@ -4,6 +4,11 @@ import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';
 /** 첫 화면에 실제로 채워지는 카드 수(pageSize)와 같은 값 — 목록 크기를 그대로 예고하기 위해 맞춘다 */
 const SKELETON_CARD_COUNT = 12;
 
+/* AI-generated : Week 7 Part 4 — fallback과 본 콘텐츠가 초기 HTML에 함께 실리므로 제목 id를 분리한다.
+   PageHeading 기본값을 그대로 쓰면 같은 id를 가진 h2가 한 문서에 2개가 된다(실측) */
+/** fallback 전용 제목 id — 본 화면의 기본 id와 겹치지 않게 한다 */
+const LOADING_TITLE_ID = 'week07-hero-title-loading';
+
 /* AI-generated : week06-fsd.md 9단계 기준 — Next.js가 이 파일을 fallback으로 라우트 세그먼트를 자동으로 <Suspense>로 감싼다 */
 /* AI-generated : Week 7 Part 2 Round 7 — 기존에는 "불러오는 중입니다…" 텍스트 한 줄만 있어서 요구사항인
    "실제 목록 크기를 예상할 수 있는 pending UI"를 만족하지 못했다(Round 4 캡처로 확인). 실제 페이지와 같은
@@ -17,6 +22,7 @@ export default function ProductsLoading() {
         title="상품 목록"
         description="카테고리와 조건으로 원하는 상품을 찾아보세요."
         compact
+        titleId={LOADING_TITLE_ID}
       />
       <section className="week05-section" aria-hidden="true">
         <div className="week05-skeleton-filters">

@@ -49,4 +49,26 @@ describe('PageHeading', () => {
     const hero = container.querySelector('section');
     expect(hero?.className).toMatch(/heroCompact/);
   });
+
+  it('기본으로는 제목 id와 aria-labelledby가 같은 값을 가리킨다', () => {
+    const { container } = render(<PageHeading title="상품 목록" description="설명" />);
+
+    const section = container.querySelector('section');
+    expect(section?.getAttribute('aria-labelledby')).toBe('week07-hero-title');
+    expect(container.querySelector('h2')?.id).toBe('week07-hero-title');
+  });
+
+  it('titleId를 주면 한 문서에 둘을 함께 그려도 id가 겹치지 않는다', () => {
+    // /products는 loading.tsx가 같은 컴포넌트를 재사용해 fallback과 본 콘텐츠가 초기 HTML에 함께 실린다.
+    const { container } = render(
+      <>
+        <PageHeading title="상품 목록" description="설명" titleId="fallback-title" />
+        <PageHeading title="상품 목록" description="설명" />
+      </>,
+    );
+
+    const ids = [...container.querySelectorAll('h2')].map((heading) => heading.id);
+    expect(ids).toEqual(['fallback-title', 'week07-hero-title']);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 });
