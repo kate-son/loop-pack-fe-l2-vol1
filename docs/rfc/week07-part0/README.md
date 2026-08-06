@@ -1,7 +1,7 @@
 # Part 0 — Before 측정 결과
 
 - **HeroSection 연결 상태**: 과제가 제공한 `HeroSection`(raw `<img>`, 미최적화 원본)은 `PageHeading`으로 통합되어 홈(`/`)·상품목록(`/products`) 양쪽에 이미 연결되어 있고, 원본 이미지도 최적화하지 않은 상태 그대로다
-- **commit SHA**: `61214ccabb448fa70910566295958d78036f8e87`(최초 모바일 측정 시점, 이후 동일 코드 상태에서 데스크톱으로 재측정)
+- **commit SHA**: `61214ccabb448fa70910566295958d78036f8e87`(Part 0 측정 시점, Part 1 시작 전)
 - **측정 도구**: Lighthouse CLI `13.4.1` (`npx lighthouse --preset=desktop`), Chrome headless(`--headless=new`)
 - **throttling**: Lighthouse desktop 프리셋 기본값(`simulate`, RTT 40ms, downlink 10,240Kbps≈1,280KB/s, CPU 배속 없음)
 - **브라우저 버전**: Google Chrome `150.0.7871.187` (Lighthouse가 띄운 헤드리스 인스턴스와 동일 바이너리 — `/Applications/Google Chrome.app`)
@@ -201,38 +201,62 @@ Playwright의 `page.route()`로 `/api/products` 요청에 `scenario=slow`를 항
 
 ---
 
-## 부록 — 최초 모바일 모드 측정값(참고용)
+## 사용자 직접 측정 — Slow 4G 실측(DevTools Performance 패널)
 
-최초 측정 때 Lighthouse에 `--form-factor`를 안 줘서 기본값인 모바일 에뮬레이션(`412×823`, RTT 150ms, downlink ≈1.47Mbps, CPU 4x)으로 측정됐던 값. 이후 데스크톱 모드로 재측정해 위 본문 수치로 교체했다.
+위 Lighthouse·Playwright 결과는 전부 시뮬레이션(데스크톱 프리셋 RTT 40ms·≈1,280KB/s) 또는 로컬 비throttled 조건이었다. 사용자가 DevTools Performance 패널로 **실제 Slow 4G**(데스크톱 프리셋보다 훨씬 열악한 RTT·대역폭) 조건에서 직접 재현한 기록을 추가한다. "몇 ms를 주장하는" 타이밍 증거는 사용자가 직접 재는 게 공식이라는 기준(Part 1에서 정한 측정 규칙)에 따른다.
 
-### 홈 (`/`) — 5회 raw 값(모바일 모드)
+- **측정 시점 코드 상태**: 커밋 `61214ccabb448fa70910566295958d78036f8e87`(Part 0, raw `<img>` 그대로)
+- **측정 도구**: DevTools Performance 패널, network throttling **"Slow 4G"**, 실제 디바이스 DPR 1, `localhost:3000`(프로덕션)
+- **측정 일시**: 2026-08-06 UTC 11:07(홈 하드 리로드) / 11:08(상품목록 인터랙션)
 
-| run        | FCP(ms) | LCP(ms)    | CLS       |
-| ---------- | ------- | ---------- | --------- |
-| 1          | 922     | 41,047     | 0.000     |
-| 2          | 906     | 40,806     | 0.000     |
-| 3          | 905     | 40,805     | 0.000     |
-| 4          | 905     | 40,805     | 0.000     |
-| 5          | 904     | 40,804     | 0.000     |
-| **중앙값** | **905** | **40,805** | **0.000** |
+### 홈(`/`) — 하드 리로드
 
-### 상품 목록 (`/products`) — 5회 raw 값(모바일 모드)
+| 지표      | 값                                                                                       |
+| --------- | ---------------------------------------------------------------------------------------- |
+| FCP       | 1,351.7ms                                                                                |
+| LCP(hero) | **47.6초 녹화 종료 시점까지 `LargestContentfulPaint::Candidate`가 hero로 갱신되지 않음** |
 
-| run        | FCP(ms) | LCP(ms)    | CLS       |
-| ---------- | ------- | ---------- | --------- |
-| 1          | 905     | 40,430     | 0.000     |
-| 2          | 905     | 40,430     | 0.000     |
-| 3          | 906     | 40,431     | 0.000     |
-| 4          | 906     | 40,431     | 0.000     |
-| 5          | 905     | 40,430     | 0.000     |
-| **중앙값** | **905** | **40,430** | **0.000** |
+7.5MB 원본 이미지를 진짜 Slow 4G 회선으로 받으면, Lighthouse가 시뮬레이션한 desktop 프리셋(≈6.6초)보다 훨씬 가혹하다. `largestContentfulPaint::Candidate` 이벤트는 텍스트 카드 하나(2,367px²→42,307px² 구간)에서 멈춰 있어 "공식 LCP 후보"로는 hero가 한 번도 잡히지 않았지만, **스크린샷으로 보면 hero는 progressive JPEG로 계속 채워지고 있었다** — 44.9초 시점엔 육안으로 거의 다 채워진 상태였다(완전히 100% 끝났다는 신호는 녹화 종료 전까지 없었음). 즉 "아예 안 보인다"가 아니라 "1분 가까이 서서히 채워지는 중이라 어느 시점에 '완료'라고 부를 수 있는지조차 애매하다"는 게 더 정확한 설명이다 — 시뮬레이션 수치(6.6초)가 오히려 낙관적인 축에 속한다는 뜻은 그대로 유지된다.
 
-### `/products` 쿼리 변형(모바일 모드)
+#### filmstrip — 홈(`/`, Slow 4G)
 
-| 쿼리 조건            | FCP 중앙값(ms) | LCP 중앙값(ms) | CLS 중앙값 |
-| -------------------- | -------------- | -------------- | ---------- |
-| 기준(쿼리 없음, n=5) | 905            | 40,430         | 0.000      |
-| 카테고리 필터        | 905            | 40,279         | 0.000      |
-| 정렬                 | 906            | 40,356         | 0.000      |
-| 검색                 | 904            | 40,054         | 0.000      |
-| 페이지네이션         | 905            | 40,355         | 0.000      |
+| 시점       | 스크린샷                                                           | 내용                                                                                                          |
+| ---------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| t=1,344ms  | [`slow4g-user/home/t1344ms.jpg`](./slow4g-user/home/t1344ms.jpg)   | 셸(Header·hero 텍스트 카드) 완성, hero는 아직 배경색만(FCP 시점과 근접)                                       |
+| t=3,275ms  | [`slow4g-user/home/t3275ms.jpg`](./slow4g-user/home/t3275ms.jpg)   | hero 최상단에 progressive JPEG 스캔라인이 막 나타나기 시작                                                    |
+| t=12,276ms | [`slow4g-user/home/t12276ms.jpg`](./slow4g-user/home/t12276ms.jpg) | hero 위쪽 절반 정도 채워짐                                                                                    |
+| t=24,276ms | [`slow4g-user/home/t24276ms.jpg`](./slow4g-user/home/t24276ms.jpg) | hero 대부분 채워짐(디테일은 아직 흐릿)                                                                        |
+| t=44,929ms | [`slow4g-user/home/t44929ms.jpg`](./slow4g-user/home/t44929ms.jpg) | 육안으로는 거의 완료된 상태 — 그래도 이 시점까지 `LargestContentfulPaint::Candidate`는 hero로 갱신되지 않았음 |
+
+### 상품 목록(`/products`) — 쿼리 변형 인터랙션(하드 리로드 없음, 클라이언트 사이드 필터 변경)
+
+같은 Slow 4G 조건에서 `/products`의 카테고리·정렬·검색·페이지 조건을 실제로 연속 조작한 기록. 위 표(카테고리/정렬/검색/페이지네이션)와 동일한 쿼리 변형들을 이번엔 Lighthouse 시뮬레이션이 아니라 실제 인터랙션으로 재확인했다.
+
+| 경과 시간    | 요청 URL                                                          | 대응하는 쿼리 조건                 |
+| ------------ | ----------------------------------------------------------------- | ---------------------------------- |
+| t=0ms        | `/api/products?category=home&sort=latest&page=1&pageSize=12`      | 카테고리(홈)                       |
+| t=5,100.6ms  | `/api/products?category=fashion&sort=latest&page=1&pageSize=12`   | 카테고리(패션)                     |
+| t=8,624.5ms  | `/api/products?sort=latest&page=1&pageSize=12`                    | 카테고리 초기화                    |
+| t=9,234.8ms  | `/api/products?sort=latest&page=2&pageSize=12`                    | 페이지네이션(다음 페이지 prefetch) |
+| t=17,494.5ms | `/api/products?category=casual&sort=latest&page=1&pageSize=12`    | 카테고리(캐주얼)                   |
+| t=25,512.6ms | `/api/products?category=casual&sort=price-asc&page=1&pageSize=12` | 정렬                               |
+| t=30,373.3ms | `/api/products?sort=price-asc&page=1&pageSize=12`                 | 카테고리 초기화                    |
+| t=30,973.3ms | `/api/products?sort=price-asc&page=2&pageSize=12`                 | 페이지네이션(prefetch)             |
+| t=32,806.1ms | `/api/products?q=tu&sort=price-asc&page=1&pageSize=12`            | 검색(입력 중)                      |
+| t=34,222.7ms | `/api/products?q=셔츠&sort=price-asc&page=1&pageSize=12`          | 검색(확정)                         |
+| t=47,479.4ms | `/api/products?sort=price-asc&page=3&pageSize=12`                 | 페이지네이션                       |
+
+- **CLS**: `LayoutShift` 이벤트 2건 잡혔으나 둘 다 `had_recent_input: true`(클릭 직후 500ms 이내)이고 점수도 0.0001~0.0008 수준으로 미미하다 — 공식 CLS 점수에는 반영되지 않는 종류이며, Lighthouse가 보고한 CLS 0.000과 결론이 일치한다.
+- 카테고리·정렬·검색·페이지 조건을 전부 실제로 조작해봐도 위 Lighthouse 결론("LCP 요소는 항상 hero 이미지, 쿼리 조건과 무관")과 어긋나는 동작은 관찰되지 않았다.
+
+#### filmstrip — 상품 목록(`/products`, Slow 4G)
+
+스크린샷 캡처는 인터랙션 시작 후 31.5초까지만 남아있었다(요청 로그는 47.5초까지 이어짐 — 녹화 툴 쪽 캡처 간격 문제로 보이며 이후 요청들의 화면은 별도 캡처가 없다). 남아있는 구간에서 5장을 뽑았다:
+
+| 시점       | 스크린샷                                                                   | 내용                                                                                |
+| ---------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| t=8ms      | [`slow4g-user/products/t8ms.jpg`](./slow4g-user/products/t8ms.jpg)         | 홈 화면에서 카테고리 링크를 막 클릭한 직후(아직 홈 화면, 소프트 내비게이션 전환 전) |
+| t=9,232ms  | [`slow4g-user/products/t9232ms.jpg`](./slow4g-user/products/t9232ms.jpg)   | `/products`로 전환 완료, hero·필터·"상품 목록" 타이틀 표시                          |
+| t=18,105ms | [`slow4g-user/products/t18105ms.jpg`](./slow4g-user/products/t18105ms.jpg) | 카테고리 "캐주얼" 반영 이후 상태                                                    |
+| t=25,535ms | [`slow4g-user/products/t25535ms.jpg`](./slow4g-user/products/t25535ms.jpg) | 정렬 조건 반영 구간                                                                 |
+| t=31,516ms | [`slow4g-user/products/t31516ms.jpg`](./slow4g-user/products/t31516ms.jpg) | 캡처가 남아있는 마지막 시점(카테고리 초기화 직후 구간)                              |
