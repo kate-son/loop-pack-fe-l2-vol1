@@ -6,14 +6,21 @@ export type ApiErrorResponse = {
 
 const DEFAULT_DEV_PORT = 3000;
 
+/* AI-generated : Week 7 Part 3 — NEXT_PUBLIC_SITE_URL → APP_ORIGIN으로 이름 변경. 이 값은
+   typeof window === 'undefined' 가드 안에서만 쓰이는 서버 전용 설정인데, NEXT_PUBLIC_ 접두사가 붙어 있으면
+   Next.js가 빌드 시점에 클라이언트 번들에도 문자열로 박아 넣는다. 접두사를 떼어 서버에만 남긴다 */
 /** 서버(Server Component 등)에서 실행될 땐 상대경로를 못 풀어서 절대경로로 바꿔준다 */
 function resolveUrl(path: string): string {
   if (typeof window !== 'undefined') {
     return path;
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? `http://localhost:${DEFAULT_DEV_PORT}`;
-  return `${baseUrl}${path}`;
+  return `${getAppOrigin()}${path}`;
+}
+
+/** 서버에서 API·metadata가 공통으로 쓰는 절대 origin */
+export function getAppOrigin(): string {
+  return process.env.APP_ORIGIN ?? `http://localhost:${DEFAULT_DEV_PORT}`;
 }
 
 /** 네트워크 자체가 실패했을 때 사용자에게 보여줄 문구 */

@@ -7,14 +7,14 @@ JavaScript가 실행되기 전에도 제목·설명·이동 경로가 보이게 
 | 항목          | 내용                                                                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Before 코드   | Part 2 종료 시점(Round 12까지 적용 — 21:9 크롭 hero + 미사용 폰트 제거)                                                               |
-| 현재 코드     | metadata·Open Graph는 **미구현**. 제목 계층 정리(`h2` 1개)만 선행 적용                                                                |
+| 현재 코드     | **구현 완료** — 루트 공통 metadata + 두 페이지 `generateMetadata` + OG fallback 이미지                                                |
 | 대상 경로     | 과제 문서는 `src/app/(commerce)/…`로 안내하지만, 이 리포지토리는 **`src/app/(home)/page.tsx`**·**`src/app/products/page.tsx`** 구조다 |
 | 측정 프로토콜 | Part 1·2와 동일 — 타이밍 수치는 사용자가 직접 측정, AI가 CLI로 잰 값은 참고용으로만 표기                                              |
-| 자료          | (측정 후 `./captures/`, `./lighthouse/`에 추가 예정)                                                                                  |
+| 자료          | [`./captures/`](./captures/) — normal·정상 empty·query failure의 document 응답 5건                                                    |
 
 ### 문서 구성
 
-**1부 Before**(현재 상태·이미 갖춰진 것·관찰 표) → **2부 재현·측정 계획**(normal / 정상 empty / metadata query failure / 서버 호출 계수 / UA 비교) → **3부 정리**(완료조건 점검·성능 개선 방향)
+**1부 Before**(현재 상태·이미 갖춰진 것·관찰 표) → **2부 구현과 관찰**(구현 내용 / normal·정상 empty·query failure / 서버 호출 계수 / UA 비교) → **3부 정리**(완료조건 점검·결정·성능 개선 방향)
 
 ---
 
@@ -133,76 +133,110 @@ export const metadata: Metadata = {
 
 ---
 
-## 2부. 재현·측정 계획
+## 2부. 구현과 관찰
 
-> 아직 **어느 것도 실행하지 않았다.** 코드 변경 후 아래 순서로 진행한다.
+## 무엇을 만들었나
 
-## 공통 준비
+| 파일                                   | 내용                                                                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/layout.tsx`                   | `metadataBase`, `title.template`(`%s \| Commerce`), 공통 `openGraph`를 `COMMON_OPEN_GRAPH`로 **export**해 페이지가 펼쳐 쓰게 함 |
+| `src/app/(home)/page.tsx`              | `generateMetadata` — 본문과 **같은 `homeQueryOptions()`** 로 조회, 배너의 title·description·image 사용                          |
+| `src/app/products/page.tsx`            | `generateMetadata` — 본문과 **같은 `loadProductSearchParams` + `productsQueryOptions`** 로 조회                                 |
+| `src/shared/api/response.ts`           | `NEXT_PUBLIC_SITE_URL` → **`APP_ORIGIN`**(서버 전용). `getAppOrigin()`을 export해 metadata도 같은 origin 사용                   |
+| `public/images/week-07/og-default.jpg` | OG fallback 이미지 **1200×630, 211KB**(원본 7.5MB를 OG 규격으로 크롭)                                                           |
 
-```bash
-APP_ORIGIN=http://localhost:3000 pnpm build
-APP_ORIGIN=http://localhost:3000 pnpm start
-```
+**shallow merge 대응**: 페이지가 `openGraph`를 지정하면 루트 것이 통째로 대체되므로, 페이지에서 `{ ...COMMON_OPEN_GRAPH, title, description, images }`로 **명시적으로 펼쳐** `siteName`·`locale`·`type`을 유지한다.
 
-`APP_ORIGIN`은 현재 코드에 없는 환경변수다. `src/shared/api/response.ts`의 `resolveUrl`이 서버에서 `NEXT_PUBLIC_SITE_URL`을 쓰고 있으므로, **둘을 어떻게 통합할지 결정이 필요하다**(아래 "판단이 필요한 것").
+**title 조립 규칙**: 검색어를 먼저 반영(`'셔츠' 검색 결과`), 2페이지 이상이면 페이지 번호를 덧붙임(`(2페이지)`). category·sort는 description에 반영.
 
-## ① normal — 정상 응답의 document 증거
+## 홈이 정적 라우트라 metadata를 못 만들던 문제
 
-- production 빌드로 `/`와 `/products`의 **document 응답**을 받아 초기 HTML을 남긴다.
-- 확인: `<title>`, `<meta name="description">`, `og:*` 태그, 하나의 `h1`, 페이지 설명, 주요 링크(`href`)와 구조.
-- 초기 HTML은 **document Response / View Source / JS 끈 새 요청** 중 하나 이상으로 확인한다(JS 실행 전 상태임을 보이기 위함).
+구현 직후 홈 document의 `<title>`이 루트 기본값(`Commerce`)에 머물렀다. 원인은 **홈이 정적(`○`) 라우트로 프리렌더**되기 때문이었다.
 
-## ② 정상 empty — 결과 0건
+- 홈은 주소가 고정이라 Next가 **빌드 시점에 HTML을 만들어 저장**한다.
+- 그런데 데이터 출처인 `/api/home`은 **같은 앱의 Route Handler**라, 빌드 중에는 서버가 떠 있지 않아 조회가 실패한다.
+- 본문은 하이드레이션 후 클라이언트가 다시 조회해 복구되지만, **metadata는 서버에서만 생성되므로 복구 경로가 없다.**
 
-- 결과가 0건이 되는 실제 URL 조건으로 접근(예: 결과 없는 검색어).
-- 확인: title·description이 **URL 조건과 0건임을 설명**하는지, Open Graph **fallback image가 유지**되는지.
+`/products`는 `searchParams`를 읽어 동적(`ƒ`) 라우트였기 때문에 이 문제가 없었다.
 
-## ③ metadata query failure — 조회 실패
+**변경**: `(home)/page.tsx`에 `export const dynamic = 'force-dynamic'`을 추가해 요청 시점 렌더로 바꿨다. 빌드 출력이 `○ /` → `ƒ /`로 바뀌고, metadata가 실제 배너 데이터를 쓰게 됐다.
 
-```bash
-APP_ORIGIN=http://127.0.0.1:9 pnpm build
-APP_ORIGIN=http://127.0.0.1:9 pnpm start
-```
+> 잃는 것은 홈의 정적 최적화지만, **이전에도 실질적으로 쓰지 못하고 있었다** — 저장된 HTML에 데이터가 없어 매번 클라이언트가 다시 조회하고 있었다.
 
-- build와 runtime에 **같은 값**을 넣어야 한다.
-- 확인: 페이지별 빈 metadata가 아니라 **root 공통 metadata가 그대로 유지**되는지. ②와 **서로 다른 fallback**을 보여야 한다.
-- 빌드 자체가 실패하면 우회하지 말고 실행 환경·오류 로그를 남긴다.
+## ① normal · ② 정상 empty · ③ metadata query failure
 
-## ④ 서버 호출 계수 — Route Handler 실제 호출 횟수
+세 시나리오의 document 응답을 [`./captures/`](./captures/)에 저장했다. 실행은 `APP_ORIGIN=… pnpm build && APP_ORIGIN=… pnpm start`(production).
 
-- `/api/products`(또는 `/api/home`) Route Handler에 **임시 서버 로그**를 넣어 요청당 호출 횟수를 센다.
-- **Browser Network만 보고 판정하지 않는다** — document/RSC 경계 때문에 브라우저에서 안 보이는 서버 내부 호출이 있다.
-- 관찰이 끝나면 **계측을 반드시 제거**하고, 제거했다는 사실을 문서에 남긴다.
+|                                                      | `<title>`                               | `og:description`                                                     | `og:image`                                 |
+| ---------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------ |
+| **① normal** `/products`                             | `상품 목록 \| Commerce`                 | 최신순 · 전체 30개의 상품을 만나보세요.                              | 첫 상품 이미지(`/images/products/p26.jpg`) |
+| **① normal** `/`                                     | `매일 새롭게 발견하는 취향 \| Commerce` | 지금 가장 사랑받는 상품을 만나보세요.                                | 배너 이미지                                |
+| **② 정상 empty** `/products?q=존재하지않는`          | `'존재하지않는' 검색 결과 \| Commerce`  | **최신순 · 조건에 맞는 상품이 0개입니다.** 다른 조건으로 찾아보세요. | **og-default.jpg**(fallback 유지)          |
+| **③ query failure**(`APP_ORIGIN=http://127.0.0.1:9`) | **`Commerce`**                          | 루트 공통 설명                                                       | og-default.jpg                             |
 
-## ⑤ 일반 UA vs `facebookexternalhit` 응답 시점
+**②와 ③이 서로 다른 fallback을 보인다** — ②는 **조건과 0건을 설명하는 페이지 metadata를 만들고** OG 이미지만 fallback을 쓰며, ③은 **페이지 metadata를 아예 만들지 않고**(빈 객체 반환) 루트 공통 metadata를 상속한다. `og:site_name`·`og:locale`·`og:type`은 네 경우 모두 유지된다(shallow merge 대응이 동작함).
+
+`robots: noindex`는 넣지 않았고, 기본 색인 가능 상태를 유지한다.
+
+## ④ 서버 호출 계수 — 요청당 1회
+
+Route Handler에 임시 로그를 넣어 **서버 측에서** 실제 호출 횟수를 셌다(Browser Network는 document/RSC 경계 때문에 판정 근거가 되지 않는다).
+
+| 요청                                               | Route Handler 호출                                              |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| `/products?category=fashion&sort=price-asc&page=2` | **1회** — `?category=fashion&sort=price-asc&page=2&pageSize=12` |
+| `/`                                                | **1회**                                                         |
+| `/products?q=셔츠`                                 | **1회**                                                         |
+
+**`generateMetadata`를 추가했는데도 호출이 늘지 않았다.** metadata와 본문이 같은 `loadProductSearchParams`로 URL을 정규화하고 같은 query factory를 호출하므로, 같은 render/request 안에서 **URL·options가 완전히 같은 native fetch**가 되어 Next.js의 fetch memoization이 걸린 결과다.
+
+> **계측 제거**: 관찰 후 `console.error` 임시 로그를 두 Route Handler에서 모두 제거했고, 소스와 빌드 산출물 양쪽에서 `COUNT-` 문자열이 남아있지 않음을 확인했다.
+>
+> 계측 중 하나 걸린 점: `next.config.ts`의 `removeConsole`이 프로덕션 빌드에서 `console.*`를 제거하되 `error`만 남기도록 돼 있어, 처음 쓴 `console.warn`은 빌드에서 사라져 아무것도 세지 못했다. `console.error`로 바꿔야 계수가 잡혔다.
+
+## ⑤ 일반 UA vs `facebookexternalhit` — 스트리밍 여부가 갈린다
 
 ```bash
 curl -s -o /dev/null -w 'normal   start=%{time_starttransfer} total=%{time_total}\n' "$APP_ORIGIN/products"
 curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_starttransfer} total=%{time_total}\n' "$APP_ORIGIN/products"
 ```
 
-- 같은 slow URL에 대해 `time_starttransfer`·`time_total`을 비교하고, **User-Agent에 따라 metadata 응답 시점이 어떻게 달라지는지** 기록한다.
+| UA                    | `time_starttransfer` | `time_total` |
+| --------------------- | -------------------- | ------------ |
+| 일반                  | **0.004–0.007s**     | 0.510–0.514s |
+| `facebookexternalhit` | **0.511–0.517s**     | 0.512–0.518s |
+
+**첫 바이트 도착 시점이 약 510ms 차이 난다.** 전체 완료 시점은 두 경우가 거의 같다(약 0.51s).
+
+해석: 일반 브라우저에는 **셸을 먼저 스트리밍**하고(그래서 TTFB 4ms) 데이터가 준비되면 나머지를 흘려보낸다. 반면 크롤러 UA에는 **스트리밍을 하지 않고 완성된 HTML을 한 번에** 준다 — 크롤러는 부분 HTML로는 metadata를 읽을 수 없으므로 합리적인 동작이다.
+
+**즉 metadata를 기다리는 비용은 사용자와 크롤러에게 다르게 걸린다.** 사용자는 셸을 먼저 받아 체감 지연이 없지만, 크롤러는 데이터 조회가 끝날 때까지 아무것도 받지 못한다. 홈·상품목록 모두 같은 패턴이다.
 
 ---
 
 ## 3부. 정리
 
-## 완료조건 점검 (현재 전부 미충족)
+## 완료조건 점검
 
-| 완료조건                                                      | 현재                   |
-| ------------------------------------------------------------- | ---------------------- |
-| normal의 document 증거                                        | ❌ 미실행              |
-| 정상 empty의 document 증거                                    | ❌ 미실행              |
-| metadata query failure의 document 증거                        | ❌ 미실행              |
-| 정상 empty와 query failure가 **서로 다른 fallback**을 보일 것 | ❌ 두 경로 모두 미구현 |
-| 서버 호출 계수와 **제거 여부**                                | ❌ 미실행              |
-| 일반 UA vs `facebookexternalhit` 응답 시점 비교               | ❌ 미실행              |
-| document 응답에서 metadata·초기 구조·최종 URL 확인 가능       | ❌ metadata 미구현     |
+| 완료조건                                                | 결과                                                                                                                                                                         |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| normal의 document 증거                                  | ✅ [`captures/01-normal-products.html`](./captures/01-normal-products.html), [`02-normal-home.html`](./captures/02-normal-home.html)                                         |
+| 정상 empty의 document 증거                              | ✅ [`captures/03-empty-products.html`](./captures/03-empty-products.html)                                                                                                    |
+| metadata query failure의 document 증거                  | ✅ [`captures/04-metadata-failure-products.html`](./captures/04-metadata-failure-products.html), [`05-metadata-failure-home.html`](./captures/05-metadata-failure-home.html) |
+| 정상 empty와 query failure가 **서로 다른 fallback**     | ✅ ②는 0건을 설명하는 페이지 metadata 생성 + OG만 fallback / ③은 페이지 metadata 미생성 → 루트 상속                                                                          |
+| 서버 호출 계수와 **제거 여부**                          | ✅ 요청당 **1회** 확인, 임시 로그 제거 완료(소스·빌드 산출물 모두)                                                                                                           |
+| 일반 UA vs `facebookexternalhit` 응답 시점              | ✅ TTFB 0.004s vs 0.514s — 크롤러에는 스트리밍하지 않음                                                                                                                      |
+| document 응답에서 metadata·초기 구조·최종 URL 확인 가능 | ✅ 저장된 document에 `<title>`·`og:*`·`h2`·`href` 링크가 모두 담김                                                                                                           |
+| `robots: noindex`를 넣지 않고 기본 색인 가능 유지       | ✅ 넣지 않음                                                                                                                                                                 |
+| metadata와 본문이 같은 URL 정규화·query factory 사용    | ✅ `loadProductSearchParams` + `productsQueryOptions` 공유(호출 1회가 그 증거)                                                                                               |
+| `getQueryClient`를 singleton·영속 캐시로 바꾸지 않음    | ✅ `cache(() => new QueryClient())` 그대로                                                                                                                                   |
 
-## 판단이 필요한 것 (코드 변경 전 결정)
+**모두 충족.** 초기 HTML 확인은 `curl`로 받은 **document Response**로 수행했다(JS 실행 전 상태).
 
-1. **`APP_ORIGIN`과 기존 `NEXT_PUBLIC_SITE_URL`의 관계** — 과제는 `APP_ORIGIN`을 쓰라고 하고, 코드에는 `NEXT_PUBLIC_SITE_URL`이 이미 있다. 하나로 통합할지, `APP_ORIGIN`을 서버 전용으로 새로 둘지 정해야 한다. `NEXT_PUBLIC_` 접두사는 클라이언트 번들에도 값이 들어가므로, **서버에서만 쓰는 origin이라면 접두사 없는 이름이 더 맞다.**
-2. **Open Graph fallback image를 무엇으로 할 것인가** — 히어로 원본(`hero-original.jpg`)을 쓰면 7.5MB라 크롤러 응답에 부담이다. Part 2에서 만든 21:9 크롭본이나 별도 OG 규격(1200×630) 이미지를 준비할지 판단이 필요하다.
+## 결정 기록 — 코드 변경 전 정한 것
+
+1. **`APP_ORIGIN`으로 이름 변경** — 이 값은 `typeof window === 'undefined'` 가드 안에서만 쓰이는 서버 전용 설정인데 `NEXT_PUBLIC_` 접두사 탓에 클라이언트 번들에도 문자열로 박히고 있었다. 참조가 한 곳뿐이고 `.env` 파일도 없어 리스크가 없다고 판단해 이름을 바꿨다.
+2. **OG fallback은 1200×630 전용 이미지를 새로 만든다** — 히어로 원본은 7.5MB, Part 2의 21:9 크롭본도 1.1MB라 크롤러 응답에 부담이다. OG 권장 규격으로 잘라 **211KB**짜리 `og-default.jpg`를 추가했다. `/_next/image?…` 같은 동적 URL은 크롤러 처리가 불안정할 수 있어 **정적 절대 URL**을 쓴다.
 
 ## 결정 — 페이지 제목은 `h2`로 한다 (Part 1 결정 승계)
 
