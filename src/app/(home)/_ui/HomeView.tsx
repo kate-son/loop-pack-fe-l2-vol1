@@ -36,6 +36,8 @@ export function HomeView() {
      시점만 옮긴다(요청 41→32건).
      주의 — 이 변경을 "서버 응답 추정치를 낮춰 FCP를 줄인다"는 이유로 넣었으나 실측에서 반증됐다.
      network-server-latency는 574 → 581ms로 그대로였고 FCP 개선은 전부 CSS 인라인에서 나왔다.
+     그 574ms의 실제 출처는 요청 경합이 아니라 mock API에 심어둔 500ms 지연이다(실측: 문서 TTFB 2.1ms,
+     /api/home 502.2ms). 같은 이유로 프리페치를 더 줄여도 FCP는 움직이지 않으니 다시 시도하지 말 것.
      중복 요청을 없앤 것 자체가 옳아서 유지한다 */
   const prefetchProductList = (categoryId: CategoryId | 'all') => {
     router.prefetch(buildCategoryHref(categoryId));
