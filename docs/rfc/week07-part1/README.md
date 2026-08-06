@@ -3,6 +3,7 @@
 - **변경 범위(합의된 3가지만)**: ① `next/image`로 전환 ② 프리로드 요청에 `fetchpriority=high` 적용 ③ 실제 표시 크기·viewport에 맞게 `next/image`가 원본에서 서버 사이드로 리사이즈하도록 함(별도 리사이즈 파일을 만들지 않음)
 - **변경 파일**: `src/shared/ui/PageHeading/PageHeading.tsx`(Image 컴포넌트 전환) — `src`는 원본 `hero-original.jpg`(7.5MB, 3840×2160) 그대로 사용, `next/image`가 요청 시점에 viewport·DPR에 맞는 크기로 서버에서 직접 리사이즈·재인코딩
 - **측정 시점 코드 상태**: 커밋 `495b57e07fdce48df95c2eeb5d73a998361e49b1` + `PageHeading.tsx`/`PageHeading.test.tsx` 변경사항(미커밋). Before 측정은 이 변경을 되돌려 동일 코드로 재현
+- **Before/After commit SHA 요약**: Before = `61214ccabb448fa70910566295958d78036f8e87`(Part 0 최초 측정 시점, raw `<img>`) → After(Round 0~headerfix, `next/image`+`fetchpriority`+`sizes`+`deviceSizes`+AVIF+렌더링 경계 수정) = 커밋 `25df6c55e49ea0550180732a84e218b0f8a36ea9` → 이후 Round 4(hero DPR 갭·상품 카드 이미지) 반영한 최종 = 커밋 `c56bfddc`
 - **측정 도구**: Lighthouse CLI `13.4.1`(`npx lighthouse --preset=desktop`), Chrome headless(`--headless=new`)
 - **throttling**: Lighthouse desktop 프리셋 기본값(`simulate`, RTT 40ms, downlink 10,240Kbps≈1,280KB/s, CPU 배속 없음) — Part 0 데스크톱 재측정과 동일 조건
 - **viewport**: `1350×940`, `deviceScaleFactor 1`, `mobile: false`
@@ -553,6 +554,49 @@ AVIF 전환으로 LCP가 소폭 더 줄었다(홈 837.5→819.1ms). `deviceSizes
 **LCP는 사실상 변화 없다(오차범위 내).** 예상된 결과다 — Round 4는 hero(=LCP 요소)가 아니라 ① hero의 DPR 1.25~1.5 구간, ② 뷰포트 밖 상품 카드 이미지의 전송량·요청 시점을 다뤘기 때문에, 헤드라인 LCP 수치에는 원래도 크게 반영되지 않는 변경이다. 대신 개선 효과는 위에서 실측한 개별 자원 단위 수치(hero `w=1920→1800`, 카드 `w=828→384`, 카드 5장 초과분만 lazy)로 확인한다.
 
 눈으로 보는 리포트: [`./lighthouse-round4-images/home/run-1.html`](./lighthouse-round4-images/home/run-1.html) ~ `run-5.html`, [`./lighthouse-round4-images/products/run-1.html`](./lighthouse-round4-images/products/run-1.html) ~ `run-5.html`
+
+---
+
+## 사용자 직접 녹화 — 홈·상품 목록 filmstrip(DevTools Performance 패널, 프로덕션)
+
+이전 filmstrip들은 전부 Playwright+CDP로 AI가 캡처한 것이었다. "몇 ms에 뭐가 보이는지"를 주장하는 타이밍 증거는 사용자가 직접 재는 게 공식이라는 기준(위 "성능 측정 규칙" 참고)에 따라, 사용자가 크롬 DevTools Performance 패널로 직접 녹화한 트레이스를 반영한다.
+
+- **측정 조건**: `localhost:3001`(프로덕션, `pnpm build && pnpm start`), DevTools Performance 패널 network throttling **"Fast 4G"**(다운로드 ≈988KB/s, RTT 165ms), 실제 디바이스 DPR 2(에뮬레이션 아님) — 이 조건이 앞으로의 측정 프로토콜로 고정됨(위 CLAUDE.md 규칙 참고)
+- **측정 시점 코드 상태**: 커밋 `c56bfddc`(Part 1 Round 4까지 적용된 상태)
+- **측정 일시**: 2026-08-06 UTC 02:59(상품 목록, `/products?category=casual`, 하드 리로드 2회 연속 기록 중 1회차) / 03:06(홈, `/`, 하드 리로드 1회 — 03:02에 처음 녹화했다가 같은 조건으로 재녹화한 03:06 결과로 교체)
+- **원본 트레이스**: 사용자가 제공한 DevTools Performance 트레이스 JSON(문서에는 미포함 — 용량이 커서 스크린샷만 추출해 반영)
+
+### 실측 FCP/LCP (트레이스 이벤트 기준)
+
+| 이벤트                                | 상품 목록(`/products?category=casual`) 1회차 | 상품 목록 2회차    | 홈(`/`)            |
+| ------------------------------------- | -------------------------------------------- | ------------------ | ------------------ |
+| FCP                                   | 377.7ms                                      | 364.4ms            | 364.0ms            |
+| LCP 후보 1(텍스트, 2,367px²)          | 377.7ms                                      | 364.4ms            | 364.0ms            |
+| LCP 후보 2(중간)                      | 673.3ms(10,701px²)                           | 664.4ms(10,701px²) | 664.0ms(42,307px²) |
+| **LCP 최종(hero 이미지, 810,000px²)** | **740.0ms**                                  | **735.3ms**        | **738.9ms**        |
+
+Lighthouse 헤드라인 LCP(Round 4 재측정 중앙값 — 상품목록 1,431.9ms, 홈 1,465.2ms)와 직접 비교하지 않는다 — 저건 Lantern 시뮬레이션값이고 이건 실제 로컬 네트워크에서 관측된 값이라 성격이 다르다(Part 0부터 계속 설명한 구조와 동일). 대신 이 트레이스 자체 안에서 "화면에 뭐가 언제 나오는지" 순서를 확인하는 데 쓴다. 홈·상품목록 모두 hero 이미지가 LCP 최종 후보이고 시점도 735~740ms로 거의 같다 — 같은 `PageHeading` 컴포넌트를 공유하니 당연한 결과.
+
+### filmstrip — 상품 목록(`/products?category=casual`)
+
+| 시점      | 스크린샷                                                                       | 내용                                                                                                     |
+| --------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| t=366ms   | [`filmstrip-user/products/t366ms.jpg`](./filmstrip-user/products/t366ms.jpg)   | `loading.tsx` fallback("불러오는 중입니다…")이 짧게 보임 — Lighthouse CLI 기반 측정에서는 못 잡았던 지점 |
+| t=663ms   | [`filmstrip-user/products/t663ms.jpg`](./filmstrip-user/products/t663ms.jpg)   | 셸(Header·필터·"상품 목록" 타이틀) 완성, hero는 아직 배경색만                                            |
+| t=741ms   | [`filmstrip-user/products/t741ms.jpg`](./filmstrip-user/products/t741ms.jpg)   | hero 이미지 완전히 로드 — LCP 최종 시점(740.0ms)과 정확히 일치                                           |
+| t=944ms   | [`filmstrip-user/products/t944ms.jpg`](./filmstrip-user/products/t944ms.jpg)   | 화면 동일하게 안정                                                                                       |
+| t=2,451ms | [`filmstrip-user/products/t2451ms.jpg`](./filmstrip-user/products/t2451ms.jpg) | 변화 없음(완료 상태 유지 확인)                                                                           |
+
+### filmstrip — 홈(`/`)
+
+| 시점      | 스크린샷                                                               | 내용                                                                                      |
+| --------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| t=356ms   | [`filmstrip-user/home/t356ms.jpg`](./filmstrip-user/home/t356ms.jpg)   | `(home)/loading.tsx` fallback("불러오는 중입니다…")이 짧게 보임 — 상품 목록과 동일한 패턴 |
+| t=657ms   | [`filmstrip-user/home/t657ms.jpg`](./filmstrip-user/home/t657ms.jpg)   | 셸(Header·"매일 새롭게 발견하는 취향" 타이틀·카테고리 시작) 완성, hero는 아직 배경색만    |
+| t=732ms   | [`filmstrip-user/home/t732ms.jpg`](./filmstrip-user/home/t732ms.jpg)   | hero 이미지 완전히 로드 — LCP 최종 시점(738.9ms)과 정확히 일치                            |
+| t=1,044ms | [`filmstrip-user/home/t1044ms.jpg`](./filmstrip-user/home/t1044ms.jpg) | 화면 동일하게 안정                                                                        |
+
+**새로 확인된 것**: 홈·상품 목록 둘 다 `loading.tsx` fallback("불러오는 중입니다…")이 실제로 짧게(FCP 시점, ~~360~~380ms) 화면에 뜬다 — React Server Components 스트리밍 구조상 셸이 먼저 플러시되고 실제 데이터가 담긴 세그먼트가 뒤이어 스트리밍되기 때문으로 보인다. AI가 Lighthouse CLI·CDP로 측정했던 이전 라운드들에서는 이 프레임이 문서화된 적이 없다.
 
 ---
 
