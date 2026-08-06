@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/widgets/header/ui/Header';
 import { ProductListSection } from '@/widgets/product-list-section/ui/ProductListSection';
@@ -23,8 +24,21 @@ import { productsQueryOptions } from '@/entities/product/api/productsQueryOption
 export function HomeView() {
   const homeQuery = useQuery(homeQueryOptions());
   const queryClient = useQueryClient();
+  const router = useRouter();
 
+  /* AI-generated : Week 7 Part 4 — Link의 href와 router.prefetch가 반드시 같은 문자열을 쓰도록 한 곳에서 만든다.
+     두 곳이 어긋나면 프리페치한 라우트와 실제로 이동하는 라우트가 달라져 예열이 조용히 무효가 된다 */
+  const buildCategoryHref = (categoryId: CategoryId | 'all') => `/products?category=${categoryId}`;
+
+  /* AI-generated : Week 7 Part 4 — 카테고리 Link의 viewport 자동 프리페치가 첫 로드에 RSC 요청 10건을 쏘는데,
+     같은 목적의 예열을 아래 onMouseEnter가 이미 하고 있어 중복이었다. prefetch={false}는 hover 프리페치까지
+     끄므로, 여기서 router.prefetch를 직접 불러 "첫 로드에는 안 쏘고 hover에서 라우트+데이터를 함께 예열"로
+     시점만 옮긴다(요청 41→32건).
+     주의 — 이 변경을 "서버 응답 추정치를 낮춰 FCP를 줄인다"는 이유로 넣었으나 실측에서 반증됐다.
+     network-server-latency는 574 → 581ms로 그대로였고 FCP 개선은 전부 CSS 인라인에서 나왔다.
+     중복 요청을 없앤 것 자체가 옳아서 유지한다 */
   const prefetchProductList = (categoryId: CategoryId | 'all') => {
+    router.prefetch(buildCategoryHref(categoryId));
     queryClient.prefetchQuery(
       productsQueryOptions({
         ...DEFAULT_PRODUCT_LIST_QUERY,
@@ -60,7 +74,8 @@ export function HomeView() {
                   {categories.map((category) => (
                     <Link
                       key={category.id}
-                      href={`/products?category=${category.id}`}
+                      href={buildCategoryHref(category.id)}
+                      prefetch={false}
                       onMouseEnter={() => prefetchProductList(category.id)}
                     >
                       {category.name}
