@@ -7,6 +7,11 @@
   background: #d8cebf;
 }
 
+/* AI-generated : Week 7 Part 2 — /products 검색 시 scroll:true로 맨 위까지 스크롤되는 폭을 줄이기 위한 축소 버전 */
+.heroCompact {
+  aspect-ratio: 21 / 9;
+}
+
 .image {
   display: block;
   width: 100%;
@@ -43,6 +48,10 @@
 @media (max-width: 640px) {
   .hero {
     aspect-ratio: 4 / 5;
+  }
+
+  .heroCompact {
+    aspect-ratio: 3 / 2;
   }
 
   .image {

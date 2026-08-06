@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import '../../layout.css';
 import { Header } from '@/widgets/header/ui/Header';
 import { ProductListSection } from '@/widgets/product-list-section/ui/ProductListSection';
 import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';

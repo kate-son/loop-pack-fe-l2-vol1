@@ -35,4 +35,18 @@ describe('PageHeading', () => {
     const img = container.querySelector('img');
     expect(img?.getAttribute('src')).toBe('/images/week-07/hero-original.jpg');
   });
+
+  /* AI-generated : Week 7 Part 2 — compact prop이 히어로 높이를 줄이는 CSS Module 클래스를 실제로 붙이는지 확인 */
+  it('compact를 주면 축소 히어로 클래스가 추가된다', () => {
+    const { container } = render(
+      <PageHeading
+        title="상품 목록"
+        description="카테고리와 조건으로 원하는 상품을 찾아보세요."
+        compact
+      />,
+    );
+
+    const hero = container.querySelector('section');
+    expect(hero?.className).toMatch(/heroCompact/);
+  });
 });
