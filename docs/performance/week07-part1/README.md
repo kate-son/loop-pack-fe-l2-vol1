@@ -1,6 +1,6 @@
 # Part 1 — Hero LCP 개선 측정 결과
 
-> `/products`는 category·sort·q·page 어떤 쿼리를 줘도 LCP 요소가 항상 같은 hero 이미지라(Part 0에서 확인), Part 1은 그 이미지 하나만 고치는 작업이다. 쿼리 변형까지 다시 재는 건 Part 0 결론을 재확인하는 것뿐이라 중복이라 하지 않는다 — 측정은 `/`(홈)·`/products`(쿼리 없는 기본) 두 URL만으로 충분하다.
+> `/products`의 병목은 검색·카테고리·정렬·페이지 로직이 아니라 두 페이지가 공유하는 hero 이미지다([Part 0](../week07-part0/README.md)에서 Slow 4G로 쿼리 조건을 실제 연속 조작해 확인). Part 1은 그 이미지 하나만 고치는 작업이라, 측정은 `/`(홈)·`/products`(쿼리 없는 기본) 두 URL로 고정한다.
 
 - **변경 범위(Round 0, 합의된 3가지)**: ① `next/image`로 전환 ② 프리로드 요청에 `fetchpriority=high` 적용 ③ 실제 표시 크기·viewport에 맞게 `next/image`가 원본에서 서버 사이드로 리사이즈하도록 함(별도 리사이즈 파일을 만들지 않음) — 이후 Round 1–4에서 `sizes`·`deviceSizes`·AVIF·렌더링 경계·상품 카드 이미지까지 추가로 다듬었다(변경 파일은 각 라운드 섹션에 명시)
 - **Before/After commit SHA**: Before = `61214ccabb448fa70910566295958d78036f8e87`(Part 0, raw `<img>`) → After(Round 0–headerfix) = `25df6c55e49ea0550180732a84e218b0f8a36ea9` → 최종(Round 4까지) = `c56bfddc`
@@ -11,7 +11,7 @@
 
 ## Before 기준선 — Part 0에서 가져온 `/`·`/products` 결과
 
-Part 1의 Before는 별도로 다시 재지 않고 [Part 0 문서](../week07-part0/README.md)에서 그대로 가져온다. AI가 CLI로 측정한 Lighthouse 시뮬레이션 수치는 이 문서에서는 인용하지 않고, 사용자가 직접 측정한 아래 기록만 Before 기준으로 삼는다.
+Part 1의 Before는 별도로 다시 재지 않고 [Part 0 문서](../week07-part0/README.md)에서 그대로 가져온다. Part 0에 있던 AI CLI 측정 수치는 이후 공식 재측정으로 대체되어 문서에서 제거됐고, 아래는 사용자가 Slow 4G로 직접 잰 기록이다.
 
 ### 사용자 직접 측정 — Slow 4G 실측(DevTools Performance 패널, 실제 DPR1)
 
