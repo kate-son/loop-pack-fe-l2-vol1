@@ -1,16 +1,22 @@
 # Part 1 — Hero LCP 개선 측정 결과
 
-- **변경 범위(합의된 3가지만)**: ① `next/image`로 전환 ② 프리로드 요청에 `fetchpriority=high` 적용 ③ 실제 표시 크기·viewport에 맞게 `next/image`가 원본에서 서버 사이드로 리사이즈하도록 함(별도 리사이즈 파일을 만들지 않음)
-- **변경 파일**: `src/shared/ui/PageHeading/PageHeading.tsx`(Image 컴포넌트 전환) — `src`는 원본 `hero-original.jpg`(7.5MB, 3840×2160) 그대로 사용, `next/image`가 요청 시점에 viewport·DPR에 맞는 크기로 서버에서 직접 리사이즈·재인코딩
-- **측정 시점 코드 상태**: 커밋 `495b57e07fdce48df95c2eeb5d73a998361e49b1` + `PageHeading.tsx`/`PageHeading.test.tsx` 변경사항(미커밋). Before 측정은 이 변경을 되돌려 동일 코드로 재현
-- **Before/After commit SHA 요약**: Before = `61214ccabb448fa70910566295958d78036f8e87`(Part 0 최초 측정 시점, raw `<img>`) → After(Round 0~headerfix, `next/image`+`fetchpriority`+`sizes`+`deviceSizes`+AVIF+렌더링 경계 수정) = 커밋 `25df6c55e49ea0550180732a84e218b0f8a36ea9` → 이후 Round 4(hero DPR 갭·상품 카드 이미지) 반영한 최종 = 커밋 `c56bfddc`
-- **측정 도구**: Lighthouse CLI `13.4.1`(`npx lighthouse --preset=desktop`), Chrome headless(`--headless=new`)
-- **throttling**: Lighthouse desktop 프리셋 기본값(`simulate`, RTT 40ms, downlink 10,240Kbps≈1,280KB/s, CPU 배속 없음) — Part 0 데스크톱 재측정과 동일 조건
-- **viewport**: `1350×940`, `deviceScaleFactor 1`, `mobile: false`
-- **측정 일시**: 2026-08-06(UTC)
-- **실행 방식**: `pnpm build && pnpm start` 이후 `http://localhost:3000/`, `http://localhost:3000/products` 각각 cold load 5회. 매 run 전 `.next/cache/images`(Next.js 이미지 최적화 서버 캐시)를 삭제하고 새 headless Chrome 인스턴스로 측정 — 브라우저·서버 양쪽 모두 매번 완전히 새 상태에서 시작
-- **눈으로 보는 리포트(이 커밋에 포함됨)**: [`./lighthouse/home/run-1.html`](./lighthouse/home/run-1.html), [`./lighthouse/products/run-1.html`](./lighthouse/products/run-1.html)(After) / [`../week07-part0/lighthouse/home/run-1.html`](../week07-part0/lighthouse/home/run-1.html), [`../week07-part0/lighthouse/products/run-1.html`](../week07-part0/lighthouse/products/run-1.html)(Before, Part 0 문서와 공유). 인터넷 연결이나 외부 업로드 없이 브라우저로 더블클릭해서 열면 된다. run-2~5는 raw 값이 표에 이미 있어 대표로 run-1만 포함
-- **문서 진행 순서**: Round 0(next/image·fetchpriority·원본 리사이즈) → 관찰-가설-반증-변경 → Round 1(`sizes` 정밀화) → Round 2(`deviceSizes` DPR2) → Round 3(AVIF) → LCP breakdown/요청 시작 시점(최종 상태) → 최종 결론 → 남은 gap(Header/h1) → `<h2>` 유지 결정 → 부록
+> `/products`는 category·sort·q·page 어떤 쿼리를 줘도 LCP 요소가 항상 같은 hero 이미지라(Part 0에서 확인), Part 1은 그 이미지 하나만 고치는 작업이다. 쿼리 변형까지 다시 재는 건 Part 0 결론을 재확인하는 것뿐이라 중복이라 하지 않는다 — 측정은 `/`(홈)·`/products`(쿼리 없는 기본) 두 URL만으로 충분하다.
+
+- **변경 범위(Round 0, 합의된 3가지)**: ① `next/image`로 전환 ② 프리로드 요청에 `fetchpriority=high` 적용 ③ 실제 표시 크기·viewport에 맞게 `next/image`가 원본에서 서버 사이드로 리사이즈하도록 함(별도 리사이즈 파일을 만들지 않음) — 이후 Round 1~4에서 `sizes`·`deviceSizes`·AVIF·렌더링 경계·상품 카드 이미지까지 추가로 다듬었다(변경 파일은 각 라운드 섹션에 명시)
+- **Before/After commit SHA**: Before = `61214ccabb448fa70910566295958d78036f8e87`(Part 0, raw `<img>`) → After(Round 0~headerfix) = `25df6c55e49ea0550180732a84e218b0f8a36ea9` → 최종(Round 4까지) = `c56bfddc`
+- **눈으로 보는 리포트(Round 0, 이 커밋에 포함됨)**: [`./lighthouse/round0/1. lighthouse html 문서/home/run-1.html`](<./lighthouse/round0/1. lighthouse html 문서/home/run-1.html>), [`./lighthouse/round0/1. lighthouse html 문서/products/run-1.html`](<./lighthouse/round0/1. lighthouse html 문서/products/run-1.html>) — run-2~5는 raw 값이 표에 이미 있어 대표로 run-1만 포함(이후 라운드 리포트는 각 섹션에 링크)
+- **문서 진행 순서**: Before 기준선(Part 0) → `fetchpriority` 확인 → Round 0(전송 크기 변화 누적표) → 관찰-가설-반증-변경 → Round 1(`sizes`) → Round 2(`deviceSizes` DPR2) → Round 3(AVIF) → LCP breakdown → 최종 결론 → 남은 gap(Header/h1) → `<h2>` 유지 결정 → Round 4(상품 카드 이미지) → 사용자 직접 녹화 filmstrip
+
+---
+
+## Before 기준선 — Part 0에서 가져온 `/`·`/products` 결과
+
+Part 1의 Before는 별도로 다시 재지 않고 [Part 0 문서](../week07-part0/README.md)에서 그대로 가져온다. AI가 CLI로 측정한 Lighthouse 시뮬레이션 수치는 이 문서에서는 인용하지 않고, 사용자가 직접 측정한 아래 기록만 Before 기준으로 삼는다.
+
+### 사용자 직접 측정 — Slow 4G 실측(DevTools Performance 패널, 실제 DPR1)
+
+- **홈(`/`) 하드 리로드**: FCP 1,351.7ms, hero는 47.6초 녹화 내내 공식 LCP 후보로 갱신되지 않음(progressive JPEG로 서서히 채워지다 44.9초 시점 육안상 거의 완료) — [Part 0 filmstrip](../week07-part0/README.md#filmstrip--홈-slow-4g) 참고.
+- **`/products` 쿼리 인터랙션**: category·sort·q·page를 실제로 조작해도 위 Lighthouse 결론과 다른 동작 없음 — [Part 0 filmstrip](../week07-part0/README.md#filmstrip--상품-목록products-slow-4g) 참고.
 
 ---
 
@@ -36,308 +42,352 @@
 
 ## Round 0 — `next/image` 전환 + `fetchpriority` + 원본 기반 리사이즈
 
-### 홈(`/`) — Before/After 비교 (데스크톱 모드)
+**변경**: 원본(`hero-original.jpg`, 7.5MB, 3840×2160)을 그대로 소스로 두고, raw `<img>` → `next/image`(`fill`+`sizes="100vw"`+`priority`+`fetchPriority="high"`)로 전환해 요청 시점마다 서버가 필요한 크기로 리사이즈·재인코딩하도록 했다. 별도로 미리 리사이즈한 파일을 만들지 않는다.
 
-| run        | FCP(ms) Before | FCP(ms) After | LCP(ms) Before | LCP(ms) After | CLS Before | CLS After |
-| ---------- | -------------- | ------------- | -------------- | ------------- | ---------- | --------- |
-| 1          | 245.8          | 249.5         | 6,745.8        | 949.5         | 0.000      | 0.000     |
-| 2          | 244.9          | 246.0         | 6,744.9        | 946.0         | 0.000      | 0.000     |
-| 3          | 245.1          | 245.0         | 6,745.1        | 945.0         | 0.000      | 0.000     |
-| 4          | 245.6          | 244.0         | 6,745.6        | 944.0         | 0.000      | 0.000     |
-| 5          | 245.5          | 243.8         | 6,745.5        | 943.8         | 0.000      | 0.000     |
-| **중앙값** | **245.5**      | **245.0**     | **6,745.5**    | **945.0**     | **0.000**  | **0.000** |
-| 최솟값     | 244.9          | 243.8         | 6,744.9        | 943.8         | 0.000      | 0.000     |
-| 최댓값     | 245.8          | 249.5         | 6,745.8        | 949.5         | 0.000      | 0.000     |
+### 전송 크기 변화 — Round 0~4 누적 (사용자 Lighthouse 리포트 `network-requests` 오디트 기준)
 
-**LCP 중앙값 6,745.5ms → 945.0ms, 86.0% 감소(약 5.8초 단축).** FCP·CLS는 사실상 변화 없음(둘 다 hero 이미지와 무관한 지표라 예상대로).
+아래는 전부 사용자가 직접 실행한 Lighthouse(`--preset=desktop`)의 `network-requests` 오디트에서 hero 이미지 요청 하나를 뽑은 값이다 — 라운드마다 표를 반복하지 않고 여기 한 표로 모은다. 이 측정 환경은 `screenEmulation.disabled: true`(Lighthouse가 실제 디바이스 값을 그대로 씀)이고, 리포트의 `configSettings.screenEmulation.deviceScaleFactor`가 `1.75`로 기록돼 있다 — 즉 이 표는 실제 DPR 1.75 환경 하나에서 각 라운드가 무엇을 바꿨는지 보여준다(홈·상품목록 모두 같은 `PageHeading` hero 요청이라 값이 동일).
 
-### 상품 목록(`/products`) — Before/After 비교 (데스크톱 모드)
+| 상태                                  | 선택된 파일              | transferSize    | 원본 대비 |
+| ------------------------------------- | ------------------------ | --------------- | --------- |
+| 원본(로컬 파일 크기)                  | `hero-original.jpg`      | 7,545,239 bytes | —         |
+| Round 0(`sizes="100vw"`)              | `w=3840` webp            | 409,736 bytes   | 94.6%↓    |
+| Round 1(`sizes` 정밀화)               | `w=3840` webp(변화 없음) | 409,736 bytes   | 94.6%↓    |
+| Round 2(`deviceSizes`에 2400 추가)    | `w=2400` webp            | 211,652 bytes   | 97.2%↓    |
+| Round 3(AVIF 우선 협상)               | `w=2400` avif            | 167,625 bytes   | 97.8%↓    |
+| Round 4(hero `deviceSizes` 1800 추가) | `w=2400` avif(변화 없음) | 167,625 bytes   | 97.8%↓    |
 
-| run        | FCP(ms) Before | FCP(ms) After | LCP(ms) Before | LCP(ms) After | CLS Before | CLS After |
-| ---------- | -------------- | ------------- | -------------- | ------------- | ---------- | --------- |
-| 1          | 246.7          | 244.8         | 6,586.7        | 864.8         | 0.000      | 0.000     |
-| 2          | 245.5          | 244.3         | 6,605.5        | 924.3         | 0.000      | 0.000     |
-| 3          | 244.6          | 244.9         | 6,604.6        | 864.9         | 0.000      | 0.000     |
-| 4          | 246.2          | 243.8         | 6,626.2        | 863.8         | 0.000      | 0.000     |
-| 5          | 244.9          | 244.4         | 6,624.9        | 864.4         | 0.000      | 0.000     |
-| **중앙값** | **245.5**      | **244.4**     | **6,605.5**    | **864.8**     | **0.000**  | **0.000** |
-| 최솟값     | 244.6          | 243.8         | 6,586.7        | 863.8         | 0.000      | 0.000     |
-| 최댓값     | 246.7          | 244.9         | 6,626.2        | 924.3         | 0.000      | 0.000     |
+- **Round 0→1**: `sizes`를 실제 렌더 폭(1200px)에 맞게 정밀화했지만, 이 환경(DPR 1.75)의 필요 폭은 1200×1.75=2100px다. 당시 `deviceSizes`(`640~1200, 1920, 2048, 3840`)엔 2100을 만족하는 후보가 1920·2048로는 부족해 여전히 3840까지 건너뛰어 파일 크기가 그대로였다 — Round 1의 효과는 이 Lighthouse 환경(DPR 1.75)에는 반영되지 않고, 아래 "사용자 직접 측정 — Round 1"의 Performance 실측(실제 DPR 1 환경)에서 확인된다.
+- **Round 1→2**: `deviceSizes`에 2400을 추가하자 이 환경(필요 폭 2100px)에서도 `w=2400`이 선택되며 409,736→211,652 bytes(**48.4%↓**)로 즉시 줄었다.
+- **Round 2→3**: 같은 `w=2400`에서 포맷만 webp→avif로 바뀌며 211,652→167,625 bytes(**20.8%↓**) 추가 감소.
+- **Round 3→4**: hero의 `deviceSizes` 1800 추가는 DPR 1.25~1.5 구간을 겨냥한 변경이라 이 DPR 1.75 환경에는 영향이 없다(변화 없음이 정상 — Round 4 "원인 1" 참고).
 
-**LCP 중앙값 6,605.5ms → 864.8ms, 86.9% 감소(약 5.7초 단축).** Part 0에서 확인했듯 `/products`는 쿼리 조건과 무관하게 항상 같은 hero 이미지가 LCP 요소였으므로, 이미지 하나를 고친 효과가 카테고리·정렬·검색·페이지네이션 모든 변형에 동시에 적용된다(개별 쿼리 변형 재측정은 하지 않음 — Part 0에서 이미 "LCP 요소가 항상 hero 이미지"임을 확인했고, 이번 변경은 그 hero 이미지 자체를 바꾼 것이므로 결론이 그대로 이전됨).
-
-### 핵심 원인: LCP 리소스 전송 크기 비교
-
-|              | Before                                        | After                                                                                                               | 감소율     |
-| ------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------- |
-| 파일         | `hero-original.jpg`(raw `<img>`, 최적화 없음) | 같은 `hero-original.jpg`를 `next/image`가 데스크톱 뷰포트(1350×940, DPR 1)에 맞춰 서버에서 리사이즈한 `w=1920` 변형 | —          |
-| transferSize | 7,545,525 bytes(≈7.5MB)                       | 162,059 bytes(≈158KB)                                                                                               | **97.85%** |
-
-원본 소스를 그대로 두고 `next/image`가 서버 사이드에서 리사이즈하게 했더니, 별도로 미리 리사이즈한 파일을 쓸 때(≈77KB)보다 전송 크기는 조금 늘었다(≈158KB) — 미리 리사이즈했던 파일(1200×675)이 `w=1920` 요청을 그 파일의 최대 해상도(1200px)로 캡핑해서 내려줬던 반면, 지금은 원본(3840px)에서 실제로 1920px까지 리사이즈·재인코딩하기 때문에 더 큰 유효 해상도의 이미지가 나간다. 그래도 원본(7.5MB) 대비 **97.85% 감소**로 여전히 압도적이고, 별도 리사이즈 파일을 리포지토리에 유지할 필요가 없다는 게 이 방식의 이점이다.
-
-Part 0에서 세운 가설("7.5MB ÷ 시뮬레이션 downlink ≈ 5.9초 = 실측 LCP와 거의 일치")이 그대로 검증됐다 — **이미지 전송 크기를 97.85% 줄이자 LCP도 86.0%(홈) / 86.9%(상품목록) 줄었다.** LCP가 0에 가깝게 떨어지지 않고 여전히 0.9초 안팎이 남은 것은 158KB조차도 시뮬레이션된 회선(≈1,280KB/s, RTT 40ms)에서는 유의미한 시간이 걸리고, 여기에 서버가 그 자리에서 원본을 리사이즈·재인코딩하는 처리 시간까지 더해지기 때문 — 완전히 없앨 수 없는 "파일 크기 대비 대역폭 + 서버 처리 시간" 비용이다.
-
-### 실제 브라우저(Playwright+Chromium, CDP) filmstrip — 데스크톱 throttle
-
-Part 0와 동일한 데스크톱 조건(CDP `Network.emulateNetworkConditions`, RTT 40ms·≈1,280KB/s)으로 Before/After 홈·상품목록 filmstrip을 재촬영했다.
-
-#### 홈
-
-| 구간                 | Before(Part 0, 데스크톱 조건)                                                        | After(데스크톱 조건)                                              |
-| -------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| 로딩 중(hero 미표시) | t=1,153ms, 셸 완성·hero는 위쪽 일부만 progressive 렌더(`home-before-02-t1153ms.png`) | t=429ms, 셸 완성·hero는 아직 배경색(`home-03-t429ms.png`, 43.7KB) |
-| 완전히 로드 완료     | t=6,376ms(`home-before-08-t6376ms.png`)                                              | **t=548ms**(`home-04-t548ms.png`, 1.2MB)                          |
-
-`PerformanceObserver` 실측: Before LCP 6,352ms → After LCP **540ms**(lcpElement 동일하게 hero `<img>`) — Lighthouse 중앙값(6,745.5ms → 945.0ms)과 같은 방향, 자릿수도 비슷하게 일치.
-
-#### 상품 목록
-
-| 구간                 | Before(데스크톱 조건)                                                               | After(데스크톱 조건)                                                              |
-| -------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 로딩 중(hero 미표시) | t=1,678ms, 셸·필터·그리드 완성·hero는 아직 배경색(`products-before-12-t1678ms.png`) | t=721ms, 셸·필터·그리드 완성·hero는 아직 배경색(`products-06-t721ms.png`, 71.6KB) |
-| 완전히 로드 완료     | t=6,700ms(`products-before-17-t6700ms.png`)                                         | **t=841ms**(`products-07-t841ms.png`, 1.3MB)                                      |
-
-`PerformanceObserver` 실측: Before LCP 6,608ms → After LCP **820ms**(lcpElement 동일하게 hero `<img>`) — Lighthouse 중앙값(6,605.5ms → 864.8ms)과 거의 정확히 일치.
+각 라운드의 실제 FCP·LCP ms 값과 CLS는 라운드마다 아래 "사용자 직접 측정 — Round N" 절 표에서 확인한다.
 
 ### Round 0 결론
 
 - 합의된 3개 변경(`next/image` 전환, `fetchpriority=high`, 원본에서 서버 사이드 리사이즈) 모두 실제 프로덕션 빌드·HTML·Lighthouse 오디트로 적용 확인됨.
-- 홈·상품목록 LCP 중앙값 각각 **86.0%, 86.9% 감소**(6~7초대 → 0.9초대, 데스크톱 모드 기준) — Part 0에서 세운 가설과 정확히 일치하는 결과.
-- FCP·CLS는 원래도 좋았던 지표라 변화 없음(회귀도 없음).
 - **별도 리사이즈 파일을 쓰지 않고 원본에서 최적화하는 방식으로 전환**했다 — 리포지토리에 미리 만든 리사이즈 이미지를 유지·관리할 필요가 없고, `next/image`가 요청되는 모든 breakpoint(640~3840w)에 대해 항상 원본으로부터 정확한 해상도를 생성한다.
 - **이 시점에 아직 남아있던 것**(이후 라운드에서 순서대로 다룸): 이미지 포맷(AVIF/WebP)·`quality` 조정, DPR 2 대응, `<h2>`→`<h1>` 여부, Part 2(목록 pending/CLS), Part 3(metadata).
 
+### 사용자 직접 측정 — Round 0 상태 재확인(Lighthouse + Performance)
+
+아래는 사용자가 Round 0 코드 상태(`sizes="100vw"`, `deviceSizes`·AVIF·헤더 수정·Round 4는 전부 미적용)에서 직접 Lighthouse·Performance 패널로 측정한 FCP/LCP/CLS 기록이다(위 "전송 크기 변화" 표와 같은 리포트에서 나온 값).
+
+- **측정 시점 코드 상태**: 커밋 `61214cca`(Part 0) 위에 `PageHeading.tsx`만 Round 0 사양(`next/image`+`fill`+`sizes="100vw"`+`priority`+`fetchPriority="high"`)으로 임시 적용 — Round 1~4 미적용
+- **측정 일시**: 2026-08-06 UTC 11:46(Performance 트레이스) / 11:48~11:52(Lighthouse)
+- **포트**: `localhost:3000`
+
+#### Lighthouse — 홈 (`/`, 5회 raw 값, `--preset=desktop`)
+
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,390.7     | 4,299.9     | 0.000     |
+| 2          | 1,387.7     | 4,290.0     | 0.000     |
+| 3          | 1,389.7     | 4,296.6     | 0.000     |
+| 4          | 1,391.5     | 4,302.5     | 0.000     |
+| 5          | 1,402.3     | 4,337.4     | 0.000     |
+| **중앙값** | **1,390.7** | **4,299.9** | **0.000** |
+| 최솟값     | 1,387.7     | 4,290.0     | 0.000     |
+| 최댓값     | 1,402.3     | 4,337.4     | 0.000     |
+
+눈으로 보는 리포트: [`./lighthouse/round0/1. lighthouse html 문서/home/run-1.html`](<./lighthouse/round0/1. lighthouse html 문서/home/run-1.html>) ~ `run-5.html`
+
+#### Lighthouse — 상품 목록 (`/products?page=2`, 5회 raw 값, `--preset=desktop`)
+
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,402.9     | 3,838.0     | 0.000     |
+| 2          | 1,402.4     | 3,636.7     | 0.000     |
+| 3          | 1,401.4     | 3,633.9     | 0.000     |
+| 4          | 1,404.3     | 4,404.1     | 0.000     |
+| 5          | 1,402.3     | 4,337.4     | 0.000     |
+| **중앙값** | **1,402.4** | **3,838.0** | **0.000** |
+| 최솟값     | 1,401.4     | 3,633.9     | 0.000     |
+| 최댓값     | 1,404.3     | 4,404.1     | 0.000     |
+
+눈으로 보는 리포트: [`./lighthouse/round0/1. lighthouse html 문서/products/run-1.html`](<./lighthouse/round0/1. lighthouse html 문서/products/run-1.html>) ~ `run-5.html`
+
+#### Performance — 홈(`/`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                     | 내용                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| t=1,347ms | [`lighthouse/round0/2. performance/home/t1347ms.jpg`](<./lighthouse/round0/2. performance/home/t1347ms.jpg>) | 셸 완성(FCP 시점과 근접), hero는 아직 배경색만 |
+| t=3,289ms | [`lighthouse/round0/2. performance/home/t3289ms.jpg`](<./lighthouse/round0/2. performance/home/t3289ms.jpg>) | hero progressive 렌더 진행 중                  |
+| t=4,582ms | [`lighthouse/round0/2. performance/home/t4582ms.jpg`](<./lighthouse/round0/2. performance/home/t4582ms.jpg>) | 대부분 채워짐                                  |
+| t=5,745ms | [`lighthouse/round0/2. performance/home/t5745ms.jpg`](<./lighthouse/round0/2. performance/home/t5745ms.jpg>) | 육안상 완료                                    |
+| t=7,501ms | [`lighthouse/round0/2. performance/home/t7501ms.jpg`](<./lighthouse/round0/2. performance/home/t7501ms.jpg>) | 안정 상태(스크롤됨)                            |
+
+실측 FCP 1,356.2ms(트레이스 이벤트 기준) — 위 Lighthouse 중앙값(1,390.7ms)과 자릿수가 일치한다. Part 0의 raw `<img>`(7.5MB, Slow 4G에서 47.6초 넘게 안 끝남)와 달리, Round 0의 `w=3840` 이미지(409KB)는 Slow 4G에서도 5~6초대에 육안상 완료된다 — next/image 전환의 효과가 Slow 4G 조건에서도 확인된다.
+
+#### Performance — 상품 목록(`/products`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                             | 내용                                                                             |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| t=3,124ms | [`lighthouse/round0/2. performance/products/t3124ms.jpg`](<./lighthouse/round0/2. performance/products/t3124ms.jpg>) | 셸("상품 목록" 타이틀) 완성, hero는 아직 배경색만                                |
+| t=3,701ms | [`lighthouse/round0/2. performance/products/t3701ms.jpg`](<./lighthouse/round0/2. performance/products/t3701ms.jpg>) | hero 대부분 채워짐                                                               |
+| t=4,946ms | [`lighthouse/round0/2. performance/products/t4946ms.jpg`](<./lighthouse/round0/2. performance/products/t4946ms.jpg>) | 안정                                                                             |
+| t=6,460ms | [`lighthouse/round0/2. performance/products/t6460ms.jpg`](<./lighthouse/round0/2. performance/products/t6460ms.jpg>) | 안정 유지                                                                        |
+| t=7,166ms | [`lighthouse/round0/2. performance/products/t7166ms.jpg`](<./lighthouse/round0/2. performance/products/t7166ms.jpg>) | 안정 유지(트레이스 뒷부분에 재로드로 보이는 구간이 있어 이 앞부분만 대표로 채택) |
+
+이 트레이스는 `navigationStart`가 잡히지 않아(홈에서 클릭으로 진입한 것으로 추정) 절대 FCP 시각은 계산하지 않았다 — 첫 스크린샷을 기준으로 한 상대 시간이다. LCP 후보는 최종적으로 hero(810,000px²)에서 확정됨을 트레이스 이벤트로 확인했다.
+
 ---
 
-## 관찰-가설-반증-변경 요약 (이미지 LCP, Round 0 이후 조사)
+## 관찰 사실 → 가설 → 반증 방법 → 최소 변경안 (Part 1 통합)
 
-Round 0 적용 이후에도 남아있던 낭비를 이 형식으로 조사했다.
+Round 0 적용 이후 이번 Part에서 조사한 두 가지를 Part 0과 같은 한 표로 정리한다. 개별 배경·재현 과정은 각 섹션(Round 1·2, 남은 gap)에 그대로 남겨두고, 여기서는 표만 모았다.
 
-| 항목               | 내용                                                                                                                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **관찰한 사실**    | `next/image` 전환·`fetchpriority=high` 적용 이후에도 Network 패널을 보면 이미지가 `sizes` 힌트나 DPR 계산상 실제 필요한 크기보다 큰 변형(`w=1920`, DPR 2 환경에선 `w=3840`)으로 요청되고 있었다.        |
-| **원인 가설**      | `sizes="100vw"`가 실제 렌더 폭(1200px)과 다르게 잡혀 있고, 기본 `deviceSizes` 후보 목록엔 DPR 2가 필요로 하는 폭(2400px)에 맞는 값이 없어서 불필요하게 큰 이미지가 선택되고 있는 것이다.                |
-| **반증할 방법**    | Lighthouse `lcp-discovery-insight`의 `boundingRect`로 실제 렌더 폭을 확인하고, Network 패널에서 실제 요청된 srcset 후보(`w=` 값)를 "렌더 폭×DPR"로 계산한 진짜 필요 폭과 대조해 차이가 있는지 확인한다. |
-| **가장 작은 변경** | `sizes`를 실제 렌더 폭에 맞게 `(min-width: 1200px) 1200px, 100vw`로 고치고, `images.deviceSizes`에 DPR 2에 맞는 후보(`2400`)를 추가한다.                                                                |
-
-아래 Round 1·Round 2가 이 가설을 검증하고 적용한 결과다.
+| 관찰한 사실                                                                                                                                                                  | 원인 가설                                                                                                                                                                                | 반증할 방법                                                                                                                                                                                             | 가장 작은 변경                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `next/image` 전환·`fetchpriority=high` 적용 이후에도 이미지가 `sizes` 힌트나 DPR 계산상 실제 필요한 크기보다 큰 변형(`w=1920`, DPR 2 환경에선 `w=3840`)으로 요청되고 있었다. | `sizes="100vw"`가 실제 렌더 폭(1200px)과 다르게 잡혀 있고, 기본 `deviceSizes` 후보 목록엔 DPR 2가 필요로 하는 폭(2400px)에 맞는 값이 없어서 불필요하게 큰 이미지가 선택되고 있는 것이다. | Lighthouse `lcp-discovery-insight`의 `boundingRect`로 실제 렌더 폭을 확인하고, Network 패널에서 실제 요청된 srcset 후보(`w=` 값)를 "렌더 폭×DPR"로 계산한 진짜 필요 폭과 대조해 차이가 있는지 확인한다. | `sizes`를 실제 렌더 폭에 맞게 `(min-width: 1200px) 1200px, 100vw`로 고치고, `images.deviceSizes`에 DPR 2에 맞는 후보(`2400`)를 추가한다 — **Round 1·2에서 검증·적용**                                                                                                             |
+| `HomeView.tsx`에서 `PageHeading`(제목·설명)이 `QueryState`의 render-prop 안에 있어, `homeQuery`가 pending인 동안 `Header`만 즉시 보이고 나머지는 전부 `null`로 렌더된다.     | 배너 제목·설명이 홈 API 응답에만 존재하는 진짜 동적 값이라, 페이지 셸의 제목·설명을 그 데이터가 도착해야만 그릴 수 있는 구조로 설계됐기 때문이다.                                        | 배너 텍스트가 실제로 요청마다 달라지는 값인지, 아니면 사실상 고정 문구인지 확인 — 고정 문구라면 API 의존 자체가 불필요했다는 뜻이라 가설이 반증된다.                                                    | **반증 실패, 가설 확정**(배너는 실제 동적 데이터임을 확인). `PageHeading`을 `QueryState` 밖으로 빼서 `Header`처럼 즉시 렌더하고, `title`·`description`은 배너 데이터 도착 전엔 고정 fallback 문구를 보여주다가 데이터가 오면 실제 값으로 교체 — **"남은 gap" 절에서 적용·재측정** |
 
 ---
 
 ## Round 1 — `sizes`를 실제 렌더 폭에 맞게 정밀화
 
-위 측정은 모두 `sizes="100vw"`로 진행됐다. 그런데 Lighthouse `lcp-discovery-insight`의 `boundingRect`를 보면 실제 렌더 폭은 뷰포트(1350px) 전체가 아니라 **1200px**로 제한돼 있었다 — 페이지 레이아웃에 max-width 제약이 있기 때문이다. `sizes="100vw"`는 브라우저에게 "뷰포트 전체 폭"이라고 알려주므로, 실제로는 1200px만 필요한데도 `srcset`에서 그보다 큰 `w=1920` 후보가 선택되고 있었다.
+Round 0은 `sizes="100vw"`로 적용됐었다. Lighthouse `lcp-discovery-insight`의 `boundingRect`를 보면 실제 렌더 폭은 뷰포트(1350px) 전체가 아니라 **1200px**로 제한돼 있었다 — 페이지 레이아웃에 max-width 제약이 있기 때문이다. `sizes="100vw"`는 브라우저에게 "뷰포트 전체 폭"이라고 알려주므로, 실제로는 1200px만 필요한데도 `srcset`에서 그보다 큰 후보가 선택되고 있었다.
 
-**`srcset` 후보 목록과 `sizes`는 서로 다른 역할을 한다.** `srcset`에 나열되는 `640/750/828/1080/1200/1920/2048/3840` 8개 폭은 `sizes` 값과 무관하게 **Next.js가 기본으로 정해둔 `deviceSizes` 설정값**이라 항상 고정이다 — `next/image`는 이 고정된 후보군으로 `srcset`을 미리 만들어 둔다. `sizes`가 바꾸는 건 이 목록 자체가 아니라 **브라우저가 그중 어떤 걸 실제로 다운로드할지 고르는 계산**이다: 브라우저는 "이 이미지가 몇 px로 보일 예정이다"라는 `sizes` 힌트와 현재 뷰포트 폭을 보고 8개 후보 중 하나를 고른다. `sizes="100vw"`일 때는 "1350px 이상을 커버해야 한다"고 판단해 `1920w`를 골랐고, 실제 렌더 폭(1200px)에 맞게 `sizes`를 고치면 "1200px만 있으면 된다"고 판단해 `1200w`를 고르게 된다 — 후보 목록이 바뀐 게 아니라 그중 선택이 바뀐 것이다.
+**`srcset` 후보 목록과 `sizes`는 서로 다른 역할을 한다.** `srcset`에 나열되는 폭 후보는 `sizes` 값과 무관하게 **Next.js가 기본으로 정해둔 `deviceSizes` 설정값**이라 항상 고정이다 — `next/image`는 이 고정된 후보군으로 `srcset`을 미리 만들어 둔다. `sizes`가 바꾸는 건 이 목록 자체가 아니라 **브라우저가 그중 어떤 걸 실제로 다운로드할지 고르는 계산**이다.
 
 - **변경**: `sizes="100vw"` → `sizes="(min-width: 1200px) 1200px, 100vw"`(`PageHeading.tsx`) — 실제 렌더 폭(최대 1200px)을 정확히 반영.
-- **측정 조건**: 위 라운드와 완전히 동일(Lighthouse CLI 13.4.1, `--preset=desktop`, viewport 1350×940, cold load 5회, 매 회 새 headless Chrome 인스턴스 + `.next/cache/images` 삭제).
-- **측정 시점 코드 상태**: Round 0 + `sizes` 값 변경 1줄(미커밋).
-- **측정 일시**: 2026-08-06(UTC)
-- **눈으로 보는 리포트(이 커밋에 포함됨)**: [`./lighthouse-sizes-tuned/home/run-1.html`](./lighthouse-sizes-tuned/home/run-1.html), [`./lighthouse-sizes-tuned/products/run-1.html`](./lighthouse-sizes-tuned/products/run-1.html)
+- 이 변경의 전송 크기·타이밍 효과는 위 "전송 크기 변화" 표와 아래 "사용자 직접 측정 — Round 1"에서 확인한다.
 
-### 선택된 srcset 후보 변화
+### 사용자 직접 측정 — Round 1 상태 재확인(Lighthouse + Performance)
 
-|                                          | `sizes="100vw"`(Round 0) | `sizes` 정밀화(이번) |
-| ---------------------------------------- | ------------------------ | -------------------- |
-| 선택된 변형                              | `w=1920`                 | `w=1200`             |
-| transferSize                             | 162,059 bytes            | 80,966 bytes         |
-| 원본(7.5MB, 7,545,525 bytes) 대비 감소율 | 97.85%                   | **98.93%**           |
+Round 0와 같은 방식으로, 사용자가 Round 1 코드 상태(`sizes="(min-width: 1200px) 1200px, 100vw"`, `deviceSizes`·AVIF·Round 4·headerfix는 전부 미적용)로 직접 재확인했다.
 
-`fetchpriority=high` 3항목 체크(`priorityHinted`/`requestDiscoverable`/`eagerlyLoaded`)는 이번에도 모두 `true`로 재확인됨 — `sizes` 변경이 프리로드 우선순위 자체에는 영향을 주지 않았다.
+- **측정 시점 코드 상태**: 커밋 `61214cca`(Part 0) 위에 `PageHeading.tsx`만 Round 0+1 사양으로 임시 적용
+- **측정 일시**: 2026-08-06 UTC 12:09(Performance 트레이스) / 12:06~12:11(Lighthouse)
+- **포트**: `localhost:3000`
 
-### 홈(`/`) — 5회 raw 값 (`sizes` 정밀화, 데스크톱 모드)
+#### Lighthouse — 홈 (`/`, 5회 raw 값, `--preset=desktop`)
 
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 250.3     | 858.4     | 0.000     |
-| 2          | 245.3     | 839.8     | 0.000     |
-| 3          | 244.0     | 835.2     | 0.000     |
-| 4          | 244.1     | 835.4     | 0.000     |
-| 5          | 243.8     | 833.1     | 0.000     |
-| **중앙값** | **244.1** | **835.4** | **0.000** |
-| 최솟값     | 243.8     | 833.1     | 0.000     |
-| 최댓값     | 250.3     | 858.4     | 0.000     |
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,395.9     | 4,376.5     | 0.000     |
+| 2          | 1,403.6     | 4,341.6     | 0.000     |
+| 3          | 1,401.4     | 4,334.5     | 0.000     |
+| 4          | 1,401.8     | 4,416.0     | 0.000     |
+| 5          | 1,392.9     | 4,306.8     | 0.000     |
+| **중앙값** | **1,401.4** | **4,341.6** | **0.000** |
+| 최솟값     | 1,392.9     | 4,306.8     | 0.000     |
+| 최댓값     | 1,403.6     | 4,416.0     | 0.000     |
 
-### 상품 목록(`/products`) — 5회 raw 값 (`sizes` 정밀화, 데스크톱 모드)
+눈으로 보는 리포트: [`./lighthouse/round1/1. lighthouse html 문서/home/run-1.html`](<./lighthouse/round1/1. lighthouse html 문서/home/run-1.html>) ~ `run-5.html`
 
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 244.7     | 837.0     | 0.000     |
-| 2          | 244.4     | 761.2     | 0.000     |
-| 3          | 244.0     | 835.4     | 0.000     |
-| 4          | 243.9     | 739.7     | 0.000     |
-| 5          | 244.5     | 762.2     | 0.000     |
-| **중앙값** | **244.4** | **762.2** | **0.000** |
-| 최솟값     | 243.9     | 739.7     | 0.000     |
-| 최댓값     | 244.7     | 837.0     | 0.000     |
+#### Lighthouse — 상품 목록 (`/products?sort=price-asc&page=2`, 5회 raw 값, `--preset=desktop`)
 
-### Before(Part 0) 대비 Round 1까지 결과
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,403.2     | 4,400.3     | 0.000     |
+| 2          | 1,403.7     | 4,402.0     | 0.000     |
+| 3          | 1,402.6     | 4,398.4     | 0.000     |
+| 4          | 1,399.4     | 4,388.0     | 0.000     |
+| 5          | 1,402.4     | 4,397.8     | 0.000     |
+| **중앙값** | **1,402.6** | **4,398.4** | **0.000** |
+| 최솟값     | 1,399.4     | 4,388.0     | 0.000     |
+| 최댓값     | 1,403.7     | 4,402.0     | 0.000     |
 
-|                     | Before(Part 0) | Round 0(`sizes="100vw"`) | Round 1(`sizes` 정밀화) |
-| ------------------- | -------------- | ------------------------ | ----------------------- |
-| 홈 LCP 중앙값       | 6,745.5ms      | 945.0ms(86.0%↓)          | **835.4ms(87.6%↓)**     |
-| 상품목록 LCP 중앙값 | 6,605.5ms      | 864.8ms(86.9%↓)          | **762.2ms(88.5%↓)**     |
+눈으로 보는 리포트: [`./lighthouse/round1/1. lighthouse html 문서/products/run-1.html`](<./lighthouse/round1/1. lighthouse html 문서/products/run-1.html>) ~ `run-5.html`
 
-**`sizes`를 정밀화하니 이전 라운드보다 LCP가 추가로 더 줄었다** — 홈은 86.0%→87.6%, 상품목록은 86.9%→88.5% 감소로 개선폭이 커졌다. 전송 크기도 162KB→81KB로 절반 가까이 더 줄었다. FCP·CLS는 이번에도 변화 없음(회귀 없음).
+**Round 0 사용자 재측정(홈 LCP 중앙값 4,299.9ms)보다도 오히려 조금 높게 나왔다(4,341.6ms)** — Lighthouse 시뮬레이션 기준으로는 `sizes` 정밀화 효과가 보이지 않는다. FCP도 Round 0과 같은 1,390~1,400ms대 이례적 관측치가 이번에도 그대로 재현됐다(이 측정 환경 고유의 특성으로 보임, Round 0 절 참고). Lighthouse만 보면 Round 1의 개선이 안 보이지만, 아래 Performance 실측에서는 뚜렷하게 확인된다 — Lighthouse 시뮬레이션과 실제 브라우저 관측이 갈리는 사례로 남긴다.
+
+#### Performance — 홈(`/`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                     | 내용                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| t=598ms   | [`lighthouse/round1/2. performance/home/t598ms.jpg`](<./lighthouse/round1/2. performance/home/t598ms.jpg>)   | 셸 완성(FCP 시점과 근접), hero는 아직 배경색만 |
+| t=636ms   | [`lighthouse/round1/2. performance/home/t636ms.jpg`](<./lighthouse/round1/2. performance/home/t636ms.jpg>)   | **hero 이미 완전히 로드됨**                    |
+| t=896ms   | [`lighthouse/round1/2. performance/home/t896ms.jpg`](<./lighthouse/round1/2. performance/home/t896ms.jpg>)   | 안정                                           |
+| t=1,196ms | [`lighthouse/round1/2. performance/home/t1196ms.jpg`](<./lighthouse/round1/2. performance/home/t1196ms.jpg>) | 안정                                           |
+| t=2,048ms | [`lighthouse/round1/2. performance/home/t2048ms.jpg`](<./lighthouse/round1/2. performance/home/t2048ms.jpg>) | 안정                                           |
+
+실측 FCP 610.4ms, LCP(hero) **610.4ms**(트레이스 이벤트 기준) — Round 0(FCP 1,356ms, hero 육안상 완료 5.7초)보다 **훨씬 빠르다.** `sizes` 정밀화로 파일이 작아진 효과가 Slow 4G 실측에서 명확하게 드러난다 — Lighthouse 시뮬레이션 표에서는 안 보이던 개선이 실제 브라우저에서는 확인된다.
+
+#### Performance — 상품 목록(`/products`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                             | 내용                                           |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| t=605ms   | [`lighthouse/round1/2. performance/products/t605ms.jpg`](<./lighthouse/round1/2. performance/products/t605ms.jpg>)   | 셸 완성(FCP 시점과 근접), hero는 아직 배경색만 |
+| t=899ms   | [`lighthouse/round1/2. performance/products/t899ms.jpg`](<./lighthouse/round1/2. performance/products/t899ms.jpg>)   | 전환 중                                        |
+| t=951ms   | [`lighthouse/round1/2. performance/products/t951ms.jpg`](<./lighthouse/round1/2. performance/products/t951ms.jpg>)   | **hero 이미 완전히 로드됨**                    |
+| t=1,451ms | [`lighthouse/round1/2. performance/products/t1451ms.jpg`](<./lighthouse/round1/2. performance/products/t1451ms.jpg>) | 안정                                           |
+| t=2,101ms | [`lighthouse/round1/2. performance/products/t2101ms.jpg`](<./lighthouse/round1/2. performance/products/t2101ms.jpg>) | 안정                                           |
+
+실측 FCP 618.2ms, LCP(hero) **909.9ms** — Round 0(hero 육안상 완료 ≈4.9~~6.5초대)보다 대폭 빨라졌다. 이 트레이스는 이후 구간(약 6.8초 지점)에 더 작은 LCP 후보(89,600px²)가 추가로 잡히는 등 후속 활동이 관찰됐으나, 첫 로드 사이클(0~~2.2초)만 대표로 채택했다.
 
 ---
 
 ## Round 2 — DPR 2 환경의 srcset 후보 보강 (`deviceSizes`에 2400 추가)
 
-실제 DPR 2(레티나) 브라우저에서 Chrome DevTools Network 패널을 직접 확인해보니, Round 1 이후에도 `w=1200`이 아니라 **`w=3840`**(410KB, 4.92초)이 요청되고 있었다. `sizes`가 알려주는 건 CSS 표시 폭(1200px)뿐이고, 브라우저는 여기에 DPR을 곱해 실제 필요한 픽셀 수를 계산한다 — DPR 2면 1200×2=2400px가 필요한데, `srcset` 후보 목록(Next.js 기본 `deviceSizes`: 640/750/828/1080/1200/1920/2048/3840)엔 2400을 만족하는 값이 1920·2048로는 부족해 3840까지 건너뛰고 있었다.
+실제 DPR 2(레티나) 브라우저에서 Chrome DevTools Network 패널을 확인해보니, Round 1 이후에도 `w=1200`이 아니라 `w=3840`이 요청되고 있었다. `sizes`가 알려주는 건 CSS 표시 폭(1200px)뿐이고, 브라우저는 여기에 DPR을 곱해 실제 필요한 픽셀 수를 계산한다 — DPR 2면 1200×2=2400px가 필요한데, 당시 `srcset` 후보 목록(Next.js 기본 `deviceSizes`: 640/750/828/1080/1200/1920/2048/3840)엔 2400을 만족하는 값이 1920·2048로는 부족해 3840까지 건너뛰고 있었다.
 
-- **변경**: `next.config.ts`의 `images.deviceSizes`에 `2400`을 추가 — `[640, 750, 828, 1080, 1200, 1920, 2048, 2400, 3840]`. `2400 = 1200px(실제 렌더 폭) × 2(DPR)`로 정확히 맞아떨어지는 값이라, DPR 2 환경에서 화질 손실 없이 딱 필요한 만큼만 받게 된다.
-- **측정 시점 코드 상태**: Round 0+1 + `next.config.ts` 변경(미커밋).
-- **측정 방법**: 두 갈래로 확인했다 — ① Lighthouse desktop(DPR 1 고정) 5회씩 재측정으로 이 변경이 DPR 1에 영향이 없는지(회귀 없는지) 확인, ② Playwright로 DPR 2(`deviceScaleFactor: 2`) 컨텍스트를 직접 만들어 동일한 데스크톱 회선 조건(RTT 40ms, ≈1,280KB/s)에서 실제 요청 URL·전송 크기·LCP를 Before(2400 없음)/After(2400 추가) 둘 다 측정 — Before는 `next.config.ts`를 임시로 되돌려 재현한 뒤 다시 복원했다.
-- **눈으로 보는 리포트(이 커밋에 포함됨, DPR 1 회귀 확인용)**: [`./lighthouse-devicesizes/home/run-1.html`](./lighthouse-devicesizes/home/run-1.html), [`./lighthouse-devicesizes/products/run-1.html`](./lighthouse-devicesizes/products/run-1.html)
-
-### DPR 1 — Lighthouse 재측정 (회귀 없는지 확인)
-
-#### 홈(`/`) — 5회 raw 값 (`deviceSizes` 2400 추가, 데스크톱 모드)
-
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 250.8     | 860.3     | 0.000     |
-| 2          | 243.9     | 834.8     | 0.000     |
-| 3          | 244.6     | 837.1     | 0.000     |
-| 4          | 245.1     | 839.3     | 0.000     |
-| 5          | 244.7     | 837.5     | 0.000     |
-| **중앙값** | **244.7** | **837.5** | **0.000** |
-| 최솟값     | 243.9     | 834.8     | 0.000     |
-| 최댓값     | 250.8     | 860.3     | 0.000     |
-
-#### 상품 목록(`/products`) — 5회 raw 값 (`deviceSizes` 2400 추가, 데스크톱 모드)
-
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 244.9     | 740.8     | 0.000     |
-| 2          | 244.3     | 760.9     | 0.000     |
-| 3          | 244.5     | 761.8     | 0.000     |
-| 4          | 244.6     | 739.7     | 0.000     |
-| 5          | 244.0     | 738.4     | 0.000     |
-| **중앙값** | **244.5** | **740.8** | **0.000** |
-| 최솟값     | 244.0     | 738.4     | 0.000     |
-| 최댓값     | 244.9     | 761.8     | 0.000     |
-
-|                              | 홈 LCP 중앙값 | 상품목록 LCP 중앙값 |
-| ---------------------------- | ------------- | ------------------- |
-| Round 1(2400 없음)           | 835.4ms       | 762.2ms             |
-| `deviceSizes`에 2400 추가 후 | 837.5ms       | 740.8ms             |
-
-두 라운드가 사실상 동일(차이는 측정 흔들림 범위 이내) — DPR 1에서는 여전히 `w=1200`이 선택되므로 이 변경의 영향을 받지 않는다는 게 확인됐다.
-
-### DPR 2 — Playwright 실측 (Before/After, 동일 데스크톱 회선 조건)
-
-|                                     | Before(2400 없음, `w=3840`) | After(2400 추가, `w=2400`) | 감소율    |
-| ----------------------------------- | --------------------------- | -------------------------- | --------- |
-| 파일 크기(webp, content-length)     | 409,306 bytes               | 211,222 bytes              | **48.4%** |
-| 원본(7,545,525 bytes) 대비          | 94.6%↓                      | 97.2%↓                     | —         |
-| 홈 LCP(`PerformanceObserver`)       | 884ms                       | **612ms**                  | 30.8%↓    |
-| 상품목록 LCP(`PerformanceObserver`) | 1,116ms                     | **880ms**                  | 21.1%↓    |
-
-Before 수치(`w=3840`, 409,306 bytes)는 사용자가 직접 DevTools에서 캡처한 스크린샷(410KB, 4.92초)과 파일 크기가 정확히 일치한다 — 다만 그 스크린샷은 실제 네트워크 환경이라 4.92초는 이번 시뮬레이션 회선(RTT 40ms, ≈1,280KB/s) 수치와 직접 비교하지 않는다.
+- **변경**: `next.config.ts`의 `images.deviceSizes`에 `2400`을 추가 — `[640, 750, 828, 1080, 1200, 1800, 1920, 2048, 2400, 3840]`(1800은 Round 4에서 추가). `2400 = 1200px(실제 렌더 폭) × 2(DPR)`로 정확히 맞아떨어지는 값이라, DPR 2 환경에서 화질 손실 없이 딱 필요한 만큼만 받게 된다.
+- 이 변경의 실제 전송 크기 효과(409,736→211,652 bytes, 48.4%↓)는 위 "전송 크기 변화" 표에서 이미 확인했다 — 이 세션의 실측 환경 자체가 DPR 1.75라, 사용자 Lighthouse 재측정이 곧 "DPR 2에 가까운 환경에서의 Before/After" 역할을 겸한다.
 
 ### Round 2 결론
 
-- DPR 2 환경에서 hero 이미지 전송 크기 48.4% 추가 감소, LCP는 홈 30.8%/상품목록 21.1% 추가 감소 — DPR 1에는 영향 없이 DPR 2에서만 개선됐다.
-- 이번 발견은 Lighthouse desktop 프리셋(DPR 1 고정)만으로는 못 잡아내는 문제였다 — 실제 브라우저(레티나 디스플레이)로 직접 확인했기 때문에 드러났다.
+- DPR 2 환경에서 hero 이미지 전송 크기가 즉시 48.4% 추가로 줄었다 — 정확히 DPR 1.0인 환경에서는 여전히 `w=1200`이 선택되므로 영향 없음(deviceSizes 후보가 하나 늘었을 뿐, 필요 폭 1200px엔 이미 정확히 맞는 후보가 있어 선택 로직 자체가 그대로다).
+- 이번 발견은 Lighthouse desktop 프리셋을 DPR 1로 강제 고정해서 실행하면 못 잡아내는 문제였다 — 실제 DPR(1.75~2)이 반영되는 이 세션의 측정 환경(`screenEmulation.disabled`)이라 드러났다.
+
+### 사용자 직접 측정 — Round 2 상태 재확인(Lighthouse + Performance)
+
+Round 0·1과 같은 방식으로, 사용자가 Round 2 코드 상태(`deviceSizes`에 2400 추가, AVIF·Round 4·headerfix는 전부 미적용)로 직접 재확인했다.
+
+- **측정 시점 코드 상태**: 커밋 `61214cca`(Part 0) 위에 `PageHeading.tsx`(Round 0+1 사양) + `next.config.ts`(Round 2 `deviceSizes` 2400 추가)만 임시 적용
+- **측정 일시**: 2026-08-06 UTC 12:22(Performance 트레이스) / 12:20~12:24(Lighthouse)
+- **포트**: `localhost:3000`
+
+#### Lighthouse — 홈 (`/`, 5회 raw 값, `--preset=desktop`)
+
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,387.8     | 3,161.7     | 0.000     |
+| 2          | 1,389.4     | 3,164.0     | 0.000     |
+| 3          | 1,388.5     | 3,162.8     | 0.000     |
+| 4          | 1,387.9     | 3,161.9     | 0.000     |
+| 5          | 1,388.4     | 3,162.7     | 0.000     |
+| **중앙값** | **1,388.4** | **3,162.7** | **0.000** |
+| 최솟값     | 1,387.8     | 3,161.7     | 0.000     |
+| 최댓값     | 1,389.4     | 3,164.0     | 0.000     |
+
+눈으로 보는 리포트: [`./lighthouse/round2/1. lighthouse html 문서/home/run-1.html`](<./lighthouse/round2/1. lighthouse html 문서/home/run-1.html>) ~ `run-5.html`
+
+#### Lighthouse — 상품 목록 (`/products?page=2`, 5회 raw 값, `--preset=desktop`)
+
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,391.4     | 3,202.9     | 0.000     |
+| 2          | 1,396.6     | 3,213.2     | 0.000     |
+| 3          | 1,392.8     | 2,705.6     | 0.000     |
+| 4          | 1,391.2     | 3,166.8     | 0.000     |
+| 5          | 1,398.7     | 3,178.0     | 0.000     |
+| **중앙값** | **1,392.8** | **3,178.0** | **0.000** |
+| 최솟값     | 1,391.2     | 2,705.6     | 0.000     |
+| 최댓값     | 1,398.7     | 3,213.2     | 0.000     |
+
+눈으로 보는 리포트: [`./lighthouse/round2/1. lighthouse html 문서/products/run-1.html`](<./lighthouse/round2/1. lighthouse html 문서/products/run-1.html>) ~ `run-5.html`
+
+**이번엔 Lighthouse 시뮬레이션에서도 뚜렷한 개선이 보인다** — 홈 LCP 중앙값이 Round 1(4,341.6ms) → Round 2(3,162.7ms)로 **27.2%↓**, 상품목록도 4,398.4ms → 3,178.0ms로 **27.7%↓**. 이 측정 환경의 실제 DPR이 1.75로 2에 가까워서(위 "전송 크기 변화" 표와 같은 이유) `deviceSizes`에 2400을 추가한 효과가 Lighthouse 표에도 그대로 반영된 것으로 보인다 — Round 1에서는 시뮬레이션에 안 보이던 개선이 Round 2에서는 보인다는 점이 흥미롭다. FCP는 여전히 1,387~1,398ms대 이례적 관측치(Round 0·1과 동일 패턴).
+
+#### Performance — 홈(`/`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                     | 내용                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| t=605ms   | [`lighthouse/round2/2. performance/home/t605ms.jpg`](<./lighthouse/round2/2. performance/home/t605ms.jpg>)   | 셸 완성(FCP 시점과 근접), hero는 아직 배경색만 |
+| t=628ms   | [`lighthouse/round2/2. performance/home/t628ms.jpg`](<./lighthouse/round2/2. performance/home/t628ms.jpg>)   | **hero 이미 완전히 로드됨**                    |
+| t=904ms   | [`lighthouse/round2/2. performance/home/t904ms.jpg`](<./lighthouse/round2/2. performance/home/t904ms.jpg>)   | 안정                                           |
+| t=1,202ms | [`lighthouse/round2/2. performance/home/t1202ms.jpg`](<./lighthouse/round2/2. performance/home/t1202ms.jpg>) | 안정                                           |
+| t=2,243ms | [`lighthouse/round2/2. performance/home/t2243ms.jpg`](<./lighthouse/round2/2. performance/home/t2243ms.jpg>) | 안정                                           |
+
+실측 FCP 619.0ms, LCP(hero) **619.0ms** — Round 1(FCP 610.4ms, LCP 610.4ms)과 사실상 동일하다. 이 트레이스는 `hostDPR: 1`로 기록돼 있어(Lighthouse 쪽에서 추정한 실제 DPR ~1.75-2와는 다른 환경/세션으로 보임), DPR 1 기준으로는 Round 1에서 이미 `w=1200`이 선택되고 있었으므로 Round 2(`deviceSizes` 2400 추가)의 영향을 받지 않는 게 정상이다 — 본문의 "정확히 DPR 1인 환경엔 영향 없음" 결론과 일치한다.
+
+#### Performance — 상품 목록(`/products`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                             | 내용                                         |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| t=8ms     | [`lighthouse/round2/2. performance/products/t8ms.jpg`](<./lighthouse/round2/2. performance/products/t8ms.jpg>)       | `loading.tsx` fallback("불러오는 중입니다…") |
+| t=602ms   | [`lighthouse/round2/2. performance/products/t602ms.jpg`](<./lighthouse/round2/2. performance/products/t602ms.jpg>)   | **hero 이미 완전히 로드됨**                  |
+| t=1,054ms | [`lighthouse/round2/2. performance/products/t1054ms.jpg`](<./lighthouse/round2/2. performance/products/t1054ms.jpg>) | 안정                                         |
+| t=1,640ms | [`lighthouse/round2/2. performance/products/t1640ms.jpg`](<./lighthouse/round2/2. performance/products/t1640ms.jpg>) | 안정                                         |
+| t=2,162ms | [`lighthouse/round2/2. performance/products/t2162ms.jpg`](<./lighthouse/round2/2. performance/products/t2162ms.jpg>) | 안정                                         |
+
+이 트레이스는 홈에서 카테고리 링크 클릭으로 진입한 소프트 내비게이션이라(`navigationStart` 미기록, 첫 `/api/products` 관련 요청 시점을 t=0으로 삼음) 절대 FCP는 없지만, LCP(hero, 810,000px²)가 요청 시작 후 **약 615.6ms**만에 확정됨을 트레이스 이벤트로 확인했다 — Round 1과 비슷한 수준으로 빠르다(DPR 1 환경이라 Round 2 변경의 영향 밖).
 
 ---
 
 ## Round 3 — AVIF 우선 협상 (`images.formats`)
 
-WebP보다 더 작은 AVIF를 지원 브라우저에 우선 제공하도록 설정을 바꾸고, 그 상태로 Lighthouse desktop(DPR 1)을 재측정했다.
+WebP보다 더 작은 AVIF를 지원 브라우저에 우선 제공하도록 설정을 바꿨다.
 
 - **변경**: `next.config.ts`의 `images.formats`에 `['image/avif', 'image/webp']` 추가 — AVIF를 지원하는 브라우저(`Accept` 헤더에 `image/avif` 포함)에는 AVIF를, 지원하지 않는 브라우저에는 자동으로 WebP나 원본으로 폴백한다.
-- **측정 시점 코드 상태**: Round 0+1+2(`deviceSizes`에 2400 포함) + `images.formats` 변경(미커밋).
-- **측정 조건**: 위와 동일(Lighthouse CLI 13.4.1, `--preset=desktop`, viewport 1350×940, cold load 5회).
-- **측정 일시**: 2026-08-06(UTC)
-- **협상 확인**: `network-requests` 오디트에서 hero 이미지 요청의 `mimeType`이 실제로 `image/avif`인 것을 확인함(Chrome 헤드리스가 `Accept` 헤더에 `image/avif`를 포함해서 요청).
-- **눈으로 보는 리포트(이 커밋에 포함됨)**: [`./lighthouse-avif/home/run-1.html`](./lighthouse-avif/home/run-1.html), [`./lighthouse-avif/products/run-1.html`](./lighthouse-avif/products/run-1.html)
-
-### 같은 해상도(w=1200)에서 포맷별 전송 크기
-
-|              | WebP(Round 2) | AVIF(이번)   | 감소율    |
-| ------------ | ------------- | ------------ | --------- |
-| transferSize | 80,966 bytes  | 69,478 bytes | **14.2%** |
-
-### 홈(`/`) — 5회 raw 값 (AVIF, 데스크톱 모드)
-
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 248.4     | 833.5     | 0.000     |
-| 2          | 245.0     | 818.6     | 0.000     |
-| 3          | 245.8     | 823.2     | 0.000     |
-| 4          | 244.8     | 819.1     | 0.000     |
-| 5          | 244.0     | 815.8     | 0.000     |
-| **중앙값** | **245.0** | **819.1** | **0.000** |
-| 최솟값     | 244.0     | 815.8     | 0.000     |
-| 최댓값     | 248.4     | 833.5     | 0.000     |
-
-### 상품 목록(`/products`) — 5회 raw 값 (AVIF, 데스크톱 모드)
-
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 245.0     | 739.7     | 0.000     |
-| 2          | 244.4     | 736.9     | 0.000     |
-| 3          | 244.9     | 718.2     | 0.000     |
-| 4          | 245.0     | 739.7     | 0.000     |
-| 5          | 244.6     | 738.6     | 0.000     |
-| **중앙값** | **244.9** | **738.6** | **0.000** |
-| 최솟값     | 244.4     | 718.2     | 0.000     |
-| 최댓값     | 245.0     | 739.7     | 0.000     |
-
-### Before(Part 0) 대비 Round 3까지 누적 결과
-
-|                     | Before(Part 0) | Round 1(`sizes` 정밀화) | Round 2(`deviceSizes`, DPR 1 기준) | Round 3(AVIF, 최종) |
-| ------------------- | -------------- | ----------------------- | ---------------------------------- | ------------------- |
-| 홈 LCP 중앙값       | 6,745.5ms      | 835.4ms(87.6%↓)         | 837.5ms(87.6%↓)                    | **819.1ms(87.9%↓)** |
-| 상품목록 LCP 중앙값 | 6,605.5ms      | 762.2ms(88.5%↓)         | 740.8ms(88.8%↓)                    | **738.6ms(88.8%↓)** |
-
-AVIF 전환으로 LCP가 소폭 더 줄었다(홈 837.5→819.1ms). `deviceSizes` 2400 추가 자체는 DPR 1엔 원래 영향이 없었으므로(Round 2에서 확인) 홈·상품목록 수치가 라운드마다 미세하게 흔들리는 건 대부분 측정 흔들림이고, AVIF 전환의 실질 효과는 같은 해상도에서 파일 크기가 14.2% 줄었다는 것으로 보는 게 더 정확하다.
-
-### Round 3 결론
-
-- AVIF 우선 협상으로 같은 해상도(w=1200) 기준 전송 크기가 WebP 대비 14.2% 추가로 줄었다(80,966→69,478 bytes).
+- 같은 해상도(`w=2400`, 이 환경 기준)에서 webp(211,652 bytes) → avif(167,625 bytes)로 **20.8%** 추가로 줄었다 — 위 "전송 크기 변화" 표 참고.
 - 미지원 브라우저는 `Accept` 헤더 협상으로 자동 폴백되므로 별도 분기 코드 없이 안전하게 적용 가능.
-- 원본(7.5MB) 대비 최종 전송 크기 감소율은 **99.08%**(7,545,525→69,478 bytes)까지 누적됨.
+- 원본(7.5MB) 대비 최종 전송 크기 감소율은 **97.8%**(7,545,239→167,625 bytes)까지 누적됨.
+
+### 사용자 직접 측정 — Round 3 상태 재확인(Lighthouse + Performance)
+
+Round 0~2와 같은 방식으로, 사용자가 Round 3 코드 상태(AVIF 우선 협상 추가, Round 4·headerfix는 미적용)로 직접 재확인했다.
+
+- **측정 시점 코드 상태**: 커밋 `61214cca`(Part 0) 위에 `PageHeading.tsx`(Round 0+1 사양) + `next.config.ts`(Round 2+3: `deviceSizes` 2400 + AVIF)만 임시 적용
+- **측정 일시**: 2026-08-06 UTC 12:34(Performance 트레이스) / 12:32~12:36(Lighthouse)
+- **포트**: `localhost:3000`
+
+#### Lighthouse — 홈 (`/`, 5회 raw 값, `--preset=desktop`)
+
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,388.5     | 2,882.8     | 0.000     |
+| 2          | 1,387.7     | 2,881.5     | 0.000     |
+| 3          | 1,387.0     | 2,880.5     | 0.000     |
+| 4          | 1,388.4     | 2,882.7     | 0.000     |
+| 5          | 1,388.0     | 2,882.0     | 0.000     |
+| **중앙값** | **1,388.0** | **2,882.0** | **0.000** |
+| 최솟값     | 1,387.0     | 2,880.5     | 0.000     |
+| 최댓값     | 1,388.5     | 2,882.8     | 0.000     |
+
+눈으로 보는 리포트: [`./lighthouse/round3/1. lighthouse html 문서/home/run-1.html`](<./lighthouse/round3/1. lighthouse html 문서/home/run-1.html>) ~ `run-5.html`
+
+#### Lighthouse — 상품 목록 (`/products?page=2`, 5회 raw 값, `--preset=desktop`)
+
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,397.2     | 3,143.7     | 0.000     |
+| 2          | 1,397.4     | 3,144.0     | 0.000     |
+| 3          | 1,389.5     | 2,884.2     | 0.000     |
+| 4          | 1,389.6     | 2,884.3     | 0.000     |
+| 5          | 1,394.3     | 3,137.1     | 0.000     |
+| **중앙값** | **1,394.3** | **3,137.1** | **0.000** |
+| 최솟값     | 1,389.5     | 2,884.2     | 0.000     |
+| 최댓값     | 1,397.4     | 3,144.0     | 0.000     |
+
+눈으로 보는 리포트: [`./lighthouse/round3/1. lighthouse html 문서/products/run-1.html`](<./lighthouse/round3/1. lighthouse html 문서/products/run-1.html>) ~ `run-5.html`
+
+**Round 2 대비 계속 줄었다** — 홈 LCP 중앙값 3,162.7ms(Round2) → 2,882.0ms(Round3), **8.9%↓**. AVIF가 같은 해상도에서 WebP보다 파일이 작다는 본문 결론과 방향이 일치한다. FCP는 여전히 1,387~~1,397ms대 이례적 관측치(Round 0~~2와 동일 패턴, 이 측정 환경 고유 특성으로 보임).
+
+#### Performance — 홈(`/`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                     | 내용                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| t=624ms   | [`lighthouse/round3/2. performance/home/t624ms.jpg`](<./lighthouse/round3/2. performance/home/t624ms.jpg>)   | 셸 완성(FCP 시점과 근접), hero는 아직 배경색만 |
+| t=646ms   | [`lighthouse/round3/2. performance/home/t646ms.jpg`](<./lighthouse/round3/2. performance/home/t646ms.jpg>)   | **hero 이미 완전히 로드됨**                    |
+| t=913ms   | [`lighthouse/round3/2. performance/home/t913ms.jpg`](<./lighthouse/round3/2. performance/home/t913ms.jpg>)   | 안정                                           |
+| t=1,198ms | [`lighthouse/round3/2. performance/home/t1198ms.jpg`](<./lighthouse/round3/2. performance/home/t1198ms.jpg>) | 안정                                           |
+| t=2,277ms | [`lighthouse/round3/2. performance/home/t2277ms.jpg`](<./lighthouse/round3/2. performance/home/t2277ms.jpg>) | 안정                                           |
+
+실측 FCP 638.8ms, LCP(hero) **638.8ms** — Round 1(610.4ms)·Round 2(619.0ms)와 같은 수준으로 여전히 매우 빠르다. DPR 1 환경(`hostDPR:1`)이라 AVIF 전환의 파일 크기 절감(같은 해상도 기준 20.8%)이 이미 서브초 단위인 로드 시간에는 육안상 차이를 만들 정도는 아니었다.
+
+#### Performance — 상품 목록(`/products`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
+
+| 시점      | 스크린샷                                                                                                             | 내용                                         |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| t=979ms   | [`lighthouse/round3/2. performance/products/t979ms.jpg`](<./lighthouse/round3/2. performance/products/t979ms.jpg>)   | `loading.tsx` fallback("불러오는 중입니다…") |
+| t=2,224ms | [`lighthouse/round3/2. performance/products/t2224ms.jpg`](<./lighthouse/round3/2. performance/products/t2224ms.jpg>) | **hero 이미 완전히 로드됨**                  |
+| t=2,590ms | [`lighthouse/round3/2. performance/products/t2590ms.jpg`](<./lighthouse/round3/2. performance/products/t2590ms.jpg>) | 안정                                         |
+| t=2,752ms | [`lighthouse/round3/2. performance/products/t2752ms.jpg`](<./lighthouse/round3/2. performance/products/t2752ms.jpg>) | 안정                                         |
+| t=2,928ms | [`lighthouse/round3/2. performance/products/t2928ms.jpg`](<./lighthouse/round3/2. performance/products/t2928ms.jpg>) | 안정                                         |
+
+LCP(hero, 810,000px²)가 이미지 요청 시작 후 **약 2,237ms**만에 확정됨 — 홈(639ms)보다 훨씬 느리다. 상품목록 페이지는 hero 외에도 여러 상품 그리드 이미지를 동시에 요청하느라 Slow 4G 대역폭을 나눠 쓰는 게 원인으로 보인다(Part 1 "LCP breakdown"의 `Resource load delay` 관찰과 같은 맥락 — 상품목록만 유독 지연이 크다는 패턴이 여기서도 재확인됨).
 
 ---
 
-## LCP breakdown (Lighthouse `lcp-breakdown-insight`, 최종 상태·run-1 기준)
+## LCP breakdown (Lighthouse `lcp-breakdown-insight`, Round 4 사용자 리포트 run-1 기준)
 
-`lcp-breakdown-insight`는 로컬(비throttled) 환경에서 실제로 캡처된 트레이스의 관측값을 그대로 보여주는 반면, 헤드라인 LCP(예: 홈 818.0ms)는 그 트레이스를 회선 프로필로 재계산(Lantern 시뮬레이션)한 값이다 — 그래서 이 섹션의 절대값을 헤드라인 LCP와 초 단위로 직접 비교하지 않는다(Part 0에서 설명한 것과 같은 구조). 대신 과제가 요구하는 "서버 응답 대기 / 이미지 요청 시작 대기 / 이미지 전송 / 화면에 그려질 때까지"의 4단계 구간을 이 오디트가 정확히 제공하므로, 각 구간이 전체에서 차지하는 비중을 관찰하는 데 쓴다. (Round 0~3 + 아래 "남은 gap" 렌더링 경계 수정까지 전부 적용한 최종 상태)
+`lcp-breakdown-insight`는 로컬에서 실제로 캡처된 트레이스의 관측값을 그대로 보여주는 반면, 헤드라인 LCP는 그 트레이스를 회선 프로필로 재계산(Lantern 시뮬레이션)한 값이다 — 그래서 이 섹션의 절대값을 헤드라인 LCP와 초 단위로 직접 비교하지 않는다(Part 0에서 설명한 것과 같은 구조). 대신 과제가 요구하는 "서버 응답 대기 / 이미지 요청 시작 대기 / 이미지 전송 / 화면에 그려질 때까지"의 4단계 구간이 전체에서 차지하는 비중을 관찰하는 데 쓴다. 아래는 사용자가 직접 실행한 Round 4 Lighthouse 리포트(`round4/1. lighthouse html 문서/{home,products}/run-1.html`)에 실제로 담긴 값이다.
 
-| 구간                   | 의미                  | 홈          | 상품목록    |
-| ---------------------- | --------------------- | ----------- | ----------- |
-| Time to first byte     | 서버 응답 대기        | 4.2ms       | 23.9ms      |
-| Resource load delay    | 이미지 요청 시작 대기 | 24.7ms      | **549.1ms** |
-| Resource load duration | 이미지 전송           | 283.3ms     | 149.3ms     |
-| Element render delay   | 화면에 그려질 때까지  | 27.9ms      | 22.1ms      |
-| **합계(로컬 관측치)**  |                       | **340.1ms** | **744.4ms** |
+| 구간                   | 의미                  | 홈            | 상품목록      |
+| ---------------------- | --------------------- | ------------- | ------------- |
+| Time to first byte     | 서버 응답 대기        | 4.2ms         | 10.9ms        |
+| Resource load delay    | 이미지 요청 시작 대기 | 582.1ms       | 609.3ms       |
+| Resource load duration | 이미지 전송           | 2,684.3ms     | 2,560.1ms     |
+| Element render delay   | 화면에 그려질 때까지  | 41.3ms        | 46.1ms        |
+| **합계(로컬 관측치)**  |                       | **3,311.8ms** | **3,226.4ms** |
 
-**관찰 1**: `Resource load duration`(이미지 전송)이 홈에서 283.3ms로, 나머지 3단계(합쳐서 57ms 안팎)보다 훨씬 크다 — 서버가 요청 시점에 원본을 리사이즈·AVIF로 재인코딩하는 처리 시간이 포함되기 때문이다. 순수 네트워크 전송(69KB)만이라면 이렇게 오래 걸리지 않는다.
+**관찰 1**: `Resource load duration`(이미지 전송)이 두 페이지 모두 2.5~2.7초로 압도적으로 크다 — 이 세션의 측정 환경이 실제 DPR 1.75라 `w=2400` avif(167,625 bytes)를 매번 서버가 그 자리에서 리사이즈·재인코딩해서 내려주는 처리 시간이 포함되기 때문으로 보인다.
 
-**관찰 2**: 상품목록은 `Resource load delay`(이미지 요청 시작 대기) 하나가 549.1ms로 압도적으로 크다 — 5회 전부 비슷한 범위로 일관되게 재현되는 패턴이라 측정 흔들림이 아니다. 시뮬레이션 기반 헤드라인 LCP(상품목록 737.7ms)에는 이 구간이 그대로 반영되지 않지만(Lantern이 자체 모델로 재계산하기 때문), **왜 홈과 상품목록이 이 구간에서만 이렇게 다른지는 이번 조사에서 원인을 확정하지 못했다** — 상품목록 페이지가 hero 이미지 외에 더 많은 리소스(필터 UI, 상품 그리드 이미지 등)를 동시에 요청하면서 우선순위 경쟁이 생기는 것이 유력한 가설이지만, 검증하지 않은 추정이다. Part 2(목록 pending/CLS) 작업 시 함께 확인할 필요가 있다.
-
-### 요청 시작 시점 Before/After 비교 (`network-requests` 오디트 run-1 기준)
-
-병목이 "이미지를 늦게 발견·요청해서"가 아니라 "파일이 커서 전송·처리에 오래 걸려서"였다는 Part 0의 결론을, 요청 시작 시점 자체를 Before/After(최종 상태)로 직접 비교해서 다시 확인한다. 홈·상품목록 둘 다 확인했다.
-
-|                                          | 홈 Before       | 홈 After     | 상품목록 Before | 상품목록 After |
-| ---------------------------------------- | --------------- | ------------ | --------------- | -------------- |
-| 요청 시작(`rendererStartTime`)           | 25.3ms          | 28.4ms       | **557.4ms**     | **572.5ms**    |
-| 네트워크 요청 시작(`networkRequestTime`) | 27.3ms          | 28.7ms       | 557.5ms         | 572.7ms        |
-| 우선순위(`priority`)                     | High            | High         | High            | High           |
-| `<link rel="preload">` 대상              | 아니오          | 예           | 아니오          | 예             |
-| transferSize                             | 7,545,525 bytes | 69,478 bytes | 7,545,525 bytes | 69,478 bytes   |
-
-(Before는 raw `<img>`, After는 `next/image` 최종 상태 `w=1200` AVIF 기준)
-
-**요청이 시작되는 시점 자체는 같은 페이지 안에서는 Before/After 거의 동일하다**(홈 25–28ms, 상품목록 557–573ms) — 두 경우 다 브라우저 preload scanner가 문서 파싱 직후 빠르게 발견하고 있었고, `priority`도 원래 `High`였다. 즉 "언제 요청을 시작하는가"는 이번에 바꾼 어떤 것과도 무관했고, 바뀐 건 오직 **그 요청으로 받아오는 파일의 크기와, 그 파일을 만드는 데 걸리는 서버 처리 시간**뿐이다 — 이게 Part 1 전체 변경(`next/image`·`sizes`·`deviceSizes`·AVIF)의 인과관계를 요약한다: 병목 구간은 항상 "이미지 전송(+ 서버 처리)" 하나였고, 선택한 모든 변경은 그 전송량과 처리 부담을 줄이는 데만 집중했다.
-
-**다만 상품목록은 홈보다 요청 시작 자체가 약 530~545ms 늦다** — 이 차이는 Before(Part 0)에도 이미 있었고 After에도 그대로 남아있어서, 이번 Part 1 변경으로 생기거나 없어진 문제가 아니라 **처음부터 존재했던 상품목록 페이지 고유의 특성**이다. 위 "LCP breakdown"의 `Resource load delay`(549.1ms)가 바로 이 지연을 가리키는 것으로 보이며, 왜 상품목록만 요청 시작이 늦는지는 이번 조사에서 원인을 확정하지 못해 Part 2 작업 시 함께 확인이 필요하다.
+**관찰 2**: 상품목록의 `Resource load delay`(이미지 요청 시작 대기)가 홈보다 27ms 정도 더 크다 — Part 0에서부터 반복 관찰된 "상품목록만 유독 요청 시작이 늦다"는 패턴과 방향은 같지만, 이 세션(실제 DPR 환경)에서는 그 격차가 Part 0 시점(약 530ms 차이)보다 훨씬 작다. 왜 격차 자체가 줄었는지는 이번 조사에서 원인을 확정하지 못했다 — Part 2 작업 시 함께 확인이 필요하다.
 
 ---
 
@@ -359,7 +409,7 @@ AVIF 전환으로 LCP가 소폭 더 줄었다(홈 837.5→819.1ms). `deviceSizes
 
 - `sizes`를 실제 렌더 폭(1200px)에 맞게 `(min-width: 1200px) 1200px, 100vw`로 정확히 지정해, DPR 1에서 불필요하게 큰 후보(`w=1920`)가 선택되던 걸 `w=1200`으로 바로잡았다(Round 1).
 - `images.deviceSizes`에 `2400`(=1200px×DPR 2)을 추가해, 레티나 화면에서 `w=3840`까지 건너뛰던 걸 `w=2400`으로 바로잡았다(Round 2) — 화질 손실 없이 전송량 48.4% 절감.
-- `images.formats`에 AVIF를 우선순위로 추가해, 같은 해상도에서 WebP보다 14.2% 더 작은 파일을 지원 브라우저에 제공했다(Round 3, 미지원 브라우저는 자동 폴백).
+- `images.formats`에 AVIF를 우선순위로 추가해, 같은 해상도(`w=2400`)에서 WebP보다 20.8% 더 작은 파일을 지원 브라우저에 제공했다(Round 3, 미지원 브라우저는 자동 폴백).
 
 이 방식은 어떤 뷰포트·DPR 조합이 와도 항상 "필요한 만큼만, 화질 손실 없이" 대응한다 — 관리해야 할 이미지 자산도 원본 파일 하나뿐이다.
 
@@ -371,63 +421,20 @@ AVIF 전환으로 LCP가 소폭 더 줄었다(홈 837.5→819.1ms). `deviceSizes
 
 ## 남은 gap — Header·h1·설명이 홈 데이터 대기 중 함께 막힘
 
-1단계 요구사항 중 "홈 데이터를 기다리는 동안 Header, 하나의 `h1`, 페이지 설명까지 함께 막히지 않도록 현재 데이터 소유권에 맞는 렌더링 경계를 선택해요"는 Round 0~3(이미지 관련 변경) 범위 밖으로 남아있었다. 과제가 요구하는 관찰-가설-반증-변경 형식으로 기록한다.
-
-| 항목               | 내용                                                                                                                                                                                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **관찰한 사실**    | `HomeView.tsx:51`에서 `PageHeading`(제목·설명)이 `QueryState`의 render-prop 안에 있어, `homeQuery`가 pending인 동안 `Header`만 즉시 보이고 나머지는 전부 `null`로 렌더된다.                                                                                                    |
-| **원인 가설**      | 배너 제목·설명(`data.banner.title`/`data.banner.description`)이 홈 API 응답에만 존재하는 진짜 동적 값이라, 페이지 셸의 제목·설명을 그 데이터가 도착해야만 그릴 수 있는 구조로 설계됐기 때문이다.                                                                               |
-| **반증할 방법**    | 배너 텍스트가 실제로 요청마다 달라지는 값인지, 아니면 사실상 고정 문구인지 확인 — 고정 문구라면 API 의존 자체가 불필요했다는 뜻이라 가설이 반증된다.                                                                                                                           |
-| **확인 결과**      | **반증 실패, 가설 확정.** 배너 title·description은 실제로 서버가 내려주는 동적 데이터이고, 그래서 `(home)/page.tsx`가 서버에서 `prefetchQuery`로 미리 데이터를 채워 클라이언트에 hydrate시켜두는 방식을 쓰고 있다 — 애초에 고정 문구였다면 prefetch 자체가 필요 없었을 것이다. |
-| **가장 작은 변경** | `PageHeading`을 `QueryState` 밖으로 빼서 `Header`처럼 즉시 렌더하고, `title`·`description`은 배너 데이터 도착 전엔 고정 fallback 문구를 보여주다가 데이터가 오면 실제 값으로 교체하는 방식으로 바꾼다.                                                                         |
+1단계 요구사항 중 "홈 데이터를 기다리는 동안 Header, 하나의 `h1`, 페이지 설명까지 함께 막히지 않도록 현재 데이터 소유권에 맞는 렌더링 경계를 선택해요"는 Round 0~3(이미지 관련 변경) 범위 밖으로 남아있었다. 관찰-가설-반증-변경 표는 위 "관찰 사실 → 가설 → 반증 방법 → 최소 변경안" 통합 표의 두 번째 행 참고.
 
 **참고**: 정상 시나리오(`scenario=slow` 아님)에서는 서버가 `prefetchQuery`로 미리 데이터를 채워 HTML에 내려주므로(`HydrationBoundary`), 클라이언트가 마운트되는 시점엔 이미 `homeQuery.data`가 존재해 이 gap이 실제로 드러나지 않는다 — `scenario=slow`(1.5초 지연)처럼 응답이 늦어지는 경우에만 관찰된다.
 
 ### 적용 및 재측정
 
-`HomeView.tsx`에서 `PageHeading` 호출을 `QueryState` 밖, `Header` 바로 다음으로 옮기고, `title`/`description`을 `homeQuery.data?.banner.title ?? '다양한 상품을 만나보세요'` 형태로 바꿨다. 이후 동일 조건(Lighthouse CLI 13.4.1, `--preset=desktop`, cold load 5회)으로 재측정했다 — 이 라운드가 Part 1의 최종 확정 코드 상태다.
+`HomeView.tsx`에서 `PageHeading` 호출을 `QueryState` 밖, `Header` 바로 다음으로 옮기고, `title`/`description`을 `homeQuery.data?.banner.title ?? '다양한 상품을 만나보세요'` 형태로 바꿨다. 이 변경은 Round 4의 "사용자 직접 측정" 코드 상태(`HomeView.tsx` 포함, 커밋 `c56bfddc` 기준)에 이미 포함돼 있어 별도 표로 다시 재지 않는다 — 위 "사용자 직접 측정 — Round 4"의 수치가 이 변경까지 반영된 최종 상태다.
 
-#### 홈(`/`) — 5회 raw 값 (렌더링 경계 수정, 데스크톱 모드)
-
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 251.9     | 847.5     | 0.000     |
-| 2          | 245.0     | 820.1     | 0.000     |
-| 3          | 244.3     | 817.2     | 0.000     |
-| 4          | 244.5     | 818.0     | 0.000     |
-| 5          | 243.6     | 814.4     | 0.000     |
-| **중앙값** | **244.5** | **818.0** | **0.000** |
-| 최솟값     | 243.6     | 814.4     | 0.000     |
-| 최댓값     | 251.9     | 847.5     | 0.000     |
-
-#### 상품 목록(`/products`) — 5회 raw 값 (렌더링 경계 수정, 데스크톱 모드)
-
-| run        | FCP(ms)   | LCP(ms)   | CLS       |
-| ---------- | --------- | --------- | --------- |
-| 1          | 244.7     | 737.7     | 0.000     |
-| 2          | 244.1     | 737.2     | 0.000     |
-| 3          | 244.6     | 738.6     | 0.000     |
-| 4          | 244.4     | 717.0     | 0.000     |
-| 5          | 244.4     | 738.2     | 0.000     |
-| **중앙값** | **244.4** | **737.7** | **0.000** |
-| 최솟값     | 244.1     | 717.0     | 0.000     |
-| 최댓값     | 244.7     | 738.6     | 0.000     |
-
-|                     | Round 3(변경 전) | 렌더링 경계 수정 후(최종) |
-| ------------------- | ---------------- | ------------------------- |
-| 홈 LCP 중앙값       | 819.1ms          | 818.0ms                   |
-| 상품목록 LCP 중앙값 | 738.6ms          | 737.7ms                   |
-
-눈으로 보는 리포트(이 커밋에 포함됨): [`./lighthouse-headerfix/home/run-1.html`](./lighthouse-headerfix/home/run-1.html), [`./lighthouse-headerfix/products/run-1.html`](./lighthouse-headerfix/products/run-1.html)
-
-**측정 흔들림 범위 안이라 유의미한 차이는 없다.** 이유는 위 "참고"에 이미 적은 것과 같다 — `(home)/page.tsx`가 `await prefetchQuery`로 **문서(document) 응답 자체**를 홈 데이터가 준비될 때까지 기다린 뒤에야 HTML을 내려보내기 때문에, `PageHeading`이 `QueryState` 안에 있든 밖에 있든 브라우저가 받는 첫 HTML에는 이미 실제 배너 데이터가 채워져 있다. 즉 **cold load(Lighthouse가 측정하는 시나리오) 기준으로는 이 gap이 애초에 노출되지 않는 구조**였다 — 이번 변경은 Lighthouse 수치를 개선하기 위한 게 아니라, `scenario=slow`처럼 실제로 데이터가 늦게 도착하는 경우(예: 캐시 미스 후 클라이언트 재요청)에 대비한 구조적 안전장치다.
-
-**Before(Part 0) 대비 최종 감소율: 홈 6,745.5ms → 818.0ms(87.9%↓), 상품목록 6,605.5ms → 737.7ms(88.8%↓).**
+**측정 흔들림 범위 안이라 유의미한 차이는 없을 것으로 예상한다.** 이유는 위 "참고"에 이미 적은 것과 같다 — `(home)/page.tsx`가 `await prefetchQuery`로 문서(document) 응답 자체를 홈 데이터가 준비될 때까지 기다린 뒤에야 HTML을 내려보내기 때문에, `PageHeading`이 `QueryState` 안에 있든 밖에 있든 브라우저가 받는 첫 HTML에는 이미 실제 배너 데이터가 채워져 있다. 즉 **cold load(Lighthouse가 측정하는 시나리오) 기준으로는 이 gap이 애초에 노출되지 않는 구조**다 — 이번 변경은 Lighthouse 수치를 개선하기 위한 게 아니라, `scenario=slow`처럼 실제로 데이터가 늦게 도착하는 경우(예: 캐시 미스 후 클라이언트 재요청)에 대비한 구조적 안전장치다.
 
 ### 결론
 
 - 코드 변경은 요구사항("Header·h1·설명이 함께 안 막히게 렌더링 경계 선택")을 구조적으로 충족시켰다.
-- 다만 이 앱의 현재 아키텍처(서버 `prefetchQuery` + `HydrationBoundary`)에서는 cold load 기준으로 이 gap이 원래도 관측되지 않았으므로, Lighthouse LCP/FCP 수치에는 유의미한 변화가 없다(측정으로 확인 완료).
+- 다만 이 앱의 현재 아키텍처(서버 `prefetchQuery` + `HydrationBoundary`)에서는 cold load 기준으로 이 gap이 원래도 관측되지 않으므로, Lighthouse LCP/FCP 수치에는 유의미한 변화가 없을 것으로 예상된다(구조상 이유는 위 설명 참고 — cold load 자체를 겨냥한 변경이 아니라서 별도 재측정하지 않았다).
 - `<h2>` 유지 결정(`h1` 아님)은 이 변경과 무관하게 그대로 남아있다 — 아래 "`<h2>` 유지 결정" 섹션 참고.
 
 ---
@@ -440,50 +447,9 @@ AVIF 전환으로 LCP가 소폭 더 줄었다(홈 837.5→819.1ms). `deviceSizes
 
 ---
 
-## 재측정 경험 — 시크릿 창·포트 변경으로 직접 재확인
-
-위 라운드들과 별개로, Lighthouse 분석 화면을 직접 열어봤을 때(AI가 측정했던 결과 기준) 퍼포먼스 점수가 **100점·99점**으로 나와서 눈으로 보기에도 의아할 만큼 좋았다. 캐시나 브라우저 확장 프로그램이 점수를 실제보다 낙관적으로 만들고 있는 게 아닌지 확인하려고, **포트 번호를 3000 → 3001로 바꿔 새 서버 인스턴스를 띄우고, 시크릿(incognito) 창에서 Lighthouse를 다시 실행**했다. 시크릿 창은 확장 프로그램이 기본적으로 비활성화되고 이전 세션의 캐시·쿠키가 없는 깨끗한 상태라, "위 라운드들의 100점에 가까운 점수가 확장 프로그램이나 캐시 덕이 아닌지" 확인하기에 적합하다고 판단했다.
-
-- **측정 도구**: Lighthouse CLI `13.3.0`, `--preset=desktop`, 시크릿 창
-- **포트**: `localhost:3001`(기존 라운드들은 `3000`)
-- **측정 일시**: 2026-08-05 UTC 22:59~23:03
-- **측정 URL**: 홈 `/`, 상품 목록 `/products?category=casual`(쿼리 없는 기본 `/products`가 아님 — 우연히 이 조건으로 측정됨)
-
-### 홈(`/`) — 5회 raw 값 (시크릿 창·포트 3001)
-
-| run        | FCP(ms)   | LCP(ms)     | CLS       |
-| ---------- | --------- | ----------- | --------- |
-| 1          | 247.8     | 1,401.6     | 0.000     |
-| 2          | 248.5     | 1,507.2     | 0.000     |
-| 3          | 247.5     | 1,441.1     | 0.000     |
-| 4          | 247.1     | 1,420.3     | 0.000     |
-| 5          | 247.6     | 1,461.3     | 0.000     |
-| **중앙값** | **247.6** | **1,441.1** | **0.000** |
-| 최솟값     | 247.1     | 1,401.6     | 0.000     |
-| 최댓값     | 248.5     | 1,507.2     | 0.000     |
-
-### 상품 목록(`/products?category=casual`) — 5회 raw 값 (시크릿 창·포트 3001)
-
-| run        | FCP(ms)   | LCP(ms)     | CLS       |
-| ---------- | --------- | ----------- | --------- |
-| 1          | 247.8     | 1,441.6     | 0.000     |
-| 2          | 245.7     | 1,437.4     | 0.000     |
-| 3          | 247.1     | 1,400.2     | 0.000     |
-| 4          | 247.1     | 1,440.3     | 0.000     |
-| 5          | 245.9     | 1,435.7     | 0.000     |
-| **중앙값** | **247.1** | **1,437.4** | **0.000** |
-| 최솟값     | 245.7     | 1,400.2     | 0.000     |
-| 최댓값     | 247.8     | 1,441.6     | 0.000     |
-
-**위 Round 0~~headerfix 결과(홈 818.0ms/상품목록 737.7ms)보다 LCP가 약 600~~700ms 높게 나왔다.** 시크릿 창·다른 포트·다른 Lighthouse 세션(`13.3.0`)이라는 조건 차이가 있어 위쪽 본문 수치를 이 값으로 덮어쓰지는 않았다 — 원인이 시크릿 창인지, 포트(서버 인스턴스)인지, 세션 차이인지는 규명하지 않았고, 이 섹션은 "같은 코드에서 조건을 다르게 재보니 100점만큼 완벽하진 않더라"는 재확인 기록으로 남긴다. 그래도 Before(Part 0, 6,745.5ms/6,564.2ms) 대비로는 여전히 **홈 78.6%↓, 상품목록(`category=casual`) 78.1%↓**로 압도적인 개선이 유지된다.
-
-눈으로 보는 리포트: [`./lighthouse-recheck-incognito/home/run-1.html`](./lighthouse-recheck-incognito/home/run-1.html) ~ `run-5.html`, [`./lighthouse-recheck-incognito/products/run-1.html`](./lighthouse-recheck-incognito/products/run-1.html) ~ `run-5.html`
-
----
-
 ## Round 4 — DPR 1.25~1.5 srcset 갭 해소 + 상품 목록 이미지 반응형·지연 로딩
 
-위 "재측정 경험" 이후 크롬 DevTools에서 직접 Lighthouse를 돌려보다가 두 가지 경고를 추가로 발견했다.
+Round 3 적용 후 크롬 DevTools에서 직접 Lighthouse를 돌려보다가 두 가지 경고를 추가로 발견했다.
 
 - 홈 hero 이미지: "This image file is larger than it needs to be (1920×1080) for its displayed dimensions (1718×966). Use responsive images to reduce the image download size."
 - 상품 목록 카드 이미지: "Increasing the image compression factor could improve this image's download size." (간헐적으로 발생)
@@ -516,95 +482,66 @@ AVIF 전환으로 LCP가 소폭 더 줄었다(홈 837.5→819.1ms). `deviceSizes
 
 **`ABOVE_FOLD_COUNT`를 5로 고정한 근거**: 데스크톱(5열)이 그리드 열 수가 가장 많은 브레이크포인트라 "첫 줄"의 최댓값(5개)에 맞췄다. 태블릿(3열)·모바일(2열)에서는 실제 첫 줄이 3개·2개뿐이라 5개까지 eager 처리하면 2~3장을 더 미리 받게 되지만, 카드 이미지 한 장이 이미 `w=384` 기준으로 충분히 작아졌고(Round 4 원인 2에서 확인) 이 정도 초과분이 페이지 전체 로딩에 주는 영향은 미미하다고 판단했다 — 열 수별로 다른 상수를 쓰는 분기를 추가하는 복잡도 대비 얻는 이득이 작다고 봐서 단일 상수(5)로 유지하기로 했다. 정밀하게 맞추려면 `ResizeObserver`나 CSS 컨테이너 쿼리로 실제 열 수를 감지해야 하지만, 이번 변경 범위(용량·타이밍 최적화)에서는 과한 대응이라 보류했다.
 
-### 재측정 (Lighthouse, `localhost:3001`, 2026-08-05 UTC 23:38~23:40)
+### 사용자 직접 측정 — Round 4 상태 재확인(Lighthouse + Performance)
 
-측정 조건은 위 "재측정 경험"과 동일(Lighthouse CLI `13.3.0`, `--preset=desktop`, 시크릿 창, 포트 3001, cold load 5회).
+Round 0~3과 같은 방식으로, 사용자가 Round 4 코드 상태(hero `deviceSizes` 1800 추가, 상품 카드 반응형 `sizes`+lazy)로 직접 재확인했다.
 
-#### 홈(`/`) — 5회 raw 값 (Round 4 적용 후)
+- **측정 시점 코드 상태**: 커밋 `c56bfddc`와 동일한 파일 상태(`PageHeading.tsx`·`next.config.ts`·`ProductCard.tsx`·`ProductListSection.tsx`·`layout.css`·`HomeView.tsx`)를 Part 0 커밋(`61214cca`) 위에 그대로 적용
+- **측정 일시**: 2026-08-06 UTC 12:46(Performance 트레이스) / 12:44~12:48(Lighthouse)
+- **포트**: `localhost:3000`
 
-| run        | FCP(ms)   | LCP(ms)     | CLS       |
-| ---------- | --------- | ----------- | --------- |
-| 1          | 249.2     | 1,472.8     | 0.000     |
-| 2          | 245.4     | 1,465.2     | 0.000     |
-| 3          | 245.6     | 1,459.6     | 0.000     |
-| 4          | 246.5     | 1,461.7     | 0.000     |
-| 5          | 246.0     | 1,465.5     | 0.000     |
-| **중앙값** | **246.0** | **1,465.2** | **0.000** |
-| 최솟값     | 245.4     | 1,459.6     | 0.000     |
-| 최댓값     | 249.2     | 1,472.8     | 0.000     |
+#### Lighthouse — 홈 (`/`, 5회 raw 값, `--preset=desktop`)
 
-#### 상품 목록(`/products?category=casual`) — 5회 raw 값 (Round 4 적용 후)
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,388.3     | 2,122.4     | 0.000     |
+| 2          | 1,394.5     | 2,231.8     | 0.000     |
+| 3          | 1,390.1     | 2,125.2     | 0.000     |
+| 4          | 1,389.9     | 2,224.8     | 0.000     |
+| 5          | 1,390.0     | 2,225.0     | 0.000     |
+| **중앙값** | **1,390.0** | **2,224.8** | **0.000** |
+| 최솟값     | 1,388.3     | 2,122.4     | 0.000     |
+| 최댓값     | 1,394.5     | 2,231.8     | 0.000     |
 
-| run        | FCP(ms)   | LCP(ms)     | CLS       |
-| ---------- | --------- | ----------- | --------- |
-| 1          | 247.1     | 1,316.6     | 0.000     |
-| 2          | 246.7     | 1,339.4     | 0.000     |
-| 3          | 248.7     | 1,445.4     | 0.000     |
-| 4          | 244.9     | 1,431.9     | 0.000     |
-| 5          | 245.8     | 1,438.7     | 0.000     |
-| **중앙값** | **246.7** | **1,431.9** | **0.000** |
-| 최솟값     | 244.9     | 1,316.6     | 0.000     |
-| 최댓값     | 248.7     | 1,445.4     | 0.000     |
+눈으로 보는 리포트: [`./lighthouse/round4/1. lighthouse html 문서/home/run-1.html`](<./lighthouse/round4/1. lighthouse html 문서/home/run-1.html>) ~ `run-5.html`
 
-|                     | 재측정 경험(Round 4 이전) | Round 4 적용 후 |
-| ------------------- | ------------------------- | --------------- |
-| 홈 LCP 중앙값       | 1,441.1ms                 | 1,465.2ms       |
-| 상품목록 LCP 중앙값 | 1,437.4ms                 | 1,431.9ms       |
+#### Lighthouse — 상품 목록 (`/products?page=2`, 5회 raw 값, `--preset=desktop`)
 
-**LCP는 사실상 변화 없다(오차범위 내).** 예상된 결과다 — Round 4는 hero(=LCP 요소)가 아니라 ① hero의 DPR 1.25~1.5 구간, ② 뷰포트 밖 상품 카드 이미지의 전송량·요청 시점을 다뤘기 때문에, 헤드라인 LCP 수치에는 원래도 크게 반영되지 않는 변경이다. 대신 개선 효과는 위에서 실측한 개별 자원 단위 수치(hero `w=1920→1800`, 카드 `w=828→384`, 카드 5장 초과분만 lazy)로 확인한다.
+| run        | FCP(ms)     | LCP(ms)     | CLS       |
+| ---------- | ----------- | ----------- | --------- |
+| 1          | 1,388.0     | 2,155.0     | 0.000     |
+| 2          | 1,388.7     | 2,383.1     | 0.000     |
+| 3          | 1,389.5     | 2,896.0     | 0.000     |
+| 4          | 1,388.4     | 2,155.5     | 0.000     |
+| 5          | 1,389.8     | 2,894.6     | 0.000     |
+| **중앙값** | **1,389.5** | **2,383.1** | **0.000** |
+| 최솟값     | 1,388.0     | 2,155.0     | 0.000     |
+| 최댓값     | 1,389.8     | 2,896.0     | 0.000     |
 
-눈으로 보는 리포트: [`./lighthouse-round4-images/home/run-1.html`](./lighthouse-round4-images/home/run-1.html) ~ `run-5.html`, [`./lighthouse-round4-images/products/run-1.html`](./lighthouse-round4-images/products/run-1.html) ~ `run-5.html`
+눈으로 보는 리포트: [`./lighthouse/round4/1. lighthouse html 문서/products/run-1.html`](<./lighthouse/round4/1. lighthouse html 문서/products/run-1.html>) ~ `run-5.html`
 
----
+**Round 3 대비 계속 줄었다** — 홈 LCP 중앙값 2,882.0ms(Round3) → 2,224.8ms(Round4), **22.8%↓**. hero의 DPR 갭 해소(`w=1920→1800`)가 이 측정 환경(실제 DPR ~~1.5~~2로 추정)에서 실질적으로 반영된 것으로 보인다. 상품목록도 3,137.1ms → 2,383.1ms로 **24.0%↓**. FCP는 여전히 1,388~~1,395ms대 이례적 관측치(Round 0~~3와 동일 패턴).
 
-## 사용자 직접 녹화 — 홈·상품 목록 filmstrip(DevTools Performance 패널, 프로덕션)
+#### Performance — 홈(`/`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
 
-이전 filmstrip들은 전부 Playwright+CDP로 AI가 캡처한 것이었다. "몇 ms에 뭐가 보이는지"를 주장하는 타이밍 증거는 사용자가 직접 재는 게 공식이라는 기준(위 "성능 측정 규칙" 참고)에 따라, 사용자가 크롬 DevTools Performance 패널로 직접 녹화한 트레이스를 반영한다.
+| 시점      | 스크린샷                                                                                                     | 내용                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| t=621ms   | [`lighthouse/round4/2. performance/home/t621ms.jpg`](<./lighthouse/round4/2. performance/home/t621ms.jpg>)   | 셸 완성(FCP 시점과 근접), hero는 아직 배경색만 |
+| t=648ms   | [`lighthouse/round4/2. performance/home/t648ms.jpg`](<./lighthouse/round4/2. performance/home/t648ms.jpg>)   | **hero 이미 완전히 로드됨**                    |
+| t=919ms   | [`lighthouse/round4/2. performance/home/t919ms.jpg`](<./lighthouse/round4/2. performance/home/t919ms.jpg>)   | 안정                                           |
+| t=1,101ms | [`lighthouse/round4/2. performance/home/t1101ms.jpg`](<./lighthouse/round4/2. performance/home/t1101ms.jpg>) | 안정                                           |
+| t=1,218ms | [`lighthouse/round4/2. performance/home/t1218ms.jpg`](<./lighthouse/round4/2. performance/home/t1218ms.jpg>) | 안정                                           |
 
-- **측정 조건**: `localhost:3001`(프로덕션, `pnpm build && pnpm start`), DevTools Performance 패널 network throttling **"Fast 4G"**(다운로드 ≈988KB/s, RTT 165ms), 실제 디바이스 DPR 2(에뮬레이션 아님) — 이 조건이 앞으로의 측정 프로토콜로 고정됨(위 CLAUDE.md 규칙 참고)
-- **측정 시점 코드 상태**: 커밋 `c56bfddc`(Part 1 Round 4까지 적용된 상태)
-- **측정 일시**: 2026-08-06 UTC 02:59(상품 목록, `/products?category=casual`, 하드 리로드 2회 연속 기록 중 1회차) / 03:06(홈, `/`, 하드 리로드 1회 — 03:02에 처음 녹화했다가 같은 조건으로 재녹화한 03:06 결과로 교체)
-- **원본 트레이스**: 사용자가 제공한 DevTools Performance 트레이스 JSON(문서에는 미포함 — 용량이 커서 스크린샷만 추출해 반영)
+실측 FCP 633.1ms, LCP(hero) **633.1ms** — Round 1~~3(610~~639ms)과 같은 수준으로 여전히 매우 빠르다. DPR 1 환경이라 Round 4의 hero DPR 갭 해소(`w=1920→1800`, DPR 1.25~1.5 대상)는 이 조건에 영향을 주지 않는다 — 이미 Round 1부터 `w=1200`이 선택되고 있었다.
 
-### 실측 FCP/LCP (트레이스 이벤트 기준)
+#### Performance — 상품 목록(`/products`) filmstrip (DevTools Performance 패널, Slow 4G, 실제 DPR1)
 
-| 이벤트                                | 상품 목록(`/products?category=casual`) 1회차 | 상품 목록 2회차    | 홈(`/`)            |
-| ------------------------------------- | -------------------------------------------- | ------------------ | ------------------ |
-| FCP                                   | 377.7ms                                      | 364.4ms            | 364.0ms            |
-| LCP 후보 1(텍스트, 2,367px²)          | 377.7ms                                      | 364.4ms            | 364.0ms            |
-| LCP 후보 2(중간)                      | 673.3ms(10,701px²)                           | 664.4ms(10,701px²) | 664.0ms(42,307px²) |
-| **LCP 최종(hero 이미지, 810,000px²)** | **740.0ms**                                  | **735.3ms**        | **738.9ms**        |
+| 시점      | 스크린샷                                                                                                             | 내용                                                                      |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| t=12ms    | [`lighthouse/round4/2. performance/products/t12ms.jpg`](<./lighthouse/round4/2. performance/products/t12ms.jpg>)     | `loading.tsx` fallback("불러오는 중입니다…")                              |
+| t=1,265ms | [`lighthouse/round4/2. performance/products/t1265ms.jpg`](<./lighthouse/round4/2. performance/products/t1265ms.jpg>) | **hero 완전히 로드됨**                                                    |
+| t=1,655ms | [`lighthouse/round4/2. performance/products/t1655ms.jpg`](<./lighthouse/round4/2. performance/products/t1655ms.jpg>) | 안정                                                                      |
+| t=2,227ms | [`lighthouse/round4/2. performance/products/t2227ms.jpg`](<./lighthouse/round4/2. performance/products/t2227ms.jpg>) | 재안정(중간 구간에 카드 이미지 지연 로딩으로 보이는 일시적 흔들림 있었음) |
+| t=2,485ms | [`lighthouse/round4/2. performance/products/t2485ms.jpg`](<./lighthouse/round4/2. performance/products/t2485ms.jpg>) | 안정                                                                      |
 
-Lighthouse 헤드라인 LCP(Round 4 재측정 중앙값 — 상품목록 1,431.9ms, 홈 1,465.2ms)와 직접 비교하지 않는다 — 저건 Lantern 시뮬레이션값이고 이건 실제 로컬 네트워크에서 관측된 값이라 성격이 다르다(Part 0부터 계속 설명한 구조와 동일). 대신 이 트레이스 자체 안에서 "화면에 뭐가 언제 나오는지" 순서를 확인하는 데 쓴다. 홈·상품목록 모두 hero 이미지가 LCP 최종 후보이고 시점도 735~740ms로 거의 같다 — 같은 `PageHeading` 컴포넌트를 공유하니 당연한 결과.
-
-### filmstrip — 상품 목록(`/products?category=casual`)
-
-| 시점      | 스크린샷                                                                       | 내용                                                                                                     |
-| --------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| t=366ms   | [`filmstrip-user/products/t366ms.jpg`](./filmstrip-user/products/t366ms.jpg)   | `loading.tsx` fallback("불러오는 중입니다…")이 짧게 보임 — Lighthouse CLI 기반 측정에서는 못 잡았던 지점 |
-| t=663ms   | [`filmstrip-user/products/t663ms.jpg`](./filmstrip-user/products/t663ms.jpg)   | 셸(Header·필터·"상품 목록" 타이틀) 완성, hero는 아직 배경색만                                            |
-| t=741ms   | [`filmstrip-user/products/t741ms.jpg`](./filmstrip-user/products/t741ms.jpg)   | hero 이미지 완전히 로드 — LCP 최종 시점(740.0ms)과 정확히 일치                                           |
-| t=944ms   | [`filmstrip-user/products/t944ms.jpg`](./filmstrip-user/products/t944ms.jpg)   | 화면 동일하게 안정                                                                                       |
-| t=2,451ms | [`filmstrip-user/products/t2451ms.jpg`](./filmstrip-user/products/t2451ms.jpg) | 변화 없음(완료 상태 유지 확인)                                                                           |
-
-### filmstrip — 홈(`/`)
-
-| 시점      | 스크린샷                                                               | 내용                                                                                      |
-| --------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| t=356ms   | [`filmstrip-user/home/t356ms.jpg`](./filmstrip-user/home/t356ms.jpg)   | `(home)/loading.tsx` fallback("불러오는 중입니다…")이 짧게 보임 — 상품 목록과 동일한 패턴 |
-| t=657ms   | [`filmstrip-user/home/t657ms.jpg`](./filmstrip-user/home/t657ms.jpg)   | 셸(Header·"매일 새롭게 발견하는 취향" 타이틀·카테고리 시작) 완성, hero는 아직 배경색만    |
-| t=732ms   | [`filmstrip-user/home/t732ms.jpg`](./filmstrip-user/home/t732ms.jpg)   | hero 이미지 완전히 로드 — LCP 최종 시점(738.9ms)과 정확히 일치                            |
-| t=1,044ms | [`filmstrip-user/home/t1044ms.jpg`](./filmstrip-user/home/t1044ms.jpg) | 화면 동일하게 안정                                                                        |
-
-**새로 확인된 것**: 홈·상품 목록 둘 다 `loading.tsx` fallback("불러오는 중입니다…")이 실제로 짧게(FCP 시점, ~~360~~380ms) 화면에 뜬다 — React Server Components 스트리밍 구조상 셸이 먼저 플러시되고 실제 데이터가 담긴 세그먼트가 뒤이어 스트리밍되기 때문으로 보인다. AI가 Lighthouse CLI·CDP로 측정했던 이전 라운드들에서는 이 프레임이 문서화된 적이 없다.
-
----
-
-## 부록 — 최초 모바일 모드 측정값(참고용)
-
-Part 0과 같은 이유로 최초엔 모바일 모드(`412×823`, RTT 150ms, ≈1.47Mbps)로 측정됐던 값. 이 값은 별도 리사이즈 파일(`hero-1200x675.jpg`) 기준으로 측정된 Round 0 초기 결과이며, 참고용으로만 남긴다.
-
-| 페이지    | LCP Before(모바일, 중앙값) | LCP After(모바일, 중앙값) | 감소율 |
-| --------- | -------------------------- | ------------------------- | ------ |
-| 홈        | 40,805ms                   | 3,342ms                   | 91.8%  |
-| 상품 목록 | 40,430ms                   | 3,341ms                   | 91.7%  |
+LCP(hero, 810,000px²)가 이미지 요청 시작 후 **약 1,277.6ms**만에 확정됨 — Round 3(약 2,237ms)보다 **거의 절반으로 빨라졌다.** Round 4의 카드 이미지 lazy-loading(첫 5장만 즉시 로드)이 hero와의 대역폭 경쟁을 줄여준 것으로 보인다 — Round 3 결론에서 추정했던 "상품목록은 hero 외 리소스와 경쟁해서 느리다"는 가설과 맞아떨어지는 개선이다.
