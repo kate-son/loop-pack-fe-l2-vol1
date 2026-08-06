@@ -23,10 +23,12 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: banner.title,
       description: banner.description,
+      alternates: { canonical: '/' },
       openGraph: {
         ...COMMON_OPEN_GRAPH,
         title: banner.title,
         description: banner.description,
+        url: '/',
         images: [banner.image || OG_FALLBACK_IMAGE.url],
       },
     };

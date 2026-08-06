@@ -174,6 +174,22 @@ export const metadata: Metadata = {
 | **② 정상 empty** `/products?q=존재하지않는`          | `'존재하지않는' 검색 결과 \| Commerce`  | **최신순 · 조건에 맞는 상품이 0개입니다.** 다른 조건으로 찾아보세요. | **og-default.jpg**(fallback 유지)          |
 | **③ query failure**(`APP_ORIGIN=http://127.0.0.1:9`) | **`Commerce`**                          | 루트 공통 설명                                                       | og-default.jpg                             |
 
+### 최종 URL — `canonical`과 `og:url`로 정규화 결과를 드러낸다
+
+처음 구현에는 `canonical`도 `og:url`도 없어 **document에서 최종 URL을 확인할 수 없었다.** 완료조건이 이를 요구하므로, 정규화된 조건으로 URL을 다시 조립해 두 곳에 넣었다(`buildCanonicalPath`). 기본값(`all`·`latest`·1페이지)은 빼서 실제로 적용된 조건만 남긴다.
+
+| 요청 URL                                        | document의 `canonical` = 최종 URL                                            |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| `/products`                                     | `/products`                                                                  |
+| `/products?page=0`                              | **`/products`** — 하한 보정(0 → 1)이 반영돼 파라미터가 사라짐                |
+| `/products?category=nonexistent&sort=price-asc` | **`/products?sort=price-asc`** — 알 수 없는 category가 `all`로 보정돼 제외됨 |
+| `/products?q=셔츠&page=3`                       | `/products?q=%EC%85%94%EC%B8%A0&page=3`                                      |
+| `/`                                             | `/`                                                                          |
+
+**즉 파서 사전 보정(`page` 하한, `category` enum)의 결과가 document에 그대로 드러난다.** metadata가 본문과 같은 `loadProductSearchParams`를 쓰기 때문에, 여기 찍힌 URL이 곧 본문이 조회한 조건이다.
+
+> ③ query failure에는 `canonical`이 없다. `generateMetadata`가 빈 객체를 반환해 **페이지 metadata를 아예 만들지 않기 때문**이며, 루트에는 `canonical`이 없다(루트에 두면 모든 페이지가 `/`를 정본으로 주장하게 되어 잘못이다). 이 부재 자체가 "루트 상속" 동작의 증거다.
+
 **②와 ③이 서로 다른 fallback을 보인다** — ②는 **조건과 0건을 설명하는 페이지 metadata를 만들고** OG 이미지만 fallback을 쓰며, ③은 **페이지 metadata를 아예 만들지 않고**(빈 객체 반환) 루트 공통 metadata를 상속한다. `og:site_name`·`og:locale`·`og:type`은 네 경우 모두 유지된다(shallow merge 대응이 동작함).
 
 `robots: noindex`는 넣지 않았고, 기본 색인 가능 상태를 유지한다.
@@ -218,20 +234,41 @@ curl -A 'facebookexternalhit/1.1' -s -o /dev/null -w 'facebook start=%{time_star
 
 ## 완료조건 점검
 
-| 완료조건                                                | 결과                                                                                                                                                                         |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| normal의 document 증거                                  | ✅ [`captures/01-normal-products.html`](./captures/01-normal-products.html), [`02-normal-home.html`](./captures/02-normal-home.html)                                         |
-| 정상 empty의 document 증거                              | ✅ [`captures/03-empty-products.html`](./captures/03-empty-products.html)                                                                                                    |
-| metadata query failure의 document 증거                  | ✅ [`captures/04-metadata-failure-products.html`](./captures/04-metadata-failure-products.html), [`05-metadata-failure-home.html`](./captures/05-metadata-failure-home.html) |
-| 정상 empty와 query failure가 **서로 다른 fallback**     | ✅ ②는 0건을 설명하는 페이지 metadata 생성 + OG만 fallback / ③은 페이지 metadata 미생성 → 루트 상속                                                                          |
-| 서버 호출 계수와 **제거 여부**                          | ✅ 요청당 **1회** 확인, 임시 로그 제거 완료(소스·빌드 산출물 모두)                                                                                                           |
-| 일반 UA vs `facebookexternalhit` 응답 시점              | ✅ TTFB 0.004s vs 0.514s — 크롤러에는 스트리밍하지 않음                                                                                                                      |
-| document 응답에서 metadata·초기 구조·최종 URL 확인 가능 | ✅ 저장된 document에 `<title>`·`og:*`·`h2`·`href` 링크가 모두 담김                                                                                                           |
-| `robots: noindex`를 넣지 않고 기본 색인 가능 유지       | ✅ 넣지 않음                                                                                                                                                                 |
-| metadata와 본문이 같은 URL 정규화·query factory 사용    | ✅ `loadProductSearchParams` + `productsQueryOptions` 공유(호출 1회가 그 증거)                                                                                               |
-| `getQueryClient`를 singleton·영속 캐시로 바꾸지 않음    | ✅ `cache(() => new QueryClient())` 그대로                                                                                                                                   |
+과제 완료조건 문장을 항목별로 쪼개 **저장된 document와 실측으로** 대조했다.
 
-**모두 충족.** 초기 HTML 확인은 `curl`로 받은 **document Response**로 수행했다(JS 실행 전 상태).
+| 완료조건                                            | 결과 | 증거                                                                                                                                                             |
+| --------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| normal의 document 증거                              | ✅   | [`01-normal-products.html`](./captures/01-normal-products.html), [`02-normal-home.html`](./captures/02-normal-home.html)                                         |
+| 정상 empty의 document 증거                          | ✅   | [`03-empty-products.html`](./captures/03-empty-products.html)                                                                                                    |
+| metadata query failure의 document 증거              | ✅   | [`04-metadata-failure-products.html`](./captures/04-metadata-failure-products.html), [`05-metadata-failure-home.html`](./captures/05-metadata-failure-home.html) |
+| 서버 호출 계수                                      | ✅   | 4개 URL 모두 **요청당 1회**                                                                                                                                      |
+| 계측 **제거 여부**                                  | ✅   | 소스·빌드 산출물 양쪽에서 계측 문자열 없음을 확인                                                                                                                |
+| 일반 UA와 `facebookexternalhit` 응답 시점 비교      | ✅   | TTFB **0.007s vs 0.514s**                                                                                                                                        |
+| 정상 empty와 query failure가 **서로 다른 fallback** | ✅   | ②는 0건을 설명하는 페이지 metadata 생성(OG 이미지만 fallback) / ③은 페이지 metadata 미생성 → 루트 상속                                                           |
+| document에서 **metadata** 확인                      | ✅   | `<title>`·`description`·`og:title/description/image/site_name/locale/type`                                                                                       |
+| document에서 **초기 구조** 확인                     | ✅   | `<main>` 1개, `h2` 1개, `href` 링크 4개(JS 실행 전 document Response 기준)                                                                                       |
+| document에서 **최종 URL** 확인                      | ✅   | `canonical`·`og:url`에 정규화 결과가 드러남(`?page=0` → `/products`)                                                                                             |
+
+### 요구사항 항목별 확인
+
+| 요구사항                                                 | 결과                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------- |
+| 루트 `title.template`·공통 OG와 페이지 metadata 합성     | ✅ `%s \| Commerce` 적용 확인                            |
+| shallow merge 대응 — `siteName`·`locale`·`type` 유지     | ✅ 네 시나리오 모두 `Commerce / ko_KR / website` 유지    |
+| 홈: 응답의 title·description·image 사용                  | ✅ `매일 새롭게 발견하는 취향 \| Commerce` + 배너 이미지 |
+| 상품목록: 카테고리명·전체 개수·첫 상품 이미지 사용       | ✅ `패션, 가격 낮은순 · 전체 6개…` + `p26.jpg`           |
+| 검색어를 title에 **먼저** 반영                           | ✅ `'셔츠' 검색 결과`                                    |
+| category·sort를 description에 반영                       | ✅ 위와 동일                                             |
+| 2페이지 이상은 title에 페이지 번호                       | ✅ `상품 목록 (2페이지)`, `'케이스' 검색 결과 (3페이지)` |
+| 정상 empty에 0건 설명 + OG fallback image 유지           | ✅ `조건에 맞는 상품이 0개입니다` + `og-default.jpg`     |
+| 조회 실패 시 페이지별 빈 값 대신 root 상속               | ✅ 빈 객체 반환 → 루트 title·description·OG              |
+| `robots: noindex` 없이 기본 색인 가능 유지               | ✅ `robots` 메타 없음                                    |
+| metadata와 본문이 같은 URL 정규화·query factory 사용     | ✅ 호출 1회가 그 증거                                    |
+| `getQueryClient`를 singleton·영속 캐시로 바꾸지 않음     | ✅ `cache(() => new QueryClient())` 그대로               |
+| Browser Network가 아닌 **서버 측 계수**로 호출 횟수 판정 | ✅ Route Handler 임시 로그로 계수                        |
+| 초기 HTML을 document Response로 확인                     | ✅ `curl`로 받은 원본 HTML(JS 실행 전)                   |
+
+**모두 충족.**
 
 ## 결정 기록 — 코드 변경 전 정한 것
 

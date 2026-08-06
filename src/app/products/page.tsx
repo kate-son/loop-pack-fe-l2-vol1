@@ -22,6 +22,20 @@ const SORT_LABELS: Record<string, string> = {
   'price-desc': '가격 높은순',
 };
 
+/* AI-generated : Week 7 Part 3 — 정규화된 조건으로 최종 URL을 다시 만든다. 기본값(all·latest·1페이지)은
+   빼서 조건이 실제로 반영된 형태만 남기므로, page=0이나 알 수 없는 category로 들어와도 document의
+   canonical·og:url에는 보정된 최종 URL이 드러난다 */
+function buildCanonicalPath(query: ProductListQuery): string {
+  const params = new URLSearchParams();
+  if (query.q) params.set('q', query.q);
+  if (query.category && query.category !== 'all') params.set('category', query.category);
+  if (query.sort && query.sort !== 'latest') params.set('sort', query.sort);
+  if ((query.page ?? FIRST_PAGE) > FIRST_PAGE) params.set('page', String(query.page));
+
+  const search = params.toString();
+  return search ? `/products?${search}` : '/products';
+}
+
 /** 응답의 categories에서 이름을 찾는다 — 라벨을 페이지에 하드코딩하지 않기 위해 */
 function findCategoryName(data: ProductListResponse, categoryId: string): string | null {
   if (categoryId === 'all') return null;
@@ -63,14 +77,17 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     const title = buildTitle(query);
     const description = buildDescription(query, data);
     const firstProductImage = data.products[0]?.image;
+    const canonicalPath = buildCanonicalPath(query);
 
     return {
       title,
       description,
+      alternates: { canonical: canonicalPath },
       openGraph: {
         ...COMMON_OPEN_GRAPH,
         title,
         description,
+        url: canonicalPath,
         images: [firstProductImage || OG_FALLBACK_IMAGE.url],
       },
     };
