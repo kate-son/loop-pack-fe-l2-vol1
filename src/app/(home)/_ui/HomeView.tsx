@@ -16,6 +16,9 @@ import { categoriesMapper } from '@/entities/category/model/categoriesMapper';
 import type { CategoryId } from '@/entities/category/model/category';
 import { productsQueryOptions } from '@/entities/product/api/productsQueryOptions';
 
+/* AI-generated : Week 7 Part 3 — 제목 계층 정리. PageHeading의 페이지 제목이 h2인데 섹션 제목("카테고리",
+   "인기 상품", "신상품")도 같은 h2여서 한 페이지에 h2가 4개로 평평했다. 섹션 제목을 h3로 내려
+   "페이지 제목 h2 하나 + 그 아래 섹션 h3" 구조로 만든다 */
 /* AI-generated : Week 7 Part 1 — PageHeading을 QueryState 밖으로 빼서 Header처럼 homeQuery pending 여부와 무관하게 즉시 렌더. 배너 데이터 도착 전엔 고정 fallback 문구를 보여주다가 도착하면 실제 title/description으로 교체 */
 export function HomeView() {
   const homeQuery = useQuery(homeQueryOptions());
@@ -52,7 +55,7 @@ export function HomeView() {
           return (
             <>
               <section className="week05-section">
-                <h2>카테고리</h2>
+                <h3>카테고리</h3>
                 <div className="week05-categories">
                   {categories.map((category) => (
                     <Link
@@ -77,7 +80,7 @@ export function HomeView() {
                   emptyMessage="상품이 없습니다."
                   labelPrefix={title}
                 >
-                  <h2>{title}</h2>
+                  <h3>{title}</h3>
                 </ProductListSection>
               ))}
             </>
