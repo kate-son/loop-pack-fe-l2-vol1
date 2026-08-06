@@ -7,10 +7,6 @@ const nextConfig: NextConfig = {
   images: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1800, 1920, 2048, 2400, 3840],
     formats: ['image/avif', 'image/webp'],
-    /* AI-generated : Week 7 Part 2 Round 11 — hero(LCP 요소)를 q=65로 낮춰 전송량을 167,195 → 108,965 bytes로
-       34.8% 줄인다. 1200×514로 표시되는 사진이라 육안 비교에서 q=75와 차이가 확인되지 않았다.
-       Next 16은 여기 나열된 값만 허용하므로, 카드 이미지가 쓰는 기본값 75도 함께 남긴다 */
-    qualities: [65, 75],
   },
   compiler: {
     // 프로덕션 빌드에서 console.* 호출 제거 (error는 남겨서 실제 장애 로그는 유지)
