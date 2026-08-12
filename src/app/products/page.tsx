@@ -6,6 +6,7 @@ import { productsQueryOptions } from '@/entities/product/api/productsQueryOption
 import type { ProductListQuery, ProductListResponse } from '@/entities/product/model/product';
 import type { SearchParams } from 'nuqs';
 import { loadProductSearchParams } from '@/features/product-filter/model/loadProductSearchParams';
+import { toProductsQueryInput } from '@/features/product-filter/model/toProductsQueryInput';
 import { COMMON_OPEN_GRAPH, OG_FALLBACK_IMAGE } from '@/app/layout';
 
 type PageProps = {
@@ -67,12 +68,15 @@ function buildDescription(query: ProductListQuery, data: ProductListResponse): s
    fetch memoization이 걸려 Route Handler 호출이 1회로 유지된다.
    검색어는 title에 먼저, category·sort는 description에, 2페이지 이상은 title에 페이지 번호를 반영한다.
    0건이어도 OG fallback image는 유지하고, 조회 실패 시에는 페이지별 빈 값을 만들지 않고 빈 객체를 반환해
-   루트 공통 metadata를 상속시킨다 — 이 둘이 서로 다른 fallback이다 */
+   루트 공통 metadata를 상속시킨다 — 이 둘이 서로 다른 fallback이다
+   Week 7 Part 4 — productsQueryOptions에 넘길 입력을 여기서 직접 골라내지 않고 toProductsQueryInput
+   하나로 통일했다. 예전엔 이 함수는 query 전체를, 본문은 {q,category,sort,page}만 손으로 골라 넘겨서
+   productSearchParams에 필드가 늘면 한쪽만 갱신되고 다른 쪽은 그대로 남을 위험이 있었다 */
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   try {
     const query = await loadProductSearchParams(searchParams);
     const queryClient = getQueryClient();
-    const data = await queryClient.fetchQuery(productsQueryOptions(query));
+    const data = await queryClient.fetchQuery(productsQueryOptions(toProductsQueryInput(query)));
 
     const title = buildTitle(query);
     const description = buildDescription(query, data);
@@ -97,9 +101,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 }
 
 export default async function ProductListPage({ searchParams }: PageProps) {
-  const { q, category, sort, page } = await loadProductSearchParams(searchParams);
+  const query = await loadProductSearchParams(searchParams);
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(productsQueryOptions({ q, category, sort, page }));
+  await queryClient.prefetchQuery(productsQueryOptions(toProductsQueryInput(query)));
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <ProductView />
