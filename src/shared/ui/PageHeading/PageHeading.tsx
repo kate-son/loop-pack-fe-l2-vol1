@@ -54,6 +54,8 @@ export function PageHeading({
         sizes={HERO_SIZES}
         priority
         fetchPriority="high"
+        // Element Timing API 실험용 — React 타입 정의에 elementtiming이 아직 없어 우회
+        {...({ elementtiming: 'hero-image' } as Record<string, string>)}
       />
       <div className={styles.copy}>
         <p className={styles.eyebrow}>이번 주의 발견</p>
