@@ -48,4 +48,8 @@ next-env.d.ts
 
 # claude local-only files
 .claude/settings.json
+/.claude/skills.zip
 docs/local/*
+
+# pnpm local store
+/.pnpm-store/
