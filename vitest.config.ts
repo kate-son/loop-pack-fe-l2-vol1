@@ -20,6 +20,7 @@ const domTests = [
   'src/app/error.test.tsx',
   'src/app/(home)/error.test.tsx',
   'src/app/(home)/_ui/HomeView.test.tsx',
+  'src/app/products/_ui/ProductView.test.tsx',
   'src/app/products/error.test.tsx',
 ];
 
@@ -35,7 +36,7 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          exclude: ['**/node_modules/**', ...domTests],
+          exclude: ['**/node_modules/**', 'e2e/**', ...domTests],
           setupFiles: ['./test/msw/setup.ts'],
         },
       },

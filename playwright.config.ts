@@ -22,7 +22,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm build && pnpm start --hostname ${E2E_HOST} --port ${E2E_PORT}`,
+    command: `./node_modules/.bin/next build && ./node_modules/.bin/next start --hostname ${E2E_HOST} --port ${E2E_PORT}`,
+    env: { APP_ORIGIN: E2E_BASE_URL },
     url: E2E_BASE_URL,
     reuseExistingServer: false,
     timeout: 120_000,
