@@ -352,10 +352,23 @@ describe('상품 목록 조건 변경', () => {
           query.category === 'fashion' &&
           query.sort === 'price-desc' &&
           query.page === '2';
+        const isSecondDefaultPage =
+          query.q === null &&
+          query.category === null &&
+          query.sort === 'latest' &&
+          query.page === '2';
+        if (hasAppliedConditions) {
+          return HttpResponse.json(
+            productListResponse([FASHION_FIRST], { page: 2, pageSize: 1, totalCount: 2 }),
+          );
+        }
+        if (isSecondDefaultPage) {
+          return HttpResponse.json(
+            productListResponse([CASUAL_SECOND], { page: 2, pageSize: 1, totalCount: 2 }),
+          );
+        }
         return HttpResponse.json(
-          hasAppliedConditions
-            ? productListResponse([FASHION_FIRST], { page: 2, pageSize: 1, totalCount: 2 })
-            : productListResponse([CASUAL_FIRST]),
+          productListResponse([CASUAL_FIRST], { page: 1, pageSize: 1, totalCount: 2 }),
         );
       }),
     );
@@ -374,7 +387,7 @@ describe('상품 목록 조건 변경', () => {
     expect(screen.getByLabelText('검색')).toHaveValue('');
     expect(screen.getByLabelText('카테고리')).toHaveValue('all');
     expect(screen.getByLabelText('정렬')).toHaveValue('latest');
-    expect(screen.getByText('1 / 1')).toBeInTheDocument();
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
     expect(updatedQueryStrings.at(-1)).toBe('');
     expect(requests).toContainEqual({ q: null, category: null, sort: 'latest', page: '1' });
   });
