@@ -22,7 +22,7 @@
 
 `toggleSetItem`의 `if (set.has(item))`을 `if (!set.has(item))`으로 바꿨다. 상품 ID가 있으면 제거하고 없으면 추가해야 하는 두 분기를 동시에 반대로 동작하게 만든 변경이다.
 
-```ts
+```text
 // 변경 전
 if (set.has(item))
 
@@ -46,7 +46,7 @@ if (!set.has(item))
 
 상품 API 요청에 전달하는 `query`는 유지하고, React Query의 query key에 포함되는 객체에서만 `category`를 `undefined`로 변경했다. 요청 조건은 같아도 서로 다른 카테고리가 같은 캐시 항목으로 취급될 수 있는 결함을 만들었다.
 
-```ts
+```text
 // 변경 전
 queryKey: ['products', query];
 
@@ -70,7 +70,7 @@ queryKey: ['products', { ...query, category: undefined }];
 
 `resetQuery`가 검색어, 카테고리와 정렬만 기본값으로 바꾸고 `page`는 전달하지 않도록 변경했다. 테스트 코드는 그대로 두고 `ProductView.test.tsx`를 실행했지만 12개 테스트가 모두 통과했다.
 
-```ts
+```text
 // 변경 전
 const resetQuery = () => setParam(DEFAULT_PRODUCT_LIST_QUERY);
 
@@ -96,7 +96,7 @@ const resetQuery = () =>
 
 이제 페이지 2가 남아도 범위 초과 보정이 개입하지 않는다. 정상 구현에서는 초기화 후 기본 조건의 첫 번째 상품과 `1 / 2`가 표시되는지 확인한다.
 
-```ts
+```text
 const isSecondDefaultPage =
   query.q === null && query.category === null && query.sort === 'latest' && query.page === '2';
 
@@ -128,7 +128,7 @@ expect(screen.getByText('1 / 2')).toBeInTheDocument();
 
 `useQueryStates`의 기본 history 방식을 `push`에서 `replace`로 변경했다. 카테고리와 정렬을 바꿔도 새로운 history 항목을 추가하지 않고 현재 항목을 덮어쓰게 했다.
 
-```ts
+```text
 // 변경 전
 const [param, setParam] = useQueryStates(productSearchParams, {
   history: 'push',
