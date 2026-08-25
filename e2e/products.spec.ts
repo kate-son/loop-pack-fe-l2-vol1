@@ -65,10 +65,8 @@ test('기존 목록 없이 상품 라우트에 진입하면 production 로딩 �
   expect((await visibleProductNames(page)).length).toBeGreaterThan(0);
 });
 
-// Week 08 Step 2 추가 — 조작이 URL에 반영 / URL 재진입 정상/경계
-test('검색/카테고리/정렬/페이지 조작을 URL에 기록하고 같은 URL로 재진입하면 조건과 목록을 복원한다', async ({
-  page,
-}) => {
+// Week 08 Step 2 추가 — 조작이 URL에 반영: 검색/카테고리/정렬 정상
+test('검색과 카테고리와 정렬을 조작하면 각 조건이 URL 쿼리에 기록된다', async ({ page }) => {
   await page.goto('/products');
   await expect(page.getByRole('region', { name: '상품 검색 결과' })).toBeVisible();
 
@@ -83,33 +81,56 @@ test('검색/카테고리/정렬/페이지 조작을 URL에 기록하고 같은 
   });
   await page.getByRole('textbox', { name: '검색' }).fill('케이블 울');
   await searchResponse;
+
   await expectSearchParam(page, 'q', '케이블 울');
   await expectSearchParam(page, 'category', 'casual');
   await expectSearchParam(page, 'sort', 'price-asc');
-  const filteredUrl = page.url();
-  const filteredNames = await visibleProductNames(page);
+});
 
-  await page.goto('/');
-  await page.goto(filteredUrl);
+// Week 08 Step 2 추가 — URL로 재진입: 검색/카테고리/정렬 정상, 공백·한글 검색 조건 경계
+test('공백과 한글이 포함된 검색 조건이 담긴 URL로 진입하면 필터와 목록이 그 조건을 따른다', async ({
+  page,
+}) => {
+  await page.goto('/products?q=케이블%20울&category=casual&sort=price-asc');
+
   await expectFilters(page, { q: '케이블 울', category: 'casual', sort: 'price-asc' });
-  await expectProductNames(page, filteredNames);
+  await expectSearchParam(page, 'q', '케이블 울');
+  await expectProductNames(page, ['[Woman]케이블 울 니트 가디건_Ivory']);
+  await expect(page.getByText('총 1개')).toBeVisible();
+});
 
+// Week 08 Step 2 추가 — 조작이 URL에 반영: 페이지 정상
+test('다음 페이지로 이동하면 URL에 page가 기록되고 페이지 표시가 2로 바뀐다', async ({ page }) => {
   await page.goto('/products');
   await expect(page.getByRole('region', { name: '상품 검색 결과' })).toBeVisible();
+  await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible();
+
   const secondPageResponse = page.waitForResponse((candidate) => {
     const url = new URL(candidate.url());
     return url.pathname === '/api/products' && url.searchParams.get('page') === '2';
   });
   await page.getByRole('button', { name: '다음' }).click();
   await secondPageResponse;
-  await expectSearchParam(page, 'page', '2');
-  const secondPageUrl = page.url();
-  const secondPageNames = await visibleProductNames(page);
 
-  await page.goto('/');
-  await page.goto(secondPageUrl);
+  await expectSearchParam(page, 'page', '2');
   await expect(page.getByText(/^2 \/ \d+$/)).toBeVisible();
-  await expectProductNames(page, secondPageNames);
+});
+
+// Week 08 Step 2 추가 — URL로 재진입: 페이지 정상, 첫 페이지와 다른 상품 집합 경계
+test('page가 담긴 URL로 진입하면 페이지 표시와 첫 페이지와 겹치지 않는 목록을 복원한다', async ({
+  page,
+}) => {
+  await page.goto('/products');
+  const firstPageNames = await visibleProductNames(page);
+  await expect(page.getByText(/^1 \/ \d+$/)).toBeVisible();
+
+  await page.goto('/products?page=2');
+
+  await expect(page.getByText(/^2 \/ \d+$/)).toBeVisible();
+  await expect(page.getByRole('button', { name: '이전' })).toBeEnabled();
+  const secondPageNames = await visibleProductNames(page);
+  expect(secondPageNames.length).toBeGreaterThan(0);
+  expect(secondPageNames.filter((name) => firstPageNames.includes(name))).toEqual([]);
 });
 
 // Week 08 Step 2 추가 — 뒤로/앞으로 가기로 필터 복원 정상/경계
