@@ -35,10 +35,15 @@ export function useLogoutMutation() {
   });
 }
 
-/** 로그인한 사람에게 매인 클라이언트 상태를 초기 상태로 되돌린다 */
+/**
+ * 로그인한 사람에게 매인 클라이언트 상태를 초기 상태로 되돌린다.
+ *
+ * 스토어 필드를 직접 세팅하지 않고 액션을 부른다. 자료구조가 바뀌어도 이 파일은 그대로다.
+ * 저장소까지 지우는 건 다음 rehydrate가 지워진 값을 되살리지 않게 하기 위해서다.
+ */
 function clearUserScopedState(): void {
-  useCartStore.setState({ productIds: new Set<string>() });
+  useCartStore.getState().clearCart();
   useCartStore.persist.clearStorage();
-  useWishlistStore.setState({ productIds: new Set<string>() });
+  useWishlistStore.getState().clearWishlist();
   useWishlistStore.persist.clearStorage();
 }

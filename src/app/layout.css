@@ -231,6 +231,44 @@
   border-top: 1px solid #c8c8c8;
 }
 
+/* 표만 가로로 스크롤한다. 페이지 전체가 흔들리면 다른 요소까지 밀린다 */
+.week05-table-scroll {
+  overflow-x: auto;
+}
+
+.week05-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* 표 이름이자 건수 표시. 제목은 PageHeading이 이미 주므로 여기서는 정보만 얹는다 */
+.week05-table caption {
+  padding-bottom: 8px;
+  text-align: left;
+}
+
+.week05-table th,
+.week05-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #c8c8c8;
+  white-space: nowrap;
+}
+
+/* 행 머리글(주문번호)은 의미상 th지만 값이므로 본문과 같은 굵기로 둔다 */
+.week05-table tbody th {
+  font-weight: normal;
+}
+
+.week05-table thead th {
+  font-weight: 600;
+}
+
+/* 수량처럼 자릿수를 비교하는 값은 오른쪽으로 맞춘다 */
+.week05-table__number {
+  text-align: right;
+}
+
 .week05-pagination {
   justify-content: center;
   margin-top: 32px;
