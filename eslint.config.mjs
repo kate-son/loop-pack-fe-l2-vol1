@@ -112,6 +112,34 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // Edge 런타임 경계 — src/proxy.ts는 Edge에서 돈다.
+  // node:crypto를 쓰는 src/app/api/_data/auth.ts가 여기로 딸려 들어오면 next build는 경고만 내고
+  // 통과한 뒤 실제 요청에서 500이 난다. 빌드로 잡히지 않는 실수라 규칙으로 막는다.
+  //
+  // boundaries/elements로는 막을 수 없다 — element 패턴은 폴더만 매칭해서 루트 파일인
+  // src/proxy.ts가 어떤 element에도 분류되지 않고, 그러면 boundaries/dependencies가 이 파일을
+  // 아예 검사하지 않는다(위반을 주입해 확인함). 그래서 파일 범위 규칙으로 직접 막는다.
+  {
+    files: ['src/proxy.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/app/*', '@/entities/*', '@/features/*', '@/widgets/*'],
+              message:
+                'proxy는 Edge에서 돈다. shared(@/shared/*)만 참조할 것 — 상위 레이어는 Node 전용 모듈을 끌고 올 수 있고, 그 실패는 build가 아니라 실행에서 500으로 나타난다.',
+            },
+            {
+              group: ['node:*'],
+              message: 'Edge 런타임에는 Node 내장 모듈이 없다.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     // react-hooks 플러그인은 nextVitals가 '**/*.{js,jsx,mjs,ts,tsx,mts,cts}'에만 등록함(.cjs 등은 제외).
     // 이 블록도 같은 범위로 제한하지 않으면 commitlint.config.cjs 같은 파일에서
@@ -168,6 +196,17 @@ const eslintConfig = defineConfig([
           Image: 'img',
         },
       },
+    },
+  },
+  // 이벤트 로거는 콘솔 출력이 목적이라 no-console을 끈다.
+  // 이 규칙은 "디버깅 로그가 프로덕션 번들에 실리는 것"을 막으려는 것인데,
+  // consoleProvider는 개발 중 확인용 프로바이더로 콘솔에 찍는 게 존재 이유이고
+  // logger는 프로바이더 초기화·전송 실패를 알리는 자리다. 프로덕션 번들에서는
+  // next.config.ts의 removeConsole이 error를 뺀 나머지를 걷어낸다.
+  {
+    files: ['src/analytics/**/*.ts'],
+    rules: {
+      'no-console': 'warn',
     },
   },
   // Override default ignores of eslint-config-next.
