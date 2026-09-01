@@ -19,6 +19,7 @@ const domTests = [
   'src/shared/ui/QueryState/QueryState.test.tsx',
   'src/app/error.test.tsx',
   'src/app/(home)/error.test.tsx',
+  'src/app/providers.test.ts',
   'src/app/(home)/_ui/HomeView.test.tsx',
   'src/app/products/_ui/ProductView.test.tsx',
   'src/app/products/error.test.tsx',
