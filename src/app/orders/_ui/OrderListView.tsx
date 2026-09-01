@@ -8,6 +8,7 @@ import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { formatDateTime } from '@/shared/lib/formatDateTime';
 import { ordersQueryOptions } from '@/entities/order/api/ordersQueryOptions';
+import { toRecentFirst } from '@/entities/order/model/order';
 import type { OrderItem } from '@/entities/order/model/order';
 
 /** 상품 열에 그대로 나열하지 않고 앞의 몇 개만 보여준다 */
@@ -65,7 +66,7 @@ export function OrderListView() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map((order) => (
+                      {toRecentFirst(orders).map((order) => (
                         <tr key={order.id}>
                           <th scope="row">{order.id}</th>
                           <td>{describeProducts(order.items)}</td>
