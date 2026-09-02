@@ -10,6 +10,8 @@ import { Pagination } from '@/shared/ui/Pagination/Pagination';
 import { QueryState } from '@/shared/ui/QueryState';
 import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useProductList } from '@/entities/product/api/useProductList';
+import { useScreenViewOnce } from '@/analytics/useScreenViewOnce';
+import { trackProductListView } from '@/analytics/trackEvents';
 
 const INITIAL_PAGE = 1;
 
@@ -20,6 +22,8 @@ export default function ProductView() {
   const { q, category, sort, page, setQuery, setCategory, setSort, setPage, resetQuery } =
     useProductListParams();
   const productListQuery = useProductList({ q, category, sort, page });
+
+  useScreenViewOnce(() => trackProductListView({ category, sort, page }));
 
   useEffect(() => {
     const data = productListQuery.data;

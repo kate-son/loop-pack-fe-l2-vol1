@@ -3,6 +3,8 @@
 import { Header } from '@/widgets/header/ui/Header';
 import { PageHeading } from '@/shared/ui/PageHeading/PageHeading';
 import { LoginForm } from '@/features/auth-login/ui/LoginForm';
+import { useScreenViewOnce } from '@/analytics/useScreenViewOnce';
+import { trackLoginStart } from '@/analytics/trackEvents';
 
 type LoginViewProps = {
   /** 로그인 후 이동할 내부 경로. 페이지에서 이미 검증해 넘긴다 */
@@ -12,6 +14,8 @@ type LoginViewProps = {
 };
 
 export function LoginView({ redirectPath, expired }: LoginViewProps) {
+  useScreenViewOnce(() => trackLoginStart(redirectPath));
+
   return (
     <div className="week05-page">
       <Header />

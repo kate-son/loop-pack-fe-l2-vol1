@@ -6,6 +6,10 @@ import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
 import { DEFAULT_REDIRECT_PATH } from '@/shared/lib/safeRedirectPath';
+import { syncAnalyticsUser } from '@/analytics/trackEvents';
+import { ApiError } from '@/shared/api/response';
+
+const LOGOUT_FAILED_MESSAGE = '로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 
 /**
  * 로그아웃하고 클라이언트에 남은 사용자 흔적을 정리한다.
@@ -23,11 +27,20 @@ export function useLogoutMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      // 응답을 확인하지 않으면 서버가 실패로 답해도 성공 처리가 이어진다. 그러면 서버에는
+      // 로그인이 남았는데 화면만 로그아웃된 것처럼 보이고, 계측의 사용자도 먼저 사라진다
+      if (!response.ok) {
+        throw new ApiError(response.status, LOGOUT_FAILED_MESSAGE);
+      }
     },
     onSuccess: () => {
-      clearUserScopedState();
+      // 로그아웃은 시드 로그에 없는 이벤트라 계측하지 않는다.
+      // 세션 캐시를 비우는 것이 이후 이벤트에서 userId를 떼는 일이고, 뒤따르는 이벤트가
+      // 없어도 프로바이더가 이전 사용자를 붙들지 않도록 여기서 한 번 맞춘다
       queryClient.setQueryData(SESSION_QUERY_KEY, null);
+      syncAnalyticsUser();
+      clearUserScopedState();
       router.replace(DEFAULT_REDIRECT_PATH);
       // 보호 경로에 서버가 그려둔 화면이 남아 있을 수 있어 서버 렌더를 다시 받는다
       router.refresh();
