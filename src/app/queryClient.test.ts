@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createQueryClient } from './providers';
+import { createQueryClient } from './queryClient';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
 import { ApiError, UNAUTHORIZED_STATUS } from '@/shared/api/response';
 import type { AuthUser } from '@/entities/session/model/session';
@@ -30,7 +30,7 @@ type RouterSpy = ReturnType<typeof createRouterSpy>;
 
 function setup() {
   const router = createRouterSpy();
-  const client = createQueryClient(router as unknown as Parameters<typeof createQueryClient>[0]);
+  const client = createQueryClient((path) => router.replace(path));
   return { router, client };
 }
 
