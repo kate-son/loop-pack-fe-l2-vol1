@@ -82,13 +82,16 @@ let browserClient: QueryClient | null = null;
 /**
  * 브라우저에서 쓰는 QueryClient. 탭 하나에 하나다.
  *
+ * 서버가 dehydrate에 쓰는 `shared/api/getQueryClient`와는 다른 것이다. 그쪽은 요청마다 새로
+ * 만들어 데이터를 실어 보내는 용도이고, 이쪽은 401 처리기를 달고 탭 전체가 함께 쓰는 캐시다.
+ *
  * 렌더 밖에서도 같은 캐시를 읽어야 해서 싱글턴으로 둔다. 계측의 공통 프로퍼티가 이벤트마다
  * 세션 캐시를 읽는데, 그 코드는 React 훅을 쓸 수 없는 자리에 있다. 렌더가 버려져도 인스턴스는
  * 하나뿐이라 버려진 렌더의 캐시를 붙들고 있을 여지도 없다.
  *
  * 서버에서는 요청마다 새로 만든다. 요청 사이에 캐시가 섞이면 다른 사용자의 데이터가 보인다.
  */
-export function getQueryClient(): QueryClient {
+export function getBrowserQueryClient(): QueryClient {
   if (typeof window === 'undefined') {
     return createQueryClient();
   }

@@ -2,7 +2,7 @@
 
 import { setupAnalytics } from '@/analytics/setup';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
-import { getQueryClient } from './queryClient';
+import { getBrowserQueryClient } from './queryClient';
 import type { AuthUser } from '@/entities/session/model/session';
 
 /**
@@ -19,5 +19,6 @@ import type { AuthUser } from '@/entities/session/model/session';
 setupAnalytics({
   // 이벤트마다 세션 캐시를 읽는다. 로그인 성공·새로고침·만료·로그아웃이 모두 이 캐시를 바꾸므로,
   // 어느 경로로 상태가 바뀌든 다음 이벤트부터 바로 반영된다
-  readUserId: () => getQueryClient().getQueryData<AuthUser | null>(SESSION_QUERY_KEY)?.id ?? null,
+  readUserId: () =>
+    getBrowserQueryClient().getQueryData<AuthUser | null>(SESSION_QUERY_KEY)?.id ?? null,
 });

@@ -6,7 +6,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { useRouter } from 'next/navigation';
 import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
-import { getQueryClient, setLoginRedirect } from './queryClient';
+import { getBrowserQueryClient, setLoginRedirect } from './queryClient';
 import './analyticsBootstrap';
 
 /**
@@ -22,7 +22,7 @@ export function MainProvider({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [queryClient] = useState(getQueryClient);
+  const [queryClient] = useState(getBrowserQueryClient);
 
   // 401 처리기가 쓸 이동 방법을 넘긴다. 401은 사용자 조작 뒤에만 오므로 이 시점이면 늦지 않다
   useEffect(() => {

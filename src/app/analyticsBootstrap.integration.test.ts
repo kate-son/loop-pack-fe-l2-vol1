@@ -6,7 +6,7 @@ import {
   trackProductListView,
 } from '@/analytics/trackEvents';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
-import { getQueryClient } from './queryClient';
+import { getBrowserQueryClient } from './queryClient';
 import type { AnalyticsProvider, EventProperties } from '@/analytics/provider';
 import type { AuthUser } from '@/entities/session/model/session';
 
@@ -52,7 +52,7 @@ beforeEach(() => {
   // 캐시도 "프로바이더에 마지막으로 알린 사용자"도 모듈에 남아 이 파일의 테스트가 공유한다.
   // 캐시만 비우면 알린 사용자는 이전 테스트의 값 그대로라, 다음 테스트에서 같은 사용자로 보여
   // identify가 나가지 않는다. 로그아웃 상태까지 맞춘 뒤에 기록을 비운다
-  getQueryClient().setQueryData(SESSION_QUERY_KEY, null);
+  getBrowserQueryClient().setQueryData(SESSION_QUERY_KEY, null);
   syncAnalyticsUser();
   calls.length = 0;
 });
@@ -60,7 +60,7 @@ beforeEach(() => {
 describe('세션 캐시와 계측의 연결', () => {
   // 서버가 심어 준 세션은 이 캐시로 들어온다. 로그인 함수를 거치지 않는 경로다
   it('캐시에 로그인 세션이 있으면 첫 이벤트 앞에 identify가 오고 그 이벤트에 userId가 실린다', () => {
-    getQueryClient().setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
+    getBrowserQueryClient().setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
 
     trackProductListView({ category: 'all', sort: 'latest', page: 1 });
 
@@ -76,7 +76,7 @@ describe('세션 캐시와 계측의 연결', () => {
 
   // 로그인 mutation이 하는 일도 이 캐시를 채우는 것 하나다
   it('로그인이 캐시를 채운 뒤 보낸 login_success에 userId가 실린다', () => {
-    getQueryClient().setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
+    getBrowserQueryClient().setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
 
     trackLoginSuccess('/orders');
 
@@ -92,11 +92,11 @@ describe('세션 캐시와 계측의 연결', () => {
 
   // 만료와 로그아웃이 캐시를 비운다
   it('캐시가 비면 다음 이벤트 앞에 reset이 오고 그 이벤트에는 userId가 없다', () => {
-    getQueryClient().setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
+    getBrowserQueryClient().setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
     trackProductListView({ category: 'all', sort: 'latest', page: 1 });
     calls.length = 0;
 
-    getQueryClient().setQueryData(SESSION_QUERY_KEY, null);
+    getBrowserQueryClient().setQueryData(SESSION_QUERY_KEY, null);
     trackProductListView({ category: 'all', sort: 'latest', page: 1 });
 
     expect(calls[0]).toEqual({ kind: 'reset' });
