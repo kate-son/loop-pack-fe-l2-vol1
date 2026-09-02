@@ -29,6 +29,10 @@ const eslintConfig = defineConfig([
         { type: 'features', pattern: 'src/features/*/**', capture: ['slice'] },
         { type: 'entities', pattern: 'src/entities/*/**', capture: ['slice'] },
         { type: 'shared', pattern: 'src/shared/**' },
+        // 계측은 FSD 슬라이스가 아니라 가로지르는 기반 모듈이다. 어느 레이어에도 넣지 않으면
+        // boundaries가 이 폴더를 아예 검사하지 않아(위반을 주입해 확인함) A-8의 분리가
+        // 개발자 주의에만 기대게 된다. 별도 타입으로 등록해 허용 방향을 명시한다.
+        { type: 'analytics', pattern: 'src/analytics/**' },
       ],
       // 테스트 파일은 "test" 카테고리로 분류 — 통합 테스트가 여러 슬라이스를 가로질러 import해야
       // 하는 건 정상이라, 아래 정책에서 이 카테고리만 예외로 허용한다.
@@ -44,7 +48,11 @@ const eslintConfig = defineConfig([
             {
               from: { file: { categories: 'test' } },
               allow: {
-                to: { element: { types: ['app', 'widgets', 'features', 'entities', 'shared'] } },
+                to: {
+                  element: {
+                    types: ['app', 'widgets', 'features', 'entities', 'shared', 'analytics'],
+                  },
+                },
               },
             },
             {
@@ -73,9 +81,21 @@ const eslintConfig = defineConfig([
               allow: { to: { element: { type: 'entities' } } },
               dependency: { kind: 'type' },
             },
+            // 계측은 shared와 자기 자신만 값으로 참조한다. 이벤트 프로퍼티가 도메인 용어를
+            // 그대로 쓰도록 entities는 타입 전용으로만 연다 — 값까지 열면 계측이 도메인 로직을
+            // 끌고 들어와, 화면과 분리했다는 A-8의 전제가 무너진다.
+            {
+              from: { element: { type: 'analytics' } },
+              allow: { to: { element: { types: ['shared', 'analytics'] } } },
+            },
+            {
+              from: { element: { type: 'analytics' } },
+              allow: { to: { element: { type: 'entities' } } },
+              dependency: { kind: 'type' },
+            },
             {
               from: { element: { type: 'features' } },
-              allow: { to: { element: { types: ['shared', 'entities'] } } },
+              allow: { to: { element: { types: ['shared', 'entities', 'analytics'] } } },
             },
             {
               from: { element: { type: 'features' } },
@@ -90,7 +110,7 @@ const eslintConfig = defineConfig([
             },
             {
               from: { element: { type: 'widgets' } },
-              allow: { to: { element: { types: ['shared', 'entities', 'features'] } } },
+              allow: { to: { element: { types: ['shared', 'entities', 'features', 'analytics'] } } },
             },
             {
               from: { element: { type: 'widgets' } },
@@ -105,7 +125,11 @@ const eslintConfig = defineConfig([
             },
             {
               from: { element: { type: 'app' } },
-              allow: { to: { element: { types: ['shared', 'entities', 'features', 'widgets'] } } },
+              allow: {
+                to: {
+                  element: { types: ['shared', 'entities', 'features', 'widgets', 'analytics'] },
+                },
+              },
             },
           ],
         },
