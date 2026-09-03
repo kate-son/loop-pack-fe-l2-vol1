@@ -58,7 +58,7 @@ describe('readSingleParam', () => {
 
   // ?next=a&next=b 로 검증을 흔들 수 있어 배열은 신뢰하지 않는다
   it('배열과 없음은 null로 돌려준다', () => {
-    expect(readSingleParam(['/orders', '//evil.com'])).toBeNull();
+    expect(readSingleParam(['/orders', '//example.com'])).toBeNull();
     expect(readSingleParam([])).toBeNull();
     expect(readSingleParam(undefined)).toBeNull();
   });

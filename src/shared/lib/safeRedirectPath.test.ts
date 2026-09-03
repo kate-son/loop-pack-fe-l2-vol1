@@ -22,24 +22,24 @@ describe('safeRedirectPath', () => {
   });
 
   it('절대 URL은 홈으로 보낸다', () => {
-    expect(safeRedirectPath('https://evil.com')).toBe(DEFAULT_REDIRECT_PATH);
-    expect(safeRedirectPath('http://evil.com/orders')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('https://example.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('http://example.com/orders')).toBe(DEFAULT_REDIRECT_PATH);
     expect(safeRedirectPath('javascript:alert(1)')).toBe(DEFAULT_REDIRECT_PATH);
   });
 
   // 앞의 '/' 하나만 보고 통과시키면 브라우저가 외부 호스트로 해석하는 형태
   it('protocol-relative 형태는 홈으로 보낸다', () => {
-    expect(safeRedirectPath('//evil.com')).toBe(DEFAULT_REDIRECT_PATH);
-    expect(safeRedirectPath('//evil.com/orders/new')).toBe(DEFAULT_REDIRECT_PATH);
-    expect(safeRedirectPath('/\\evil.com')).toBe(DEFAULT_REDIRECT_PATH);
-    expect(safeRedirectPath('/\\\\evil.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('//example.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('//example.com/orders/new')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('/\\example.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('/\\\\example.com')).toBe(DEFAULT_REDIRECT_PATH);
   });
 
   // 브라우저가 URL 해석 전에 떼어내는 문자로 검사를 우회하지 못해야 한다
   it('앞쪽 공백·제어문자를 붙여도 우회되지 않는다', () => {
-    expect(safeRedirectPath('  //evil.com')).toBe(DEFAULT_REDIRECT_PATH);
-    expect(safeRedirectPath('\n//evil.com')).toBe(DEFAULT_REDIRECT_PATH);
-    expect(safeRedirectPath('\t//evil.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('  //example.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('\n//example.com')).toBe(DEFAULT_REDIRECT_PATH);
+    expect(safeRedirectPath('\t//example.com')).toBe(DEFAULT_REDIRECT_PATH);
     expect(safeRedirectPath('  /orders')).toBe('/orders');
   });
 

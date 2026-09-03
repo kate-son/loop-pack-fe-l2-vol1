@@ -5,10 +5,10 @@
  * 그 값은 주소창에서 온 것이라 그대로 믿고 이동하면 외부 주소로 튕겨나간다.
  *
  * 통과 조건 세 가지 —
- * 1. `/`로 시작한다. 절대 URL(`https://evil.com`)을 막는다.
- * 2. `//` 또는 `/\`로 시작하지 않는다. `//evil.com`은 protocol-relative URL이라 앞의
+ * 1. `/`로 시작한다. 절대 URL(`https://example.com`)을 막는다.
+ * 2. `//` 또는 `/\`로 시작하지 않는다. `//example.com`은 protocol-relative URL이라 앞의
  *    `/` 하나만 보고 통과시키면 브라우저가 외부 절대 주소로 해석한다. 브라우저는 URL을
- *    해석할 때 `\`를 `/`처럼 다루므로 `/\evil.com`도 같은 결과가 된다.
+ *    해석할 때 `\`를 `/`처럼 다루므로 `/\example.com`도 같은 결과가 된다.
  * 3. 로그인 경로로 되돌아가지 않는다. 로그인 후 다시 로그인 화면으로 가면 루프가 된다.
  *
  * 하나라도 어기면 홈으로 떨어뜨린다. 값을 고쳐서 살려내지 않는다 — 조작된 값을 보정하면
@@ -45,11 +45,11 @@ export function isExpiredFlag(value: string | null | undefined): boolean {
 
 /**
  * 브라우저가 URL을 해석하기 전에 떼어내는 앞쪽 공백·제어문자.
- * `\n/evil.com` 같은 값이 검사를 우회하지 못하도록 같은 기준으로 먼저 정리한다.
+ * `\n/example.com` 같은 값이 검사를 우회하지 못하도록 같은 기준으로 먼저 정리한다.
  */
 const LEADING_BLANK_PATTERN = /^[\u0000-\u0020]+/;
 
-/** `//evil.com` `/\evil.com` — 호스트로 해석될 수 있는 시작 형태 */
+/** `//example.com` `/\example.com` — 호스트로 해석될 수 있는 시작 형태 */
 const PROTOCOL_RELATIVE_PATTERN = /^\/[/\\]/;
 
 /**
