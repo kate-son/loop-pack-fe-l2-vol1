@@ -242,6 +242,7 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     'dist/**', // 빌드 산출물 제외하기 위해 추가
     '.claude/**', //이 프로젝트와 무관한 격리된 git worktree 제외하기 위해 추가
+    'docs/local/**', //gitignore된 로컬 작업물(분석 스크립트 등) 제외
   ]),
 ]);
 
