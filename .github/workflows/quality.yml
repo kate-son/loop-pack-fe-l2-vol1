@@ -12,6 +12,9 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    # 멈춘 job이 러너를 무한히 잡고 있지 않도록 상한을 둔다.
+    # 조건 고정 이전 관측에서 job 전체가 36초였으므로 10분은 정상 실행을 끊지 않는다.
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -33,5 +36,14 @@ jobs:
           if pnpm exec playwright --version >/dev/null 2>&1; then
             pnpm exec playwright install --with-deps chromium
           fi
-      - name: Run quality checks
-        run: pnpm check
+      # pnpm check를 step으로 나눈 이유는 계측이다. 단일 step에서는 test/lint/typecheck/build 중
+      # 어디가 긴지 로그에서 구분되지 않는다. 실행 순서와 검증 집합은 pnpm check와 같다.
+      # 이 구성은 Before/After 측정 내내 동일하게 유지한다 (docs/rfc/week10-step01.md 0-1).
+      - name: Test
+        run: pnpm test
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build
+        run: pnpm build

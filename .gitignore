@@ -53,7 +53,15 @@ next-env.d.ts
 # claude local-only files
 .claude/settings.json
 /.claude/skills.zip
+/.claude/skills/
 docs/local/*
+
+# 작업 중 통합 문서 — 내용이 단계별 문서(week10-step01.md 등)로 이관되면 삭제한다
+docs/rfc/week*-ci.md
+
+# 판단 근거 초안 — 파일명에 decision이 들어간 문서
+# 이미 추적 중인 docs/decisions-week0*.md에는 영향이 없다(gitignore는 추적 중인 파일을 제외하지 못함)
+*decision*
 
 # pnpm local store
 /.pnpm-store/
