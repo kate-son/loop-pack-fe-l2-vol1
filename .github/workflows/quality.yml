@@ -13,7 +13,7 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     # 멈춘 job이 러너를 무한히 잡고 있지 않도록 상한을 둔다.
-    # 조건 고정 이전 관측에서 job 전체가 36초였으므로 10분은 정상 실행을 끊지 않는다.
+    # 관측된 최장 실행 시간 114초보다 여유를 두어 상한을 10분으로 설정했다.
     timeout-minutes: 10
     steps:
       - name: Checkout
