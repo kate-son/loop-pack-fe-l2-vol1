@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { server } from '../../../../test/msw/server';
+import { ORDERS_QUERY_KEY } from '@/entities/order/api/ordersQueryOptions';
 import { registerProviders, resetAnalyticsForTest, initAnalytics } from '@/analytics/logger';
 import { resetAnalyticsSetupForTest, setupAnalytics } from '@/analytics/setup';
 import type { AnalyticsProvider, EventProperties } from '@/analytics/provider';
@@ -42,12 +43,12 @@ function renderLoginMutation() {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
   const { result } = renderHook(() => useLoginMutation('/orders'), { wrapper });
-  return result;
+  return { result, queryClient };
 }
 
 /** 마지막으로 남은 login_fail의 사유 */
 async function loginFailReason(): Promise<unknown> {
-  const result = renderLoginMutation();
+  const { result } = renderLoginMutation();
   result.current.mutate({ email: 'looper1@loopers.dev', password: 'x' });
   await waitFor(() => expect(result.current.isError).toBe(true));
   return tracked.find((row) => row.event === 'login_fail')?.properties.reason;
@@ -96,5 +97,24 @@ describe('login_fail의 사유', () => {
     );
 
     await expect(loginFailReason()).resolves.toBe('UNKNOWN_ERROR');
+  });
+});
+
+describe('사용자 전환과 주문 캐시', () => {
+  // QueryClient는 탭에 하나뿐이다. 만료로 로그인 화면에 온 뒤 다른 계정으로 들어오면
+  // 이전 사용자의 주문 내역이 캐시에 남아 있다
+  it('로그인에 성공하면 이전 사용자의 주문 캐시를 버린다', async () => {
+    server.use(
+      http.post('*/api/auth/login', () =>
+        HttpResponse.json({ user: { id: 'u2', name: '루퍼2', email: 'looper2@loopers.dev' } }),
+      ),
+    );
+    const { result, queryClient } = renderLoginMutation();
+    queryClient.setQueryData(ORDERS_QUERY_KEY, { orders: [{ id: 'o1' }] });
+
+    result.current.mutate({ email: 'looper2@loopers.dev', password: 'looper1234' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryData(ORDERS_QUERY_KEY)).toBeUndefined();
   });
 });

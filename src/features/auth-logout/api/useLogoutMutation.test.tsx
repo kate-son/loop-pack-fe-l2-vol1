@@ -5,6 +5,7 @@ import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { server } from '../../../../test/msw/server';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
+import { ORDERS_QUERY_KEY } from '@/entities/order/api/ordersQueryOptions';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
 import type { AuthUser } from '@/entities/session/model/session';
@@ -38,6 +39,7 @@ function renderLogoutMutation() {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   queryClient.setQueryData(SESSION_QUERY_KEY, LOGGED_IN_USER);
+  queryClient.setQueryData(ORDERS_QUERY_KEY, { orders: [{ id: 'o1' }] });
   const wrapper = ({ children }: PropsWithChildren) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
@@ -66,6 +68,8 @@ describe('로그아웃 응답 처리', () => {
     expect(useWishlistStore.getState().productIds.size).toBe(0);
     expect(syncAnalyticsUser).toHaveBeenCalledTimes(1);
     expect(replaceRoute).toHaveBeenCalledWith('/');
+    // 같은 탭을 이어 쓰는 다음 사람에게 이전 사용자의 주문번호가 보이면 안 된다
+    expect(queryClient.getQueryData(ORDERS_QUERY_KEY)).toBeUndefined();
   });
 
   it('서버가 실패로 답하면 아무것도 바꾸지 않는다', async () => {
@@ -80,5 +84,6 @@ describe('로그아웃 응답 처리', () => {
     expect(useWishlistStore.getState().productIds.has('p2')).toBe(true);
     expect(syncAnalyticsUser).not.toHaveBeenCalled();
     expect(replaceRoute).not.toHaveBeenCalled();
+    expect(queryClient.getQueryData(ORDERS_QUERY_KEY)).toEqual({ orders: [{ id: 'o1' }] });
   });
 });

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
+import { clearOrdersCache } from '@/entities/order/api/ordersQueryOptions';
 import { ApiError, UNAUTHORIZED_STATUS } from '@/shared/api/response';
 import { LOGIN_FAIL_REASON } from '@/analytics/events';
 import type { LoginFailReason } from '@/analytics/events';
@@ -86,6 +87,8 @@ export function useLoginMutation(redirectPath: string) {
       // 세션 캐시를 먼저 채운다. 공통 프로퍼티가 이 캐시를 읽고, 프로바이더에 알리는 일도
       // 이벤트를 보내는 자리에서 이 캐시를 기준으로 하므로, 뒤로 미루면 둘 다 어긋난다
       queryClient.setQueryData(SESSION_QUERY_KEY, user);
+      // 같은 탭에서 다른 계정으로 바꿔 로그인할 수 있다. 이전 사용자의 주문 캐시를 버린다
+      void clearOrdersCache(queryClient);
       trackLoginSuccess(redirectPath);
       router.replace(redirectPath);
       // 보호 경로는 서버가 세션을 읽어 그리므로, 이동 후 서버 렌더를 다시 받아야 내용이 채워진다

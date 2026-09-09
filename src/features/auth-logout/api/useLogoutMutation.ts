@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
+import { clearOrdersCache } from '@/entities/order/api/ordersQueryOptions';
 import { useCartStore } from '@/entities/cart/model/useCartStore';
 import { useWishlistStore } from '@/entities/wishlist/model/useWishlistStore';
 import { DEFAULT_REDIRECT_PATH } from '@/shared/lib/safeRedirectPath';
@@ -27,7 +28,15 @@ export function useLogoutMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      // 요청을 보내지 못한 경우도 같은 문구로 바꾼다. 화면이 error.message를 그대로 쓰므로
+      // 잡지 않으면 오프라인에서 "Failed to fetch" 같은 브라우저 원문이 사용자에게 보인다
+      let response: Response;
+      try {
+        response = await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (cause) {
+        throw new Error(LOGOUT_FAILED_MESSAGE, { cause });
+      }
+
       // 응답을 확인하지 않으면 서버가 실패로 답해도 성공 처리가 이어진다. 그러면 서버에는
       // 로그인이 남았는데 화면만 로그아웃된 것처럼 보이고, 계측의 사용자도 먼저 사라진다
       if (!response.ok) {
@@ -39,6 +48,7 @@ export function useLogoutMutation() {
       // 세션 캐시를 비우는 것이 이후 이벤트에서 userId를 떼는 일이고, 뒤따르는 이벤트가
       // 없어도 프로바이더가 이전 사용자를 붙들지 않도록 여기서 한 번 맞춘다
       queryClient.setQueryData(SESSION_QUERY_KEY, null);
+      void clearOrdersCache(queryClient);
       syncAnalyticsUser();
       clearUserScopedState();
       router.replace(DEFAULT_REDIRECT_PATH);

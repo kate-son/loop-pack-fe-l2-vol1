@@ -1,5 +1,6 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { SESSION_QUERY_KEY } from '@/entities/session/api/sessionQueryOptions';
+import { clearOrdersCache } from '@/entities/order/api/ordersQueryOptions';
 import { isUnauthorizedError } from '@/shared/api/response';
 import { buildLoginPath } from '@/shared/lib/safeRedirectPath';
 
@@ -50,6 +51,8 @@ export function createQueryClient(redirect?: RedirectToLogin): QueryClient {
   const handleUnauthorized = () => {
     const hadSession = client.getQueryData(SESSION_QUERY_KEY) != null;
     client.setQueryData(SESSION_QUERY_KEY, null);
+    // 만료 뒤 다른 계정으로 로그인할 수 있다. 이전 사용자의 주문 캐시를 남기지 않는다
+    void clearOrdersCache(client);
 
     // 훅 대신 location을 읽는다 — 이 콜백은 사용자 조작 뒤에만 도는 클라이언트 코드라
     // useSearchParams를 쓰면 정적 프리렌더에 Suspense 경계만 더 요구하게 된다

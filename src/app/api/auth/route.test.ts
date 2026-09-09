@@ -43,7 +43,7 @@ describe('POST /api/auth/login', () => {
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=lax');
     expect(cookie).toContain('Path=/');
-    expect(cookie).toContain('Max-Age=3600');
+    expect(cookie).toContain('Max-Age=90000');
   });
 
   it('rejects a wrong password and an unknown email with 401', async () => {

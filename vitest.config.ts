@@ -22,6 +22,8 @@ const domTests = [
   'src/app/(home)/error.test.tsx',
   'src/features/auth-login/api/useLoginMutation.test.tsx',
   'src/features/auth-logout/api/useLogoutMutation.test.tsx',
+  'src/features/auth-logout/ui/LogoutButton.test.tsx',
+  'src/entities/session/api/sessionQueryOptions.test.tsx',
   'src/analytics/analytics.test.ts',
   'src/analytics/hooks.test.tsx',
   'src/app/queryClient.test.ts',

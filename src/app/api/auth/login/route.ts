@@ -6,7 +6,11 @@ import {
   isRecord,
   waitForAuthApi,
 } from '@/app/api/_data/auth';
-import { SCENARIO_COOKIE, SESSION_COOKIE, SESSION_TTL_SECONDS } from '@/shared/config/session';
+import {
+  SCENARIO_COOKIE,
+  SESSION_COOKIE,
+  SESSION_COOKIE_MAX_AGE_SECONDS,
+} from '@/shared/config/session';
 import type { AuthErrorResponse, SessionResponse } from '@/entities/session/model/session';
 
 export async function POST(
@@ -55,7 +59,7 @@ export async function POST(
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: SESSION_TTL_SECONDS,
+    maxAge: SESSION_COOKIE_MAX_AGE_SECONDS,
     // E2E는 production build를 http://localhost에서 실행한다. https일 때만 secure를 켠다
     secure: request.nextUrl.protocol === 'https:',
   });

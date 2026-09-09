@@ -1,12 +1,10 @@
 import { queryOptions } from '@tanstack/react-query';
 import { apiResponseResult, isUnauthorizedError } from '@/shared/api/response';
-import { SESSION_TTL_SECONDS } from '@/shared/config/session';
+import { SESSION_STALE_TIME_MS } from '@/shared/config/session';
 import type { AuthUser, SessionResponse } from '@/entities/session/model/session';
 
 /** 서버가 읽은 세션을 초기값으로 심을 때도 이 키를 쓴다 */
 export const SESSION_QUERY_KEY = ['session'] as const;
-
-const MS_PER_SECOND = 1000;
 
 /**
  * 로그인한 사용자. 로그인하지 않았거나 세션이 더는 유효하지 않으면 null.
@@ -17,9 +15,17 @@ const MS_PER_SECOND = 1000;
  * 만료 판정은 세션 쿠키의 유무를 아는 쪽에서 한다 — 서버는 readServerSession이,
  * 클라이언트는 직전 상태를 아는 전역 401 처리기가 맡는다.
  *
- * staleTime을 세션 수명으로 잡아 마운트 직후의 background refetch를 막는다. 이 라우트에는
- * 500ms 지연이 걸려 있어서, 그대로 두면 홈 cold load의 waterfall에 지연 요청이 하나 더 얹힌다.
- * 만료는 시간이 아니라 보호 경로 요청의 401로 알게 되고, 그때 이 쿼리를 무효화한다.
+ * 만료를 알려주는 계기가 보호 경로 요청의 401뿐이면, 그 요청은 보호 화면에서만 나가므로
+ * 홈이나 목록에 머무는 동안에는 화면이 로그인 상태로 남는다. staleTime을 짧게 두고
+ * 포커스 복귀에 재조회를 걸어 그 창을 좁힌다.
+ *
+ * 정정되는 범위는 두 경우다 — 다른 탭·앱에 갔다가 돌아왔을 때, 그리고 이 쿼리가 다시
+ * 구독될 때. **같은 화면을 계속 보고 있는 동안에는 정정되지 않는다.** staleTime은 다시
+ * 물어봐도 되는 시점만 정하고 스스로 요청하지는 않기 때문이다. 그 이상은 폴링이 필요한데
+ * 비용에 비해 얻는 것이 적어 이번 범위에 넣지 않았다.
+ *
+ * 첫 진입에는 서버가 심은 값이 방금 만들어진 것이라 요청이 나가지 않는다. 이 라우트의
+ * 500ms 지연을 홈 cold load의 waterfall에 얹지 않으려던 원래 근거는 그대로다.
  */
 export function sessionQueryOptions() {
   return queryOptions({
@@ -35,6 +41,7 @@ export function sessionQueryOptions() {
         throw error;
       }
     },
-    staleTime: SESSION_TTL_SECONDS * MS_PER_SECOND,
+    staleTime: SESSION_STALE_TIME_MS,
+    refetchOnWindowFocus: true,
   });
 }

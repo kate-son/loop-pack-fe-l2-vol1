@@ -37,13 +37,23 @@ export class CommercePage {
     return productId;
   }
 
-  async submitOrder(productId: string) {
+  /** 주문을 제출하고 주문 내역에 기록됐는지까지 본다 */
+  async completeOrder(productId: string) {
     await this.page.getByRole('button', { name: '주문하기' }).click();
     await expect(this.page).toHaveURL('/orders');
     await expect(this.page.getByRole('heading', { name: '주문 내역' })).toBeVisible();
     await expect(
       this.page.getByRole('cell', { name: productId, exact: true }).first(),
     ).toBeVisible();
+  }
+
+  /**
+   * 주문 뒤 장바구니가 비워졌는지 본다.
+   *
+   * 주문 기록과 따로 둔다. 한 덩어리로 두면 "주문이 안 됐다"와 "주문은 됐는데 장바구니가
+   * 안 비워졌다"가 같은 step 실패로 보고돼 무엇이 깨졌는지 갈리지 않는다.
+   */
+  async expectCartCleared() {
     await expect(
       this.page
         .getByRole('navigation', { name: '주요 메뉴' })
