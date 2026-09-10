@@ -7,7 +7,7 @@
 | 번들 예산 게이트         | 완료 — `scripts/measure-transfer.mjs`    |
 | 환경 변수 검증 (CI 맥락) | 완료 — `scripts/validate-env.mjs`        |
 | 환경 변수 검증 (CD 맥락) | 스크립트 준비 완료, **배포 환경 미확인** |
-| 실패·복귀 PR 증거        | **미확보**                               |
+| 실패·복귀 PR 증거        | 완료 — PR #10                            |
 | required 배치            | **미실시**                               |
 
 ---
@@ -222,11 +222,57 @@ env:
 
 ---
 
-## 8. 남은 것
+## 8. 빨간불 자가 검증
 
-| #   | 항목                                                                   |
-| --- | ---------------------------------------------------------------------- |
-| 1   | 예산을 넘기는 임시 변경으로 PR을 만들어 CI 실패와 실행 요약을 확인한다 |
-| 2   | 변경을 되돌려 다시 통과하는지 확인한다. 실험 PR은 머지하지 않는다      |
-| 3   | required 설정 후 차단 동작을 확인한다                                  |
-| 4   | 배포 환경이 준비되면 `--context=production` 검증을 실행한다            |
+예산을 넘기는 변경을 만들어 CI가 막는지, 실행 요약만 보고 원인을 알 수 있는지 확인했다.
+
+### 초과를 만든 방법
+
+`/products`의 클라이언트 컴포넌트 `src/app/products/_ui/ProductView.tsx`에 무의미한 무거운 import를 넣었다.
+
+```tsx
+import * as prettierStandalone from 'prettier/standalone';
+import * as prettierBabel from 'prettier/plugins/babel';
+
+// 이 참조가 없으면 위 import가 트리 셰이킹으로 사라진다.
+const BUNDLE_PROBE = Object.keys(prettierStandalone).length + Object.keys(prettierBabel).length;
+```
+
+임계값을 낮추는 방식은 쓰지 않았다. 그러면 "번들이 커져서 막혔다"가 아니라 "예산 설정만 바뀌었다"가 된다.
+
+### 결과 — [PR #10](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/10)
+
+| 단계 | 커밋       | run                                                                                      | 결과        |
+| ---- | ---------- | ---------------------------------------------------------------------------------------- | ----------- |
+| 초과 | `c9e28641` | [34511183387](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34511183387) | **failure** |
+| 복귀 | `f811e0bb` | [34511448577](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34511448577) | **success** |
+
+초과 회차의 step 결과다. **다른 검증은 전부 통과하고 `Bundle budget`만 실패했다.**
+
+```
+success  Validate env (ci)
+success  Test / Lint / Typecheck / Build
+failure  Bundle budget
+```
+
+실행 요약에 남은 표다. 로그를 열지 않고 여기서 원인을 읽는다.
+
+| 진입점      | 자산 수 | JS      | CSS   | 합계        | 예산    | 여유             |
+| ----------- | ------- | ------- | ----- | ----------- | ------- | ---------------- |
+| `/`         | 15      | 213.9KB | 3.1KB | 217.0KB     | 249.0KB | 32.0KB 남음      |
+| `/products` | 17      | 328.2KB | 3.1KB | **331.3KB** | 249.0KB | **+82.3KB 초과** |
+
+이어서 큰 자산 10개가 나열된다. **변경한 진입점만 잡히고 `/`는 그대로 통과**한다는 점도 함께 확인됐다. CI 값이 로컬 측정값과 같았다.
+
+### 복귀
+
+`git revert`로 되돌린 뒤 `feat/week-10`과 파일 내용이 완전히 같아졌고, 같은 PR의 다음 회차에서 `Bundle budget`이 다시 통과했다. 실험 PR은 머지하지 않고 닫았다.
+
+---
+
+## 9. 남은 것
+
+| #   | 항목                                                        |
+| --- | ----------------------------------------------------------- |
+| 1   | required 설정 후 차단 동작을 확인한다                       |
+| 2   | 배포 환경이 준비되면 `--context=production` 검증을 실행한다 |
