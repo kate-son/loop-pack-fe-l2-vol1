@@ -9,37 +9,50 @@
 | 항목          | 고정 조건                                    |
 | ------------- | -------------------------------------------- |
 | 이벤트        | `pull_request`                               |
-| 기준 commit   | 측정 시작 시 기록                            |
+| 기준 commit   | `be3a40a408f0384026178cb885245a66953d0eb6`   |
 | runner        | `ubuntu-latest`                              |
 | Node·pnpm     | `.nvmrc`, `package.json#packageManager`      |
 | 검증 순서     | test → lint → typecheck → build              |
 | 설치          | `pnpm install --frozen-lockfile`             |
 | 브라우저 설치 | 현재 `quality` job의 Chromium 설치 step 포함 |
 
-`pnpm check`를 네 step으로 나눴다. 명령의 순서와 검증 범위는 유지하며, 각 검증의 시간을 Actions 화면에서 구분하기 위한 변경이다. 이 단계에서는 병목을 제거하거나 검증을 생략하지 않는다.
+`pnpm check`를 네 단계로 나눴다. 명령의 순서와 검증 범위는 유지하며, 각 검증의 시간을 Actions 화면에서 구분하기 위한 변경이다. 이 단계에서는 병목을 제거하거나 검증을 생략하지 않는다.
 
 ### 표본 분류
 
-- cold: 실행 로그에서 의존성 cache restore가 확인되지 않은 실행이다.
-- warm: 실행 로그에서 cache restore가 확인된 실행이다.
+- cold: 실행 로그에서 의존성 캐시 복원이 확인되지 않은 실행이다.
+- warm: 실행 로그에서 캐시 복원이 확인된 실행이다.
 - cache 상태를 로그로 확인하지 못한 실행은 cold 또는 warm 표본에 넣지 않는다.
+
+PR #1의 캐시 참조(`refs/pull/1/merge`)만 조회·삭제했다. `main`의 캐시는 조회하거나 삭제하지 않았고, `main`의 실행 이력도 이 측정값에 사용하지 않았다.
 
 ### Before 결과
 
-| 구분   | run URL | commit | 전체 시간 | install | Chromium | test | lint | typecheck | build | cache 상태 |
-| ------ | ------- | ------ | --------: | ------: | -------: | ---: | ---: | --------: | ----: | ---------- |
-| cold 1 | 미측정  | -      |         - |       - |        - |    - |    - |         - |     - | -          |
-| cold 2 | 미측정  | -      |         - |       - |        - |    - |    - |         - |     - | -          |
-| cold 3 | 미측정  | -      |         - |       - |        - |    - |    - |         - |     - | -          |
-| warm 1 | 미측정  | -      |         - |       - |        - |    - |    - |         - |     - | -          |
-| warm 2 | 미측정  | -      |         - |       - |        - |    - |    - |         - |     - | -          |
-| warm 3 | 미측정  | -      |         - |       - |        - |    - |    - |         - |     - | -          |
+| 구분   | 실행 URL                                                                                          | 커밋      | 전체 시간 | 의존성 설치 | Chromium | test | lint | typecheck | build | 캐시 상태      |
+| ------ | ------------------------------------------------------------------------------------------------- | --------- | --------: | ----------: | -------: | ---: | ---: | --------: | ----: | -------------- |
+| cold 1 | [attempt 2](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34497848152/attempts/2) | `be3a40a` |      91초 |         6초 |     26초 | 18초 |  6초 |       4초 |  10초 | 복원 로그 없음 |
+| cold 2 | [attempt 3](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34497848152/attempts/3) | `be3a40a` |      85초 |         6초 |     30초 | 14초 |  5초 |       3초 |   8초 | 복원 로그 없음 |
+| cold 3 | [attempt 4](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34497848152/attempts/4) | `be3a40a` |      94초 |         6초 |     26초 | 19초 |  6초 |       4초 |  10초 | 복원 로그 없음 |
+| warm 1 | [attempt 5](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34497848152/attempts/5) | `be3a40a` |      81초 |         2초 |     24초 | 19초 |  6초 |       4초 |   9초 | 복원 로그 확인 |
+| warm 2 | [attempt 6](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34497848152/attempts/6) | `be3a40a` |      88초 |         1초 |     30초 | 19초 |  5초 |       4초 |  10초 | 복원 로그 확인 |
+| warm 3 | [attempt 7](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34497848152/attempts/7) | `be3a40a` |      90초 |         2초 |     24초 | 19초 |  6초 |       5초 |  10초 | 복원 로그 확인 |
 
-측정 뒤 각 조건의 raw 값·중앙값·범위를 표 아래에 기록한다. 가장 긴 step은 이 결과를 바탕으로 지목한다.
+Actions가 제공한 단계 시작·종료 시각의 초 단위 차이로 시간을 계산했다. job 전체 시간은 job 시작·종료 시각의 차이이며, setup·post 단계도 포함한다.
+
+| 구분           | raw 값           | 중앙값 | 범위 |
+| -------------- | ---------------- | -----: | ---: |
+| cold 전체 시간 | 91초, 85초, 94초 |   91초 |  9초 |
+| warm 전체 시간 | 81초, 88초, 90초 |   88초 |  9초 |
+
+warm에서 install은 1~2초였고 cold에서는 6초였다. 그러나 job 전체 중앙값 차이는 3초로 각 조건의 범위(9초)보다 작다. 따라서 전체 시간만으로 캐시 효과를 단정하지 않는다.
+
+가장 긴 단계는 모든 표본에서 24~30초인 Chromium 설치였다. 현재 `quality` job은 E2E를 실행하지 않지만 이 설치를 수행하므로, 다음 변경 후보는 `quality` job에서 이 설치를 제거하는 것이다. E2E workflow를 만드는 2단계에서는 그 workflow에 필요한 브라우저 설치를 둔다. job 분리는 이 병목과 직접 연결되지 않으므로 이번 단계의 변경 후보에서 제외한다.
+
+로컬의 `pnpm check`는 Corepack이 pnpm 레지스트리 서명을 검증하지 못해 검증 명령을 시작하기 전에 중단됐다. 이 문제를 우회하지 않았으며, 표의 결과는 모두 Actions에서 통과한 실행만 사용했다.
 
 ### 이후 순서
 
 1. Before cold/warm 표본을 각각 3회 이상 확보한다.
 2. 가장 긴 step만 대상으로 변경한다.
-3. cache hit/miss를 별도 실험으로 확인하고 lockfile을 원복한다.
+3. 캐시 복원 여부를 별도 실험으로 확인하고 lockfile을 원복한다.
 4. 같은 조건에서 After를 측정한다.

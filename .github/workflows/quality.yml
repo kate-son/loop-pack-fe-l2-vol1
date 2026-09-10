@@ -30,11 +30,6 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Chromium when used
-        run: |
-          if pnpm exec playwright --version >/dev/null 2>&1; then
-            pnpm exec playwright install --with-deps chromium
-          fi
       # 검증 순서와 검증 범위는 pnpm check와 같다. 분리한 이유는 Before/After에서
       # 어느 검증이 시간을 쓰는지 Actions step 시간으로 확인하기 위해서다.
       - name: Test
