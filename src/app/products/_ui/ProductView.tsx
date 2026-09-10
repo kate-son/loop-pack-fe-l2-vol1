@@ -12,14 +12,8 @@ import { ErrorRetry } from '@/shared/ui/ErrorRetry/ErrorRetry';
 import { useProductList } from '@/entities/product/api/useProductList';
 import { useScreenViewOnce } from '@/analytics/useScreenViewOnce';
 import { trackProductListView } from '@/analytics/trackEvents';
-// 3단계 자가 검증: 번들 예산 초과를 만들려고 넣은 무의미한 import다. 확인 뒤 되돌린다.
-import * as prettierStandalone from 'prettier/standalone';
-import * as prettierBabel from 'prettier/plugins/babel';
 
 const INITIAL_PAGE = 1;
-
-// 무의미한 참조. 이게 없으면 위 import가 트리 셰이킹으로 사라진다.
-const BUNDLE_PROBE = Object.keys(prettierStandalone).length + Object.keys(prettierBabel).length;
 
 /* AI-generated : Week 7 Part 2 — 갱신 중(isFetching)에 Pagination을 숨기던 걸 없애 CLS를 만들던 마운트/언마운트를 제거하고, ProductListSection에 isUpdating을 넘겨 최소한의 로딩 신호를 준다 */
 /* AI-generated : Week 7 Part 2 — 필터 변경으로 새 데이터가 도착하면 겹치는 상품(같은 product.id)이 다른 그리드 슬롯으로 옮겨가며 실제 LayoutShift가 발생함을 실측으로 확인. ProductListSection을 dataUpdatedAt으로 키잉해 데이터가 바뀔 때마다 카드 전체를 새로 마운트시켜, key 기반 재사용(=슬라이드 이동)을 원천 차단한다 */
@@ -42,7 +36,7 @@ export default function ProductView() {
   }, [productListQuery.data, page, setPage]);
 
   return (
-    <div className="week05-page" data-bundle-probe={BUNDLE_PROBE}>
+    <div className="week05-page">
       <Header />
       <main>
         <PageHeading
