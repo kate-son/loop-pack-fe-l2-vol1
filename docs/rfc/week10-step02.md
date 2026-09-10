@@ -45,13 +45,14 @@ PR 파일 API의 반환 수가 이벤트의 `changed_files`와 다르면 목록�
 
 ## 확인할 사례
 
-실제 PR에서 다음 결과를 확인한 뒤 Actions URL을 이 문서에 추가한다.
+실제 PR에서 다음 결과를 확인했다.
 
-| 사례                          | 기대 결과                   |
-| ----------------------------- | --------------------------- |
-| `src/**` 변경                 | E2E 실행·통과 시 guard 성공 |
-| 문서 스킵 목록만 변경         | E2E 스킵·guard 성공         |
-| E2E 테스트를 의도적으로 실패  | E2E 실패·guard 실패         |
-| 경로 판정 실패 또는 출력 누락 | guard 실패                  |
+| 사례                                                                                                              | 결과                               |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `src/**` 변경, [PR #1 Actions](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34505122659)         | E2E 실행·성공, `e2e-required` 성공 |
+| 문서 스킵 목록만 변경, [PR #5 Actions](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34505784698) | E2E `skipped`, `e2e-required` 성공 |
+| 의도적 실패 assertion, [PR #6 Actions](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34506508566) | E2E 실패, `e2e-required` 실패      |
 
-정상 실행·정상 스킵·E2E 실패·판정 오류를 확인한 뒤 branch protection에서 `quality`와 `e2e-required`를 required 대상으로 설정하고, 실패 PR이 차단되는지 별도로 기록한다.
+PR #5와 PR #6은 검증 후 닫고 브랜치를 삭제했으며 머지하지 않았다. PR #1은 작업 브랜치의 실행 대상 사례로 유지한다.
+
+정상 실행·정상 스킵·E2E 실패는 확인했다. 판정 오류·출력 누락 사례와 branch protection에서 `quality`와 `e2e-required`를 required 대상으로 설정한 뒤 실패 PR이 차단되는지는 별도 확인 대상으로 남긴다.
