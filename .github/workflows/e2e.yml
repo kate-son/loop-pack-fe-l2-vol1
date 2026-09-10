@@ -50,7 +50,6 @@ jobs:
             path.startsWith('docs/rfc/') ||
             path.startsWith('docs/assignments/') ||
             path.startsWith('docs/images/') ||
-            path.startsWith('docs/local/') ||
             /^docs\/[^/]+\.md$/.test(path) ||
             path === 'README.md';
 
