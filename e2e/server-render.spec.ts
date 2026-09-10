@@ -38,4 +38,7 @@ test('JS 없이도 서버가 로그인 상태와 보호 화면 본문을 그려�
   await test.step('보호 화면 본문도 그려져 있다', async () => {
     await expect(page.getByRole('heading', { name: '주문 내역' })).toBeVisible();
   });
+
+  // 보호 브랜치의 required check 차단을 확인하기 위한 임시 assertion이다.
+  await expect(true).toBe(false);
 });
