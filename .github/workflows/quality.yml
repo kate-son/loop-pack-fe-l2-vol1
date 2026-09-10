@@ -12,6 +12,8 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    # 관측된 실행보다 충분히 긴 상한을 두어, 멈춘 작업이 러너를 계속 점유하지 않게 한다.
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -33,5 +35,13 @@ jobs:
           if pnpm exec playwright --version >/dev/null 2>&1; then
             pnpm exec playwright install --with-deps chromium
           fi
-      - name: Run quality checks
-        run: pnpm check
+      # 검증 순서와 검증 범위는 pnpm check와 같다. 분리한 이유는 Before/After에서
+      # 어느 검증이 시간을 쓰는지 Actions step 시간으로 확인하기 위해서다.
+      - name: Test
+        run: pnpm test
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build
+        run: pnpm build
