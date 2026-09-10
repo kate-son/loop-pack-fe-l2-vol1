@@ -53,6 +53,14 @@ PR 파일 API의 반환 수가 이벤트의 `changed_files`와 다르면 목록�
 | 문서 스킵 목록만 변경, [PR #5 Actions](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34505784698) | E2E `skipped`, `e2e-required` 성공 |
 | 의도적 실패 assertion, [PR #6 Actions](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34506508566) | E2E 실패, `e2e-required` 실패      |
 
+| `changes` 성공·`run` 출력 누락, [PR #7 Actions](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34507233336) | E2E `skipped`, `e2e-required` 실패 |
+
 PR #5와 PR #6은 검증 후 닫고 브랜치를 삭제했으며 머지하지 않았다. PR #1은 작업 브랜치의 실행 대상 사례로 유지한다.
 
-정상 실행·정상 스킵·E2E 실패는 확인했다. 판정 오류·출력 누락 사례와 branch protection에서 `quality`와 `e2e-required`를 required 대상으로 설정한 뒤 실패 PR이 차단되는지는 별도 확인 대상으로 남긴다.
+## required check 확인
+
+`main`에 영향을 주지 않기 위해 임시 보호 브랜치 `experiment/week10-protected-base`에만 `quality`와 `e2e-required`를 required로 설정했다. 문서 전용 성공 PR [#8](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/8)은 두 required check가 성공한 뒤 `mergeStateStatus: CLEAN`이 됐다. 의도적 E2E 실패 PR [#9](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/9)은 `e2e-required`가 실패하고 `mergeStateStatus: BLOCKED`가 됐다.
+
+확인 뒤 보호 설정과 임시 브랜치를 삭제했다. 따라서 현재 `main`과 `feat/week-10`에는 branch protection required 설정을 추가하지 않았다.
+
+정상 실행·정상 스킵·E2E 실패·출력 누락과 임시 보호 브랜치에서의 머지 차단을 확인했다. 판정 오류를 실제 API 오류로 재현하지는 않았으며, workflow job 실패가 guard 실패로 전파되는 구조와 출력 누락 실패를 확인한 범위로 기록한다.
