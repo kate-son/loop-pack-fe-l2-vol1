@@ -8,7 +8,8 @@
 | 환경 변수 검증 (CI 맥락) | 완료 — `scripts/validate-env.mjs`        |
 | 환경 변수 검증 (CD 맥락) | 스크립트 준비 완료, **배포 환경 미확인** |
 | 실패·복귀 PR 증거        | 완료 — PR #10                            |
-| required 배치            | **미실시**                               |
+| required 동작 확인       | 완료 — 임시 보호 브랜치, PR #11·#12·#13  |
+| required 영구 배치       | **미실시** — 확인 후 보호 설정을 정리함  |
 
 ---
 
@@ -210,15 +211,48 @@ env:
 
 ## 7. 컷별 required 여부
 
-| 검증                  | 컷   | 실행 조건  | required (계획) | 근거                                       |
-| --------------------- | ---- | ---------- | --------------- | ------------------------------------------ |
-| 번들 예산             | CI   | 모든 PR    | 예              | 코드만으로 재현되고 반복 측정 범위가 0이다 |
-| 환경 변수 형식·접두사 | CI   | 모든 PR    | 예              | 정적 검사라 오탐 여지가 낮다               |
-| 환경 변수 실제 주입   | CD   | 배포 시    | 배포 중단       | 배포 환경 값을 봐야 판정된다               |
-| Lighthouse 실험실     | —    | 사용 안 함 | 아니오          | 단발성 측정이라 차단 기준으로 쓰지 않는다  |
-| 실사용 Web Vitals     | LIVE | 미구축     | 아니오          | 수집 경로가 없다                           |
+| 검증                  | 컷   | 실행 조건  | required  | 담는 check     | 근거                                       |
+| --------------------- | ---- | ---------- | --------- | -------------- | ------------------------------------------ |
+| 번들 예산             | CI   | 모든 PR    | 예        | `quality`      | 코드만으로 재현되고 반복 측정 범위가 0이다 |
+| 환경 변수 형식·접두사 | CI   | 모든 PR    | 예        | `quality`      | 정적 검사라 오탐 여지가 낮다               |
+| E2E                   | CI   | 앱 변경 시 | 예        | `e2e-required` | 실행 조건이 갈려 guard job을 대신 지정한다 |
+| 환경 변수 실제 주입   | CD   | 배포 시    | 배포 중단 | —              | 배포 환경 값을 봐야 판정된다               |
+| Lighthouse 실험실     | —    | 사용 안 함 | 아니오    | —              | 단발성 측정이라 차단 기준으로 쓰지 않는다  |
+| 실사용 Web Vitals     | LIVE | 미구축     | 아니오    | —              | 수집 경로가 없다                           |
 
-**required 배치는 아직 하지 않았다.** 저장소에 branch protection도 ruleset도 없다. 실패·복귀 PR 확인을 마친 뒤 `quality`와 `e2e-required`를 포함해 한 번에 정한다.
+required로 지정한 것은 job 이름 `quality`와 `e2e-required` 둘뿐이다. 예산·환경 변수 검증은 `quality` job 안의 step이라 별도 check로 잡히지 않고, `e2e`는 스킵될 수 있어 지정 대상에서 뺐다.
+
+### required 배치와 확인
+
+`main`에 영향을 주지 않기 위해 임시 보호 브랜치 `experiment/week10-protected-base`를 `feat/week-10`(`51f3e600`)에서 만들고, 거기에만 required status check로 `quality`와 `e2e-required`를 지정했다. `strict: false`(base 최신화 요구 없음), `enforce_admins: false`, 리뷰 요구 없음이다. 리뷰 요구를 걸지 않았으므로 머지 판정 차이는 check 결과에서만 갈린다.
+
+세 경로를 각각 PR로 열었다. 세 PR은 base와 보호 설정이 같고 변경 내용만 다르다.
+
+| 경로               | PR                                                              | `changes` 판정 | `e2e`     | `e2e-required` | `quality` | mergeStateStatus |
+| ------------------ | --------------------------------------------------------------- | -------------- | --------- | -------------- | --------- | ---------------- |
+| 앱 파일 변경       | [#11](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/11) | `run=true`     | success   | success        | success   | **CLEAN**        |
+| 문서만 변경        | [#12](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/12) | `run=false`    | `skipped` | success        | success   | **CLEAN**        |
+| E2E 단언 고의 실패 | [#13](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/13) | `run=true`     | failure   | **failure**    | success   | **BLOCKED**      |
+
+guard가 무엇을 보고 판정했는지는 실행 로그에 남는다.
+
+```
+#11  changes=success target=true  e2e=success   → E2E가 통과했다.
+#12  changes=success target=false e2e=skipped   → 문서 변경만 있어 E2E를 의도적으로 스킵했다.
+#13  changes=success target=true  e2e=failure   → E2E 결과가 통과가 아니다: failure   (exit 1)
+```
+
+run: [#11 34512231977](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34512231977) · [#12 34512237137](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34512237137) · [#13 34512240360](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34512240360)
+
+#13만 BLOCKED가 된 것을 `e2e-required` 실패로 볼 수 있는 이유는, 나머지 조건이 셋 다 같고 `quality`는 모두 성공했으며 리뷰 요구를 걸지 않았기 때문이다. 스킵된 `e2e`가 차단 사유가 되지 않는다는 점도 #12에서 같이 확인된다 — `e2e`가 `skipped`인데 머지는 막히지 않았다.
+
+**확인 뒤 보호 설정과 임시 브랜치, 실험 PR을 모두 정리했다.** 그래서 지금 이 저장소의 `main`과 `feat/week-10`에는 branch protection이 없고, 실제로 머지가 막히는 상태는 아니다. 확인된 범위는 "required로 지정하면 세 경로가 이렇게 판정된다"까지다. 영구 배치는 같은 설정을 `main`에 한 번 적용하면 된다.
+
+```bash
+# protection.json: required_status_checks.checks = [quality, e2e-required], strict=false,
+#                  enforce_admins=false, required_pull_request_reviews=null
+gh api -X PUT repos/<owner>/<repo>/branches/main/protection --input protection.json
+```
 
 ---
 
@@ -272,7 +306,8 @@ failure  Bundle budget
 
 ## 9. 남은 것
 
-| #   | 항목                                                        |
-| --- | ----------------------------------------------------------- |
-| 1   | required 설정 후 차단 동작을 확인한다                       |
-| 2   | 배포 환경이 준비되면 `--context=production` 검증을 실행한다 |
+| #   | 항목                                                                                     |
+| --- | ---------------------------------------------------------------------------------------- |
+| 1   | 임시 브랜치에서 확인만 한 required 설정을 `main`에 영구 배치한다                         |
+| 2   | 배포 환경이 준비되면 `--context=production` 검증을 실행한다                              |
+| 3   | `changes` job 자체가 실패하는 경우(API 오류 등)는 코드 경로로만 확인했고 재현하지 않았다 |
