@@ -30,6 +30,14 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # 설정 오류는 코드 검증을 통과한 뒤에 드러나므로 build 전에 막는다.
+      # CI에는 실제 비밀값이 없다. 로그에 남아도 문제가 없는 검증용 값을 주입하고,
+      # 실제 값 주입과 fallback 여부는 CD에서 확인한다.
+      - name: Validate env (ci)
+        env:
+          APP_ORIGIN: http://127.0.0.1:3000
+          AUTH_SESSION_SECRET: ci-validation-placeholder
+        run: pnpm validate:env -- --context=ci
       # 검증 순서와 검증 범위는 pnpm check와 같다. 분리한 이유는 Before/After에서
       # 어느 검증이 시간을 쓰는지 Actions step 시간으로 확인하기 위해서다.
       - name: Test
@@ -40,3 +48,10 @@ jobs:
         run: pnpm typecheck
       - name: Build
         run: pnpm build
+      # 예산 판정은 build 산출물을 그대로 쓴다. 여기서 build를 다시 돌리지 않는다.
+      # 초과 내역은 Actions 실행 요약에 표로 남는다.
+      - name: Bundle budget
+        env:
+          APP_ORIGIN: http://127.0.0.1:3210
+          AUTH_SESSION_SECRET: ci-validation-placeholder
+        run: pnpm measure:transfer
