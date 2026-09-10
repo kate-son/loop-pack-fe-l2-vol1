@@ -222,3 +222,5 @@ test('개수가 0인 상품 목록에서 장바구니와 위시리스트에 첫 
   await expect(mainNavigation.getByText('위시리스트 1')).toBeVisible();
   await expect(firstWishlistButton).toHaveAttribute('aria-pressed', 'true');
 });
+
+// required check 검증(A): E2E가 실행되어 통과하는 경로를 확인하려고 추가한 주석이다.
