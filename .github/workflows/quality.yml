@@ -66,3 +66,5 @@ jobs:
           APP_ORIGIN: http://127.0.0.1:3210
           AUTH_SESSION_SECRET: ci-validation-placeholder
         run: pnpm measure:transfer
+
+# concurrency 확인용 두 번째 push
