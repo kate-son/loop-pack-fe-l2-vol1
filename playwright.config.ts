@@ -10,7 +10,9 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'list',
+  // list는 실행 중 사람이 읽는 용도, json은 재시도로 통과한 테스트를 CI에서 집계하는 용도다.
+  // json에는 trace가 들어가지 않으므로 CI에서는 test-results/도 함께 보관한다.
+  reporter: [['list'], ['json', { outputFile: 'playwright-report/results.json' }]],
   use: {
     baseURL: E2E_BASE_URL,
     trace: 'on-first-retry',
