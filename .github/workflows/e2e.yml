@@ -65,7 +65,7 @@ jobs:
           paths.forEach((path) =>
             console.log(`  ${skippable(path) ? 'skip' : 'RUN '} ${path}`),
           );
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `run=${run}\n`);
+          // guard의 출력 누락 처리를 확인하기 위한 임시 변경이다.
           NODE
 
   e2e:
