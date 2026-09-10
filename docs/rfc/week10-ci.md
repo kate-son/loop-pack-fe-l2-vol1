@@ -70,11 +70,17 @@ warm에서 install은 1~2초였고 cold에서는 6초였다. 그러나 job 전�
 
 Before와 After의 cold 중앙값은 91초에서 64초로 27초 줄었고, warm 중앙값은 88초에서 60초로 28초 줄었다. 두 변화량은 각 조건의 범위보다 크며, 제거한 Chromium 설치가 Before에서 24~30초를 차지했던 사실과 시간 차이가 가깝다. 따라서 이번 변화는 해당 설치 단계 제거와 연결해 설명할 수 있다.
 
-After에서도 모든 검증 단계가 실행됐고 세 cold·세 warm 실행이 모두 통과했다. 캐시 복원 여부를 캐시 삭제와 실행 로그로 확인했지만, lockfile을 임시 변경해 키 불일치를 확인하는 별도 실험은 아직 남아 있다.
+After에서도 모든 검증 단계가 실행됐고 세 cold·세 warm 실행이 모두 통과했다. 캐시 복원 여부는 캐시 삭제와 실행 로그로 확인했으며, lockfile을 임시 변경해 키 불일치와 설치 재실행도 별도로 확인했다.
+
+### 캐시 키 불일치 실험
+
+실험 PR [#4](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/4)의 커밋 `723e7e552172184fdea3964783130db6a01d8c2c`에서 `pnpm-lock.yaml` 끝에 주석만 추가했다. 이 변경으로 캐시 키가 기존 `node-cache-Linux-x64-pnpm-71d1...`에서 다른 값으로 바뀌었다.
+
+실험 [Actions 실행](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34504209852)에서는 캐시 복원 로그가 없었고, `pnpm install --frozen-lockfile`이 실행됐다. 의존성 설치 단계는 6초였으며 `Lockfile is up to date`가 출력되어 lockfile 내용의 유효성은 유지됐다. 확인 뒤 PR·실험 브랜치·실험 캐시는 삭제했으며, 실험 커밋은 `feat/week-10`에 포함하지 않았다.
 
 ### 이후 순서
 
 1. ~~Before cold/warm 표본을 각각 3회 이상 확보한다.~~ 완료
 2. ~~가장 긴 단계만 대상으로 변경한다.~~ 완료
-3. lockfile을 임시 변경해 캐시 키 불일치와 설치 재실행을 확인한 뒤 원복한다.
+3. ~~lockfile을 임시 변경해 캐시 키 불일치와 설치 재실행을 확인한 뒤 원복한다.~~ 완료
 4. ~~같은 조건에서 After를 측정한다.~~ 완료
