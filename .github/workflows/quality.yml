@@ -9,6 +9,13 @@ name: Quality
 permissions:
   contents: read
 
+# 그룹 키에 ref를 넣어 브랜치별로 가른다. 키가 브랜치를 구분하지 않으면 PR 실행이
+# main push 실행을 취소할 수 있다. 취소는 pull_request에서만 켜서, main push 실행은
+# 뒤 실행이 들어와도 끝까지 돌게 둔다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   quality:
     runs-on: ubuntu-latest

@@ -58,6 +58,17 @@ PR 파일 API의 반환 수가 이벤트의 `changed_files`와 다르면 목록�
 
 PR #5와 PR #6은 검증 후 닫고 브랜치를 삭제했으며 머지하지 않았다. PR #1은 작업 브랜치의 실행 대상 사례로 유지한다.
 
+### 이전 시도에서 남아 있던 실험 PR
+
+이 단계를 다시 진행하기 전에 만든 실험 PR 두 건이 닫히지 않은 채 남아 있었다. 6단계 최종 점검에서 확인하고 닫았으며 브랜치도 지웠다. 결과는 위 표의 같은 경로와 어긋나지 않는다.
+
+| PR                                                            | 브랜치           | run                                                                                      | 결과                               |
+| ------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| [#2](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/2) | `e2e-skip-check` | [34482509266](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34482509266) | E2E `skipped`, `e2e-required` 성공 |
+| [#3](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/3) | `e2e-fail-check` | [34483215563](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34483215563) | E2E 실패, `e2e-required` 실패      |
+
+3단계 예산 실험에 쓴 `bundle-budget-check` 브랜치도 [PR #10](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/10)이 닫힌 뒤 남아 있어 같이 지웠다. 현재 이 저장소에 열린 PR은 작업 PR [#1](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/1)뿐이고, 실험용 브랜치는 남아 있지 않다.
+
 ## required check 확인
 
 `main`에 영향을 주지 않기 위해 임시 보호 브랜치 `experiment/week10-protected-base`에만 `quality`와 `e2e-required`를 required로 설정했다. 문서 전용 성공 PR [#8](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/8)은 두 required check가 성공한 뒤 `mergeStateStatus: CLEAN`이 됐다. 의도적 E2E 실패 PR [#9](https://github.com/kate-son/loop-pack-fe-l2-vol1/pull/9)은 `e2e-required`가 실패하고 `mergeStateStatus: BLOCKED`가 됐다.
