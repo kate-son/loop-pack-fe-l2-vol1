@@ -193,6 +193,12 @@ env:
 
 항목명·현재 크기·임계값·초과량이 한 표에 있고, 큰 자산 10개가 함께 나온다. PR 코멘트 권한(`pull-requests: write`)은 부여하지 않았다. 실행 요약으로 충분한지 확인한 뒤 필요하면 추가한다.
 
+### PR 화면 캡처
+
+실패한 GitHub Actions run [34511183387](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34511183387)의 Summary 화면에서 quality job이 실패한 사실을 확인할 수 있다. Summary 화면에는 로그 접근 권한에 따라 상세 표가 노출되지 않을 수 있으므로, 정확한 현재값·임계값·`82.3KB` 초과량은 연결된 run 로그와 위 출력에 함께 기록했다.
+
+![번들 예산 초과 시 GitHub Actions Summary 화면](../images/week10-bundle-budget-failure.png)
+
 ---
 
 ## 6. workflow 순서
