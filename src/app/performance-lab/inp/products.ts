@@ -13,10 +13,7 @@ export const performanceLabProducts: PerformanceLabProduct[] = Array.from(
   }),
 );
 
-export function calculateCardPresentation(
-  productId: string,
-  selected: boolean,
-) {
+export function calculateCardPresentation(productId: string, selected: boolean) {
   const productSeed = Array.from(productId).reduce(
     (sum, character) => sum + character.charCodeAt(0),
     selected ? 31 : 17,

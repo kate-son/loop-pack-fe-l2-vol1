@@ -12,6 +12,11 @@
 
 # testing
 /coverage
+.vitest-attachments/
+__screenshots__/
+/test-results/
+/playwright-report/
+/blob-report/
 
 # next.js
 /.next/
@@ -23,6 +28,7 @@
 # misc
 .DS_Store
 *.pem
+/tmp/
 
 # debug
 npm-debug.log*
@@ -39,3 +45,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/my-doc
+
+# intelliJ
+.idea
+
+# claude local-only files
+.claude/settings.json
+/.claude/skills.zip
+docs/local/*
+
+# pnpm local store
+/.pnpm-store/

@@ -1,12 +1,45 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* surface / overlay */
+  --color-surface: #ffffff;
+  --color-border: #e2e2e2;
+  --color-overlay: rgb(0 0 0 / 40%);
+
+  /* elevation */
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 16%);
+
+  /* motion */
+  --transition-fast: 150ms ease;
+
+  /* stacking */
+  --z-overlay: 40;
+  --z-dialog: 50;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --color-surface: #1a1a1a;
+    --color-border: #333333;
+    --color-overlay: rgb(0 0 0 / 60%);
+    --shadow-md: 0 8px 24px rgb(0 0 0 / 40%);
   }
 }
 

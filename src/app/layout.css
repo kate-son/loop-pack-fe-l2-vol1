@@ -1,0 +1,324 @@
+.week05-page {
+  width: min(100% - 32px, 1200px);
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.week05-header,
+.week05-header nav,
+.week05-categories,
+.week05-filters,
+.week05-pagination,
+.week05-product > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.week05-header {
+  justify-content: space-between;
+  padding-bottom: 24px;
+}
+
+.week05-hero {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 32px;
+  background: #ececec;
+}
+
+.week05-hero--banner {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+
+.week05-hero--banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0%) 40%, rgb(0 0 0 / 55%));
+}
+
+.week05-hero--banner > * {
+  position: relative;
+  z-index: 2;
+}
+
+.week05-hero-image {
+  object-fit: cover;
+  z-index: 0;
+}
+
+.week05-section {
+  position: relative;
+  margin-top: 40px;
+}
+
+.week05-section > h1,
+.week05-section > h2 {
+  margin-bottom: 16px;
+}
+
+/* AI-generated : Week 7 Part 2 — 갱신 중(기존 목록 유지) 상태의 시각적 신호. 레이아웃 크기를 바꾸지 않도록 절대 위치 오버레이로 기존 목록 위에 떠서 "갱신 중"임을 알린다 */
+.week05-section__pending-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(255 255 255 / 70%);
+  pointer-events: none;
+}
+
+/* .week05-button은 컨테이너에 묶이지 않은 버튼(로그인·로그아웃·초기화·주문)이
+   상품 카드·페이지네이션 버튼과 같은 모양을 갖게 한다. 값을 복제하지 않고 셀렉터만 합류시킨다 */
+.week05-categories a,
+.week05-product button,
+.week05-pagination button,
+.week05-button {
+  padding: 8px 12px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+}
+
+.week05-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.week05-product {
+  display: grid;
+  gap: 8px;
+}
+
+/* AI-generated : Week 7 Part 2 Round 7 — loading.tsx 스켈레톤. 실제 카드 한 줄 높이(실측 약 565px)에 맞춰
+   고정 높이를 주어, fallback이 실제 목록으로 교체될 때 아래 요소(Pagination 등)의 위치가 크게 튀지 않게 한다 */
+.week05-skeleton {
+  background: #ececec;
+  border-radius: 2px;
+}
+
+.week05-skeleton-card {
+  height: 565px;
+  align-content: start;
+}
+
+.week05-skeleton-brand {
+  width: 40%;
+  height: 14px;
+}
+
+.week05-skeleton-name {
+  width: 85%;
+  height: 40px;
+}
+
+.week05-skeleton-price {
+  width: 30%;
+  height: 16px;
+}
+
+.week05-skeleton-count {
+  width: 72px;
+  height: 19px;
+}
+
+/* AI-generated : Week 7 Part 2 Round 9 — 스켈레톤에 Pagination 자리가 없어서, fallback↔실제 콘텐츠 전환 때
+   Pagination이 언마운트/재마운트되며 공식 CLS(had_recent_input:false)에 잡히는 시프트가 생겼다.
+   실제 Pagination과 같은 높이(34px)의 자리를 미리 잡아 그 이동을 없앤다 */
+.week05-skeleton-pagination {
+  width: 148px;
+  height: 34px;
+}
+
+.week05-skeleton-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.week05-skeleton-field {
+  width: 160px;
+  height: 65px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .week05-skeleton {
+    animation: week05-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes week05-skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* AI-generated : Week 7 Part 1 Round 4 — 카드 이미지가 width:100%(반응형)인데 next/image에 고정 width/height(400)를 주면 실제 렌더 폭보다 큰 srcset이 선택돼(예: 5열 그리드에서 실렌더 폭 ≈224px인데 400px 기준으로 다운로드) "compression/oversized" 경고가 뜨는 문제 — fill 모드로 바꾸면서 position 기준을 이 wrap이 담당하도록 분리. height:400px는 기존 <img width={400} height={400}>가 만들던 모양(폭은 그리드에 따라 가변, 높이는 400px 고정)을 그대로 유지하기 위한 값 — 용량 최적화 범위를 벗어나는 비율 변경은 하지 않는다 */
+.week05-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: #ececec;
+  overflow: hidden;
+}
+
+.week05-image {
+  object-fit: cover;
+}
+
+/* .week05-field는 검색 필터와 같은 "라벨 위 · 입력 아래" 배치를 필터 밖에서도 쓰게 한다 */
+.week05-filters label,
+.week05-field {
+  display: grid;
+  gap: 6px;
+}
+
+.week05-filters input,
+.week05-filters select,
+.week05-field input {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #c8c8c8;
+  background: transparent;
+  color: inherit;
+}
+
+/* 입력 폼을 세로로 쌓고 페이지 가로 중앙에 둔다. 제목(PageHeading)은 기존 정렬을 유지한다 */
+.week05-form {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* 주문 상품·안내·주문 버튼을 로그인 폼과 같은 폭으로 묶어 페이지 가로 중앙에 둔다.
+   제목(PageHeading)은 로그인 화면과 마찬가지로 기존 정렬을 유지한다 */
+.week05-order {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* 기본 목록 들여쓰기를 지우지 않으면 블록만 가운데고 내용은 오른쪽으로 밀려 보인다 */
+.week05-order ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 구분선을 항목 사이에만 두려면 gap 대신 padding으로 간격을 만들어야 한다 —
+   gap은 선 위아래 여백을 항목이 소유하지 않아 선이 한쪽으로 붙어 보인다 */
+.week05-order li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.week05-order li + li {
+  border-top: 1px solid #c8c8c8;
+}
+
+/* 표만 가로로 스크롤한다. 페이지 전체가 흔들리면 다른 요소까지 밀린다 */
+.week05-table-scroll {
+  overflow-x: auto;
+}
+
+.week05-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* 표 이름이자 건수 표시. 제목은 PageHeading이 이미 주므로 여기서는 정보만 얹는다 */
+.week05-table caption {
+  padding-bottom: 8px;
+  text-align: left;
+}
+
+.week05-table th,
+.week05-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #c8c8c8;
+  white-space: nowrap;
+}
+
+/* 행 머리글(주문번호)은 의미상 th지만 값이므로 본문과 같은 굵기로 둔다 */
+.week05-table tbody th {
+  font-weight: normal;
+}
+
+.week05-table thead th {
+  font-weight: 600;
+}
+
+/* 수량처럼 자릿수를 비교하는 값은 오른쪽으로 맞춘다 */
+.week05-table__number {
+  text-align: right;
+}
+
+.week05-pagination {
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.week05-page a:focus-visible,
+.week05-page button:focus-visible,
+.week05-page input:focus-visible,
+.week05-page select:focus-visible {
+  outline: 3px solid #2557a7;
+  outline-offset: 3px;
+}
+
+.toggled {
+  color: #2557a7;
+  font-weight: bold;
+}
+
+@media (max-width: 960px) {
+  .week05-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .week05-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .week05-filters label {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .week05-header {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .week05-header nav {
+    width: 100%;
+  }
+
+  .week05-hero {
+    min-height: 180px;
+    padding: 24px;
+  }
+
+  .week05-grid {
+    gap: 24px 12px;
+  }
+}
