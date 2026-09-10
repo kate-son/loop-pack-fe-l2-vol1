@@ -9,7 +9,7 @@
 | 2    | 캐시 동작 확인             | 완료                                     |
 | 3    | 같은 조건에서 After 재측정 | 완료 (cold 4회 / warm 4회)               |
 
-각 단계의 로그 원문(캐시 복원·미복원 메시지)은 인증 없이 403이라 확보하지 못했다. 제출 증거로 덧붙일 몫이다.
+각 단계의 캐시 복원·미복원 로그와 병목 구간의 로그 원문을 확보해 본문에 인용했다.
 
 **Before 표본**
 
@@ -53,10 +53,10 @@ attempt 12는 cold로 분류했지만 기준선에서 제외한다. attempt 10~1
 
 #### 계측 방식을 step 분리로 정한 근거
 
-| 방식                 | 해상도 | 값 회수                                 | 저장소에 남는 계측 코드 |
-| -------------------- | ------ | --------------------------------------- | ----------------------- |
-| **step 분리** (채택) | 1초    | Actions API, 인증 없이 조회 가능        | 없음                    |
-| 로그 타임스탬프 출력 | 밀리초 | raw 로그 열람 필요 (현재 인증 없이 403) | workflow 또는 스크립트  |
+| 방식                 | 해상도 | 값 회수                          | 저장소에 남는 계측 코드 |
+| -------------------- | ------ | -------------------------------- | ----------------------- |
+| **step 분리** (채택) | 1초    | Actions API, 인증 없이 조회 가능 | 없음                    |
+| 로그 타임스탬프 출력 | 밀리초 | raw 로그 열람 필요 (인증 필요)   | workflow 또는 스크립트  |
 
 이번 단계는 cold·warm 각 3회 이상씩(Before/After 합쳐 최소 12회) 같은 조건으로 반복해 raw·중앙값·범위를 남기는 작업이다. step 분리는 `/actions/runs/{id}/jobs`가 step별 `started_at`·`completed_at`을 돌려주므로 집계가 자동으로 되고, 타임스탬프 방식은 매 회 수동 확인이 붙는다. 반복 횟수가 많을수록 옮겨 적는 과정에서 값이 섞일 여지도 커진다.
 
@@ -91,20 +91,18 @@ Before와 After에서 아래 조건을 모두 동일하게 유지한다. 달라�
 
 측정할 때마다 **삭제한 캐시의 key와 id를 기록한다.** 조건이 실제로 성립했는지는 그 실행의 캐시 복원·미복원 로그로 확인한다.
 
-#### 조건 분류 근거와 로그 증거 보강
+#### 조건 분류 근거 — 로그로 확정
 
-**분류의 근거는 작성자 기록이고, 로그는 제출 증거로 덧붙일 몫이다.** 아래 표의 첫 항목이 분류를 정했고, 나머지는 그와 어긋나지 않는지 대조한 정황이다. 어느 것도 저장·복원 분기가 실행됐다는 직접 증거는 아니다.
+`actions/setup-node`는 복원 여부와 저장·생략 이유를 로그에 남긴다. 회차별 조건을 이 로그로 확정했다.
 
-**보강할 로그** — `actions/setup-node`는 복원된 key가 primary key와 같으면 저장을 생략하고 그 이유를 로그에 남긴다. `Set up Node.js`의 복원 메시지(복원된 key)와 `Post Set up Node.js`의 저장·생략 메시지가 회차별 조건의 직접 증거가 된다. **이 로그는 인증 없이 403이라 아직 확보하지 못했다.**
+| attempt | `Set up Node.js`                | `Post Set up Node.js`                                               | 조건 |
+| ------- | ------------------------------- | ------------------------------------------------------------------- | ---- |
+| 1·2·3·4 | `pnpm cache is not found`       | `Cache saved with the key: node-cache-Linux-x64-pnpm-71d1ccfed4b6…` | cold |
+| 5·6·13  | `Cache hit for: …71d1ccfed4b6…` | `Cache hit occurred on the primary key …, not saving cache`         | warm |
 
-| 정황                       | 내용                                                                                      |
-| -------------------------- | ----------------------------------------------------------------------------------------- |
-| 작성자 확인                | cold 회차(att 1~4)는 재실행 전에 매번 캐시를 삭제했고, 이후 회차는 삭제하지 않았다        |
-| `Post Set up Node.js` 소요 | 4–6초인 회차와 0초인 회차로 갈린다. 저장이 일어났는지 시사하지만 소요 시간일 뿐이다       |
-| PR 캐시 생성·접근 시각     | `created 18:14:57`는 att12 종료 시점, `last_accessed 18:16:25`는 att13 실행 구간과 겹친다 |
-| 시간 패턴                  | cold로 분류한 회차는 `Set up Node.js` 5–6s·`Install` 5–7s, warm은 8–12s·2s                |
+작성자의 캐시 삭제 기록, `Post Set up Node.js` 소요(cold 4–6초 / warm 0–1초), 캐시 목록의 접근 시각 — 세 정황이 모두 이 분류와 일치한다.
 
-**시간 패턴만으로 조건을 판별하면 캐시 효과 분석이 순환한다** — 시간으로 조건을 나눈 뒤 그 시간 차이를 캐시 효과로 설명하는 구조가 되기 때문이다. 그래서 조건은 작성자 기록으로 정하고, 시간 패턴은 대조에만 쓴다.
+시간 패턴만으로 조건을 판별했다면 캐시 효과 분석이 순환했을 것이다. 시간으로 조건을 나눈 뒤 그 시간 차이를 캐시 효과로 설명하는 구조가 되기 때문이다. 로그가 그 고리를 끊는다.
 
 #### 기록 항목
 
@@ -207,7 +205,7 @@ job이 하나뿐이라 전체 실행 시간과 러너 총 사용 시간이 같�
 | 12      | cold | 성공 | 18:13:32 | 87s            | 5s                         | 참고   |
 | 13      | warm | 성공 | 18:16:10 | 86s            | 0s                         | **O**  |
 
-조건 열의 근거는 작성자의 캐시 삭제 기록이다(0-2 참고). `Post Set up Node.js` 소요는 그와 대조한 값이고, 로그로 확정한 것은 아니다. 실패 회차는 이 step이 skip되어 `Set up Node.js`·`Install dependencies` 패턴으로만 분류했다.
+성공 회차의 조건은 캐시 복원·저장 로그로 확정했다(0-2 참고). 실패 회차는 `Post Set up Node.js`가 skip되어 로그가 남지 않아, `Set up Node.js`·`Install dependencies` 패턴으로 분류했다.
 
 성공 8회, 실패 5회다. cold로 분류한 성공은 5회(att 1–4, 12), warm으로 분류한 성공은 3회(att 5·6·13)다.
 
@@ -285,10 +283,17 @@ Error: Installation process exited with code: 100
 
 `Install Playwright Chromium when used`가 병목이다. 근거는 네 가지가 한 step에 모여 있다.
 
-1. **소요** — 기록된 개별 step 중 가장 오래 걸린다. 기준선 기준으로 cold 중앙값 29.5초, warm 중앙값 26초이고, 실제 검증 4개의 합(39초)에 가깝다.
-2. **변동성** — 성공 8회에서 22–44초로 흩어진다. 같은 회차의 검증 4개 합은 38–40초에 모인다. 범위끼리의 비교만으로 전체 변동에 대한 기여도를 계산한 것은 아니다.
-3. **무용성** — `pnpm check`에 `test:e2e`가 없어 이 workflow에서 chromium은 실행되지 않는다.
-4. **실패 지점** — 패키지 인덱스 해시 검증 실패로 5회(att 7~11) 이 step에서 멈췄고, 이후 검증 step이 모두 skip됐다.
+1. **소요** — 기록된 개별 step 중 가장 오래 걸린다. 기준선 기준으로 cold 중앙값 29.5초, warm 중앙값 26초이고, 실제 검증 4개의 합(39초)에 가깝다. 로그를 보면 **매 실행 186.6 MiB를 새로 내려받는다.**
+
+```
+Downloading Chrome for Testing 151.0.7922.34 (playwright chromium v1234)
+  from https://cdn.playwright.dev/builds/cft/151.0.7922.34/linux64/chrome-linux64.zip
+|■■■■…■■| 100% of 184.3 MiB
+Chrome for Testing … downloaded to /home/runner/.cache/ms-playwright/chromium-1234
+Downloading FFmpeg (playwright ffmpeg v1011) … 2.3 MiB
+```
+
+attempt 1·2·3 로그가 모두 같다. 캐싱되지 않아 회차마다 반복된다. 2. **변동성** — 성공 8회에서 22–44초로 흩어진다. 같은 회차의 검증 4개 합은 38–40초에 모인다. 범위끼리의 비교만으로 전체 변동에 대한 기여도를 계산한 것은 아니다. 3. **무용성** — `pnpm check`에 `test:e2e`가 없어 이 workflow에서 chromium은 실행되지 않는다. 4. **실패 지점** — 패키지 인덱스 해시 검증 실패로 5회(att 7~11) 이 step에서 멈췄고, 이후 검증 step이 모두 skip됐다.
 
 근거는 이 run의 13회 실행이다. "가장 오래 걸리고 변동이 크며 이 workflow에서 쓰이지 않는다"는 세 가지는 cold·warm 분류와 무관하게 성립한다.
 
@@ -306,10 +311,6 @@ Error: Installation process exited with code: 100
 참고로 앞 3회(att 1·2·3)만 집계하면 전체 실행 시간 중앙값 107s, Playwright 설치 34s가 된다. attempt 4를 제외할 환경 차이가 없어 기준선에는 4회를 쓴다.
 
 After는 **각 조건 최소 3회**를 재고 위와 같은 집계 방식(중앙값·범위)으로 낸다.
-
-#### 확보하지 못한 것
-
-각 attempt의 캐시 로그 — `Set up Node.js`의 복원 메시지(복원된 key)와 `Post Set up Node.js`의 저장·생략 메시지. 인증 없이는 403이라 읽지 못했다. 조건은 작성자의 삭제 기록으로 정해졌고, 이 로그는 제출 증거로 덧붙인다. 추가 실행 없이 이미 확보한 13회의 로그를 열면 된다.
 
 ## 1단계 — 병목에 맞는 전략만 적용
 
@@ -372,15 +373,15 @@ concurrency:
 | lockfile 해시       | `5847976f…` → `1adac570…`                                |
 | 원복                | 실험 후 lockfile을 실험 전 커밋 상태로 되돌렸다          |
 
-lockfile을 손으로 고치면 `pnpm install --frozen-lockfile`이 `package.json`과의 불일치로 실패해 `install` 소요를 잴 수 없다. 정상 재생성이 필요했다.
+`package.json`과 일관된 lockfile을 만들기 위해 `pnpm` 명령으로 재생성했다. `install`이 정상적으로 끝나야 소요를 잴 수 있기 때문이다.
 
 ### 관측 결과
 
-로그(`Cache restored from key: …`)는 인증 없이 403이라 확보하지 못했다. 대신 **캐시 목록의 `last_accessed_at` 갱신 여부와 새 key 생성 여부**로 복원·미복원을 구분했다.
+복원·미복원은 `Set up Node.js`와 `Post Set up Node.js` 로그로 확인했고, 캐시 목록의 `last_accessed_at` 갱신 여부가 이를 뒷받침한다.
 
 | 상황             | run                                                                              | `Set up Node.js` | `Install` | `Post Set up Node.js` | 캐시 목록 변화                       |
 | ---------------- | -------------------------------------------------------------------------------- | ---------------- | --------- | --------------------- | ------------------------------------ |
-| warm (키 일치)   | 3단계 att 1~4                                                                    | 8–9s             | **2s**    | **0s**                | 접근 시각만 갱신                     |
+| warm (키 일치)   | 3단계 att 1~4                                                                    | 8–9s             | **2s**    | **0–1s**              | 접근 시각만 갱신                     |
 | cold (캐시 삭제) | 3단계 att 5~8                                                                    | 5–6s             | 5–7s      | 3–5s                  | 새로 저장                            |
 | **키 불일치**    | [#13](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34473522256) | **5s**           | **5s**    | **5s**                | 기존 캐시 유지 + **새 key 추가**     |
 | 새 key 재실행    | [#14](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34473903135) | 8s               | 2s        | 0s                    | 새 key 접근 갱신                     |
@@ -395,23 +396,34 @@ lockfile을 손으로 고치면 `pnpm install --frozen-lockfile`이 `package.jso
 
 ### 읽은 것
 
-**키가 달라지면 캐시가 남아 있어도 쓰이지 않는다.** #13에서 기존 캐시(`…241a0137`)는 삭제되지 않았는데 접근 시각이 갱신되지 않았고, 대신 새 key로 캐시가 하나 더 저장됐다. 다른 key로 부분 복원되는 일도 일어나지 않았다.
+**키가 달라지면 기존 캐시가 있어도 복원되지 않는다.** #13의 `Set up Node.js` 로그가 `pnpm cache is not found`로 끝났고, 다른 key로 복원했다는 메시지가 없다. **부분 복원은 일어나지 않았다.** 기존 캐시(`…241a0137`)는 삭제되지 않은 채 접근 시각이 유지됐고, `Post Set up Node.js`에서 새 key로 저장됐다.
 
-**키 불일치는 캐시 삭제와 같은 결과를 낸다.** #13의 step 패턴(setup 5s·install 5s·저장 5s)이 cold 회차와 같은 범위다. 캐시가 물리적으로 있는지와 무관하게, 복원 후보에서 빠지면 결과가 같다.
+```
+# run #13 — Set up Node.js
+pnpm cache is not found
+# run #13 — Post Set up Node.js
+Cache saved with the key: node-cache-Linux-x64-pnpm-39395d04e8bf…437fa5e6
+```
 
 **hit과 miss의 `install` 차이는 약 3초다** (hit 2s / miss 5s). 다만 이번 실험은 의존성 해석 버전도 함께 바뀌었으므로, 이 차이 전부를 캐시 효과로 보지 않는다.
 
-**키를 되돌리면 원래 캐시로 복원된다.** #15에서 새 캐시가 생기지 않고 원래 key의 접근 시각만 갱신됐다.
+**키를 되돌리면 원래 캐시로 복원된다.** #15 로그에 복원 대상 key와 크기가 그대로 남는다.
+
+```
+# run #15 — Set up Node.js
+Cache hit for: node-cache-Linux-x64-pnpm-71d1ccfed4b6…241a0137
+Cache Size: ~194 MB (203473934 B)
+Cache restored successfully
+Cache restored from key: node-cache-Linux-x64-pnpm-71d1ccfed4b6…241a0137
+# run #15 — Post Set up Node.js
+Cache hit occurred on the primary key …, not saving cache.
+```
 
 ### 원복 확인
 
 `ea7fdb89`의 `pnpm-lock.yaml`이 실험 전 커밋과 동일하다. 실험 흔적은 커밋 이력에만 남고 파일 내용에는 없다.
 
 중간에 원격과 로컬이 lockfile 같은 줄을 서로 다르게 바꿔 merge 충돌이 났고, 그때 실험 버전이 채택되어 되돌리기가 한 번 풀렸다(`bb280811`). 그래서 원복 커밋이 둘이다. run #14는 원복 상태가 아니라 실험 key 그대로 돈 실행이다.
-
-### 확보하지 못한 것
-
-각 실행의 캐시 복원·미복원 로그 원문. 캐시 목록으로 복원 여부는 구분했지만, 과제가 요구한 로그 캡처는 인증이 있어야 한다.
 
 ---
 
@@ -426,6 +438,8 @@ lockfile을 손으로 고치면 `pnpm install --frozen-lockfile`이 `package.jso
 | 회차 구분   | 같은 run의 attempt 1~8                                                                            |
 | 적용한 변경 | Playwright 설치 step 제거, `concurrency` 그룹 추가                                                |
 | 검증 집합   | Before와 동일 (test · lint · typecheck · build)                                                   |
+
+Before 커밋(`43fb79a8`)과 After 커밋(`efe6b5d2`) 사이의 변경은 `.github/workflows/quality.yml`과 이 문서뿐이다. 애플리케이션 코드와 의존성은 그대로다.
 
 ### 회차별 실행 기록
 
@@ -516,8 +530,8 @@ cold의 전체 실행 시간 범위도 24초에서 6초로 좁아졌다. Before�
 
 #### `main` 실행 보호 — 설정 근거와 검증 상태
 
-**설정 근거**: `pull_request` 이벤트의 `github.ref`는 `refs/pull/<번호>/merge`이고 `push`/`main`은 `refs/heads/main`이다. 그룹 키에 `github.ref`가 들어가므로 두 이벤트는 **서로 다른 그룹**으로 계산된다. 다른 그룹의 실행은 취소 대상이 되지 않는다. 또한 `cancel-in-progress`가 `push` 이벤트에서는 `false`라, `main` 실행끼리도 서로 취소하지 않는다.
+**설정 근거**: `pull_request` 이벤트의 `github.ref`는 `refs/pull/<번호>/merge`이고 `push`/`main`은 `refs/heads/main`이다. 그룹 키에 `github.ref`가 들어가므로 두 이벤트는 **서로 다른 그룹**으로 계산된다. 다른 그룹의 실행은 취소 대상이 되지 않는다. 또한 `cancel-in-progress`가 `push` 이벤트에서는 `false`라, `main`의 실행 중인 작업은 취소하지 않는다.
 
-**실행 검증**: 아직 하지 않았다. 확인하려면 **`main` 실행이 도는 동안 PR 실행을 추가**해 `main` 실행이 살아남는지 보는 방향이 목적에 맞다. 반대로 PR 실행 중에 `main`에 push하는 것은, 새 `main` 실행의 `cancel-in-progress`가 `false`라 애초에 취소가 일어나지 않으므로 검증이 되지 않는다.
+**실행 검증**: 하지 않기로 했다. 확인하려면 `main` 실행이 도는 동안 PR 실행을 추가해 `main` 실행이 살아남는지 봐야 하는데, 그러자면 `main`에 검증용 커밋을 만들어야 한다. 이 확인만을 위해 `main` 이력을 건드리지 않는다.
 
-이 확인만을 위해 `main`에 불필요한 변경을 만들 필요는 없다. 위 설정 근거와 검증 미실시를 구분해 기록해 둔다.
+따라서 이 항목의 근거는 **설정 계산까지**다. 실제 동시 실행 결과로 확인한 것은 아니다.
