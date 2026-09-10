@@ -50,9 +50,31 @@ warm에서 install은 1~2초였고 cold에서는 6초였다. 그러나 job 전�
 
 로컬의 `pnpm check`는 Corepack이 pnpm 레지스트리 서명을 검증하지 못해 검증 명령을 시작하기 전에 중단됐다. 이 문제를 우회하지 않았으며, 표의 결과는 모두 Actions에서 통과한 실행만 사용했다.
 
+### After 결과
+
+변경 커밋은 `76f332c96f3af24385fac7f203833999c019b386`이다. `quality` job에서 Chromium 설치 단계만 제거했으며, 나머지 검증 순서와 범위는 Before와 같다.
+
+| 구분   | 실행 URL                                                                                          | 커밋      | 전체 시간 | 의존성 설치 | test | lint | typecheck | build | 캐시 상태      |
+| ------ | ------------------------------------------------------------------------------------------------- | --------- | --------: | ----------: | ---: | ---: | --------: | ----: | -------------- |
+| cold 1 | [attempt 2](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34501622108/attempts/2) | `76f332c` |      62초 |         5초 | 12초 |  4초 |       3초 |   8초 | 복원 로그 없음 |
+| cold 2 | [attempt 3](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34501622108/attempts/3) | `76f332c` |      64초 |         6초 | 16초 |  6초 |       3초 |   9초 | 복원 로그 없음 |
+| cold 3 | [attempt 4](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34501622108/attempts/4) | `76f332c` |      71초 |         6초 | 20초 |  6초 |       4초 |  10초 | 복원 로그 없음 |
+| warm 1 | [attempt 1](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34501622108/attempts/1) | `76f332c` |      68초 |         4초 | 12초 |  5초 |       3초 |   7초 | 복원 로그 확인 |
+| warm 2 | [attempt 5](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34501622108/attempts/5) | `76f332c` |      56초 |         2초 | 13초 |  4초 |       3초 |   7초 | 복원 로그 확인 |
+| warm 3 | [attempt 6](https://github.com/kate-son/loop-pack-fe-l2-vol1/actions/runs/34501622108/attempts/6) | `76f332c` |      60초 |         2초 | 19초 |  6초 |       4초 |  10초 | 복원 로그 확인 |
+
+| 구분           | raw 값           | 중앙값 | 범위 |
+| -------------- | ---------------- | -----: | ---: |
+| cold 전체 시간 | 62초, 64초, 71초 |   64초 |  9초 |
+| warm 전체 시간 | 68초, 56초, 60초 |   60초 | 12초 |
+
+Before와 After의 cold 중앙값은 91초에서 64초로 27초 줄었고, warm 중앙값은 88초에서 60초로 28초 줄었다. 두 변화량은 각 조건의 범위보다 크며, 제거한 Chromium 설치가 Before에서 24~30초를 차지했던 사실과 시간 차이가 가깝다. 따라서 이번 변화는 해당 설치 단계 제거와 연결해 설명할 수 있다.
+
+After에서도 모든 검증 단계가 실행됐고 세 cold·세 warm 실행이 모두 통과했다. 캐시 복원 여부를 캐시 삭제와 실행 로그로 확인했지만, lockfile을 임시 변경해 키 불일치를 확인하는 별도 실험은 아직 남아 있다.
+
 ### 이후 순서
 
-1. Before cold/warm 표본을 각각 3회 이상 확보한다.
-2. 가장 긴 step만 대상으로 변경한다.
-3. 캐시 복원 여부를 별도 실험으로 확인하고 lockfile을 원복한다.
-4. 같은 조건에서 After를 측정한다.
+1. ~~Before cold/warm 표본을 각각 3회 이상 확보한다.~~ 완료
+2. ~~가장 긴 단계만 대상으로 변경한다.~~ 완료
+3. lockfile을 임시 변경해 캐시 키 불일치와 설치 재실행을 확인한 뒤 원복한다.
+4. ~~같은 조건에서 After를 측정한다.~~ 완료
