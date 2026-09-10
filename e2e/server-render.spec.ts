@@ -36,6 +36,7 @@ test('JS 없이도 서버가 로그인 상태와 보호 화면 본문을 그려�
   });
 
   await test.step('보호 화면 본문도 그려져 있다', async () => {
-    await expect(page.getByRole('heading', { name: '주문 내역' })).toBeVisible();
+    // 2단계 자가 검증: E2E 실패가 guard 실패로 이어지는지 확인하려고 일부러 깨뜨린 단언이다.
+    await expect(page.getByRole('heading', { name: '존재하지 않는 제목' })).toBeVisible();
   });
 });
